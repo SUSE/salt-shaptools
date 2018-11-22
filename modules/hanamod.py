@@ -333,3 +333,23 @@ def create_backup(
             user_key, user_password, database, backup_name)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(str(err))
+
+
+def sr_cleanup(force=False, sid=None, inst=None, password=None):
+    '''
+    Clean system replication state
+
+    Parameters:
+        force (bool): Force cleanup
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.sr_cleanup true prd 00 pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.sr_cleanup(force)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))

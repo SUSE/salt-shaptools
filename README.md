@@ -76,7 +76,7 @@ List of dependencies are specified in the ["Requirements file"](requirements.txt
 
 ## License
 
-See the [LICENSE](LICENSE.md) file for license rights and limitations.
+See the [LICENSE](LICENSE) file for license rights and limitations.
 
 ## Author
 

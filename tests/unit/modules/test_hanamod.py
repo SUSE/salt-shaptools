@@ -354,7 +354,7 @@ class HanaModuleTest(TestCase):
         with patch.object(hanamod, '_init', mock_hana):
             with self.assertRaises(exceptions.CommandExecutionError) as err:
                 hanamod.create_user_key(
-                'key', 'env', 'user', 'pass', 'db', 'prd', '00', 'pass')
+                    'key', 'env', 'user', 'pass', 'db', 'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.create_user_key.assert_called_once_with(
                 'key', 'env', 'user', 'pass', 'db')
@@ -385,8 +385,35 @@ class HanaModuleTest(TestCase):
         with patch.object(hanamod, '_init', mock_hana):
             with self.assertRaises(exceptions.CommandExecutionError) as err:
                 hanamod.create_backup(
-                'key', 'pass', 'db', 'bakcup', 'prd', '00', 'pass')
+                    'key', 'pass', 'db', 'bakcup', 'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.create_backup.assert_called_once_with(
                 'key', 'pass', 'db', 'bakcup')
+            self.assertTrue('hana error' in str(err.exception))
+
+    def test_sr_cleanup_return(self):
+        '''
+        Test sr_cleanup method - return
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            hanamod.sr_cleanup(True, 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with('prd', '00', 'pass')
+            mock_hana_inst.sr_cleanup.assert_called_once_with(True)
+
+    def test_sr_cleanup_raise(self):
+        '''
+        Test sr_cleanup method - raise
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana_inst.sr_cleanup.side_effect = hanamod.hana.HanaError(
+            'hana error'
+        )
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            with self.assertRaises(exceptions.CommandExecutionError) as err:
+                hanamod.sr_cleanup(False, 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with('prd', '00', 'pass')
+            mock_hana_inst.sr_cleanup.assert_called_once_with(False)
             self.assertTrue('hana error' in str(err.exception))

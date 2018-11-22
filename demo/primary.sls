@@ -1,5 +1,5 @@
 NUREMBERG:
-    hana.primary_enabled:
+    hana.sr_primary_enabled:
       - sid: 'prd'
       - inst: '00'
       - password: 'Qwerty1234'

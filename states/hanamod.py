@@ -72,7 +72,7 @@ def _parse_dict(dict_params):
     return output
 
 
-def primary_enabled(name, sid, inst, password, **kwargs):
+def sr_primary_enabled(name, sid, inst, password, **kwargs):
     '''
     Set the node as a primary hana node and in running state
 
@@ -80,11 +80,11 @@ def primary_enabled(name, sid, inst, password, **kwargs):
         The name of the primary node
     sid
         System id of the installed hana platform
-    inst:
+    inst
         Instance number of the installed hana platform
-    password:
+    password
         Password of the installed hana platform user
-    backup (optional):
+    backup (optional)
         Create a new backup of the current database
         user:
             Database user
@@ -94,7 +94,7 @@ def primary_enabled(name, sid, inst, password, **kwargs):
             Database name to backup
         file:
             Backup file name
-    userkey (optional):
+    userkey (optional)
         Create a new key user
         key (str):
             Key name
@@ -102,9 +102,9 @@ def primary_enabled(name, sid, inst, password, **kwargs):
             Database location (host:port)
         user:
             User name
-        user_password:
+        user_password
             User password
-        database (optional):
+        database (optional)
             Database name in MDC environment
     '''
 
@@ -137,7 +137,6 @@ def primary_enabled(name, sid, inst, password, **kwargs):
         #  Here starts the actual process
         if not running:
             __salt__['hana.start'](sid, inst, password)
-            ret['changes']['running'] = True
         if 'userkey' in kwargs:
             userkey_data = _parse_dict(kwargs.get('userkey'))
             __salt__['hana.create_user_key'](
@@ -158,6 +157,123 @@ def primary_enabled(name, sid, inst, password, **kwargs):
                 sid, inst, password)
             ret['changes']['backup'] = backup_data.get('file')
         __salt__['hana.sr_enable_primary'](name, sid, inst, password)
+        new_state = __salt__['hana.get_sr_state'](sid, inst, password)
+        ret['comment'] = 'HANA node set as {}'.format(new_state.name)
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+
+
+def sr_secondary_registered(
+        name, remote_host, remote_instance,
+        replication_mode, operation_mode, sid, inst, password, **kwargs):
+    '''
+    Register a secondary node to an already enabled primary node
+
+    name
+        The name of the secondary node
+    remote_host
+        Primary node hostname
+    remote_instance
+        Primary node instance
+    replication_mode
+        Replication mode
+    operation_mode
+        Operation mode
+    sid
+        System id of the installed hana platform
+    inst
+        Instance number of the installed hana platform
+    password
+        Password of the installed hana platform user
+    '''
+
+    ret = {'name': name,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if not __salt__['hana.is_installed'](sid, inst, password):
+        ret['comment'] = 'HANA is not installed properly with the provided data'
+        return ret
+
+    current_state = __salt__['hana.get_sr_state'](sid, inst, password)
+    running = __salt__['hana.is_running'](sid, inst, password)
+    #  Improve that comparison
+    if running and current_state.value == 2:
+        ret['result'] = True
+        ret['comment'] = 'HANA node already set as secondary and running'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = '{} would be registered as a secondary node'.format(name)
+        ret['changes']['secondary'] = name
+        return ret
+
+    try:
+        #  Here starts the actual process
+        if running:
+            __salt__['hana.stop'](sid, inst, password)
+        __salt__['hana.sr_register_secondary'](
+            name, remote_host, remote_instance,
+            replication_mode, operation_mode, sid, inst, password)
+        __salt__['hana.start'](sid, inst, password)
+        new_state = __salt__['hana.get_sr_state'](sid, inst, password)
+        ret['comment'] = 'HANA node set as {}'.format(new_state.name)
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+
+
+def sr_clean(name, force, sid, inst, password):
+    '''
+    Clean the current node system replication mode
+    name:
+        Just for logging purposes
+    force
+        Force cleanup process
+    sid
+        System id of the installed hana platform
+    inst
+        Instance number of the installed hana platform
+    password
+        Password of the installed hana platform user
+    '''
+
+    ret = {'name': name,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if not __salt__['hana.is_installed'](sid, inst, password):
+        ret['comment'] = 'HANA is not installed properly with the provided data'
+        return ret
+
+    current_state = __salt__['hana.get_sr_state'](sid, inst, password)
+    running = __salt__['hana.is_running'](sid, inst, password)
+    #  Improve that comparison
+    if current_state.value == 0:
+        ret['result'] = True
+        ret['comment'] = 'HANA node already clean'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = '{} would be clean'.format(name)
+        return ret
+
+    try:
+        #  Here starts the actual process
+        if running:
+            __salt__['hana.stop'](sid, inst, password)
+        __salt__['hana.sr_cleanup'](force, sid, inst, password)
         new_state = __salt__['hana.get_sr_state'](sid, inst, password)
         ret['comment'] = 'HANA node set as {}'.format(new_state.name)
         ret['result'] = True
