@@ -158,6 +158,7 @@ def sr_primary_enabled(name, sid, inst, password, **kwargs):
             ret['changes']['backup'] = backup_data.get('file')
         __salt__['hana.sr_enable_primary'](name, sid, inst, password)
         new_state = __salt__['hana.get_sr_state'](sid, inst, password)
+        ret['changes']['primary'] = name
         ret['comment'] = 'HANA node set as {}'.format(new_state.name)
         ret['result'] = True
         return ret
@@ -223,6 +224,7 @@ def sr_secondary_registered(
             replication_mode, operation_mode, sid, inst, password)
         __salt__['hana.start'](sid, inst, password)
         new_state = __salt__['hana.get_sr_state'](sid, inst, password)
+        ret['changes']['secondary'] = name
         ret['comment'] = 'HANA node set as {}'.format(new_state.name)
         ret['result'] = True
         return ret
@@ -266,6 +268,7 @@ def sr_clean(name, force, sid, inst, password):
 
     if __opts__['test']:
         ret['result'] = None
+        ret['changes']['disabled'] = name
         ret['comment'] = '{} would be clean'.format(name)
         return ret
 
@@ -275,6 +278,7 @@ def sr_clean(name, force, sid, inst, password):
             __salt__['hana.stop'](sid, inst, password)
         __salt__['hana.sr_cleanup'](force, sid, inst, password)
         new_state = __salt__['hana.get_sr_state'](sid, inst, password)
+        ret['changes']['disabled'] = name
         ret['comment'] = 'HANA node set as {}'.format(new_state.name)
         ret['result'] = True
         return ret
