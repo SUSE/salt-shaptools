@@ -22,6 +22,7 @@ from tests.support.mock import (
 # Import Salt Libs
 import salt.modules.hanamod as hanamod
 
+
 @skipIf(NO_MOCK, NO_MOCK_REASON)
 class HanaModuleTest(TestCase):
     '''
