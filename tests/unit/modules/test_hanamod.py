@@ -248,7 +248,8 @@ class HanaModuleTest(TestCase):
         mock_hana_inst = MagicMock()
         mock_hana = MagicMock(return_value=mock_hana_inst)
         with patch.object(hanamod, '_init', mock_hana):
-            hanamod.sr_register_secondary('PRAGUE', 'hana01', '00', 'sync',
+            hanamod.sr_register_secondary(
+                'PRAGUE', 'hana01', '00', 'sync',
                 'logreplay', 'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_register_secondary.assert_called_once_with(
@@ -265,11 +266,40 @@ class HanaModuleTest(TestCase):
         mock_hana = MagicMock(return_value=mock_hana_inst)
         with patch.object(hanamod, '_init', mock_hana):
             with self.assertRaises(exceptions.CommandExecutionError) as err:
-                hanamod.sr_register_secondary('PRAGUE', 'hana01', '00', 'sync',
+                hanamod.sr_register_secondary(
+                    'PRAGUE', 'hana01', '00', 'sync',
                     'logreplay', 'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_register_secondary.assert_called_once_with(
                 'PRAGUE', 'hana01', '00', 'sync', 'logreplay')
+            self.assertTrue('hana error' in str(err.exception))
+
+    def test_sr_changemode_secondary_return(self):
+        '''
+        Test sr_changemode_secondary method - return
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            hanamod.sr_changemode_secondary('sync', 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with('prd', '00', 'pass')
+            mock_hana_inst.sr_changemode_secondary.assert_called_once_with('sync')
+
+    def test_sr_changemode_secondary_raise(self):
+        '''
+        Test sr_changemode_secondary method - raise
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana_inst.sr_changemode_secondary.side_effect = hanamod.hana.HanaError(
+            'hana error'
+        )
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            with self.assertRaises(exceptions.CommandExecutionError) as err:
+                hanamod.sr_changemode_secondary('sync', 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with('prd', '00', 'pass')
+            mock_hana_inst.sr_changemode_secondary.assert_called_once_with(
+                'sync')
             self.assertTrue('hana error' in str(err.exception))
 
     def test_sr_unregister_secondary_return(self):

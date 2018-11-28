@@ -13,3 +13,5 @@ PRAGUE:
       - inst: '00'
       - password: 'Qwerty1234'
       - cleanup: true
+      - require:
+        - primary-available

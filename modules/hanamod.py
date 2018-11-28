@@ -241,6 +241,26 @@ def sr_register_secondary(
         raise exceptions.CommandExecutionError(str(err))
 
 
+def sr_changemode_secondary(new_mode, sid=None, inst=None, password=None):
+    '''
+    Change secondary synchronization mode
+
+    Parameters:
+        new_mode (str): New mode between sync|syncmem|async
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.sr_changemode_secondary sync prd 00 pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.sr_changemode_secondary(new_mode)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
+
+
 def sr_unregister_secondary(primary_name, sid=None, inst=None, password=None):
     '''
     Unegister SAP HANA system replication from primary node
