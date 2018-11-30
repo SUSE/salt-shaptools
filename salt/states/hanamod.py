@@ -68,7 +68,7 @@ __virtualname__ = 'hana'
 TMP_CONFIG_FILE = '/tmp/hana.conf'
 
 
-def __virtual__():
+def __virtual__():  # pragma: no cover
     '''
     Only load if the hana module is in __salt__
     '''
@@ -145,6 +145,7 @@ def installed(
         if 'config_file' in kwargs:
             config_file = kwargs.get('config_file')
             __salt__['cp.get_file'](config_file, TMP_CONFIG_FILE)
+            ret['changes']['config_file'] = config_file
             config_file = TMP_CONFIG_FILE
         else:
             config_file = __salt__['hana.create_conf_file'](
@@ -156,6 +157,7 @@ def installed(
                 root_password=root_password,
                 sapadm_password=kwargs.get('sapadm_password', password),
                 system_user_password=kwargs.get('system_user_password'))
+            ret['changes']['config_file'] = 'new'
         if 'extra_parameters' in kwargs:
             extra_parameters = _parse_dict(kwargs.get('extra_parameters'))
             config_file = __salt__['hana.update_conf_file'](
