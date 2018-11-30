@@ -30,13 +30,13 @@ from salt import exceptions
 try:
     from shaptools import hana
     HAS_HANA = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_HANA = False
 
 __virtualname__ = 'hana'
 
 
-def __virtual__():
+def __virtual__():  # pragma: no cover
     '''
     Only load this module if shaptools python module is installed
     '''
@@ -106,8 +106,11 @@ def create_conf_file(software_path, conf_file, root_user, root_password):
 
         salt '*' hana.create_conf_file /installation_path /home/myuser/hana.conf root root
     '''
-    return hana.HanaInstance.create_conf_file(
-        software_path, conf_file, root_user, root_password)
+    try:
+        return hana.HanaInstance.create_conf_file(
+            software_path, conf_file, root_user, root_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
 
 
 def update_conf_file(conf_file, **kwargs):
@@ -128,7 +131,10 @@ def update_conf_file(conf_file, **kwargs):
 
         salt '*' hana.update_conf_file /home/myuser /home/myuser/hana.conf sid=PRD
     '''
-    return hana.HanaInstance.update_conf_file(conf_file, **kwargs)
+    try:
+        return hana.HanaInstance.update_conf_file(conf_file, **kwargs)
+    except IOError as err:
+        raise exceptions.CommandExecutionError(str(err))
 
 
 def install(software_path, conf_file, root_user, root_password):
@@ -147,8 +153,11 @@ def install(software_path, conf_file, root_user, root_password):
 
         salt '*' hana.install /installation_path /home/myuser/hana.conf root root
     '''
-    return hana.HanaInstance.install(
-        software_path, conf_file, root_user, root_password)
+    try:
+        hana.HanaInstance.install(
+            software_path, conf_file, root_user, root_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
 
 
 def uninstall(
@@ -171,8 +180,11 @@ def uninstall(
     hana_inst = _init(sid, inst, password)
     kwargs = {}
     if installation_folder:
-        kwargs.update('installation_folder', installation_folder)
-    hana_inst.uninstall(root_user, root_password, **kwargs)
+        kwargs['installation_folder'] = installation_folder
+    try:
+        hana_inst.uninstall(root_user, root_password, **kwargs)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
 
 
 def is_running(sid=None, inst=None, password=None):
