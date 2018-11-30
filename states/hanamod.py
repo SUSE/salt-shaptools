@@ -21,15 +21,27 @@ State module to provide SAP HANA functionality to Salt
 :usage:
 
 .. code-block:: yaml
+    hana-install:
+      hana.installed:
+        - root_user: 'root'
+        - root_password: 's'
+        - software_path: '/root/sap_inst/51052481'
+        - sid: 'prd'
+        - inst: '00'
+        - password: 'Qwerty1234'
+        - config_file: salt://hana_conf/hana.conf
+        - extra_parameters:
+          - hostname: 'hana01'
+
     NUREMBERG:
-      hana.primary_enabled:
+      hana.sr_primary_enabled:
         - sid: 'prd'
         - inst: '00'
         - password: 'Qwerty1234'
         - cleanup: true
         - backup:
           - user: 'backupkey'
-          - password:  Qwerty1234
+          - password:  'Qwerty1234'
           - database: 'SYSTEMDB'
           - file: 'backup'
         - userkey:
@@ -38,6 +50,8 @@ State module to provide SAP HANA functionality to Salt
           - user: 'SYSTEM'
           - password: 'Qwerty1234'
           - database: 'SYSTEMDB'
+        - require:
+          - hana-install
 '''
 
 
@@ -50,6 +64,8 @@ from salt import exceptions
 from salt.ext import six
 
 __virtualname__ = 'hana'
+
+TMP_CONFIG_FILE = '/tmp/hana.conf'
 
 
 def __virtual__():
@@ -70,6 +86,143 @@ def _parse_dict(dict_params):
         for key, value in item.items():
             output[key] = value
     return output
+
+
+def installed(
+        sid, inst, password,
+        software_path, root_user, root_password, **kwargs):
+    """
+    Install SAP HANA if the platform is not installed yet. There are two ways of
+    using in. The configuration file might be imported from the master to the minions
+    using the *config_file* option, or if this value is not set, the sapadm_password
+    and system_user_password values are mandatory
+
+    sid
+        System id of the installed hana platform
+    inst
+        Instance number of the installed hana platform
+    password
+        Password of the installed hana platform user
+    software_path:
+        Path where the SAP HANA software is downloaded, it must be located in
+        the minion itself
+    root_user
+        Root user name
+    root_password
+        Root user password
+    config_file
+        If config_file paremeter is set, it will be downloaded from the master
+        to the minion and used in the installation. Values in this file might
+        be changed setting then in the extra_parameters dictionary using the
+        exact name as in the config file as a key
+    sapadm_password
+        If the config file is not set, the sapadm_password is mandatory. The
+        password of the sap administrator user
+    system_user_password
+        If the config file is not set, the system_user_password is mandatory. The
+        password of the database SYSTEM (superuser) user
+    extra_parameters
+        Optional configuration parameters (exact name as in the config file as a key)
+    """
+    ret = {'name': sid,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if __salt__['hana.is_installed'](sid, inst, password):
+        ret['result'] = True
+        ret['comment'] = 'HANA is already installed'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = '{} would be installed'.format(sid)
+        ret['changes']['sid'] = sid
+        return ret
+
+    try:
+        #  Here starts the actual process
+        if 'config_file' in kwargs:
+            config_file = kwargs.get('config_file')
+            __salt__['cp.get_file'](config_file, TMP_CONFIG_FILE)
+            config_file = TMP_CONFIG_FILE
+        else:
+            config_file = __salt__['hana.create_conf_file'](
+                software_path, TMP_CONFIG_FILE, root_user, root_password)
+            config_file = __salt__['hana.update_conf_file'](
+                config_file,
+                sid=sid.upper(), password=password, number=inst,
+                root_user=root_user,
+                root_password=root_password,
+                sapadm_password=kwargs.get('sapadm_password', password),
+                system_user_password=kwargs.get('system_user_password'))
+        if 'extra_parameters' in kwargs:
+            extra_parameters = _parse_dict(kwargs.get('extra_parameters'))
+            config_file = __salt__['hana.update_conf_file'](
+                config_file, **extra_parameters)
+
+        __salt__['hana.install'](
+            software_path, config_file, root_user, root_password)
+        ret['changes']['sid'] = sid
+        ret['comment'] = 'HANA installed'
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+    finally:
+        __salt__['file.remove'](TMP_CONFIG_FILE)
+        __salt__['file.remove']('{}.xml'.format(TMP_CONFIG_FILE))
+
+
+def uninstalled(sid, inst, password, root_user, root_password, **kwargs):
+    '''
+    Uninstall SAP HANA from node
+
+    sid
+        System id of the installed hana platform
+    inst
+        Instance number of the installed hana platform
+    password
+        Password of the installed hana platform user
+    root_user
+        Root user name
+    root_password
+        Root user password
+    instalation_folder
+        HANA installation folder
+    '''
+    ret = {'name': sid,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if not __salt__['hana.is_installed'](sid, inst, password):
+        ret['result'] = True
+        ret['comment'] = 'HANA already not installed'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = '{} would be uninstalled'.format(sid)
+        ret['changes']['sid'] = sid
+        return ret
+
+    try:
+        #  Here starts the actual process
+        installation_folder = kwargs.get('installation_folder', None)
+        __salt__['hana.uninstall'](
+            root_user, root_password, sid=sid, inst=inst, password=password,
+            installation_folder=installation_folder)
+        ret['changes']['sid'] = sid
+        ret['comment'] = 'HANA uninstalled'
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
 
 
 def sr_primary_enabled(name, sid, inst, password, **kwargs):

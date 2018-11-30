@@ -87,6 +87,94 @@ def is_installed(sid=None, inst=None, password=None):
     return hana_inst.is_installed()
 
 
+def create_conf_file(software_path, conf_file, root_user, root_password):
+    '''
+    Create SAP HANA configuration template file
+
+    Parameters:
+        software_path (str): Path where SAP HANA software is downloaded
+        conf_file (str): Path where configuration file will be created
+        root_user (str): Root user name
+        root_password (str): Root user password
+
+    Returns:
+        str: Configuration file path
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.create_conf_file /installation_path /home/myuser/hana.conf root root
+    '''
+    return hana.HanaInstance.create_conf_file(
+        software_path, conf_file, root_user, root_password)
+
+
+def update_conf_file(conf_file, **kwargs):
+    '''
+    Update SAP HANA installation configuration file
+
+    Parameters:
+        conf_file (str): Path to the existing configuration file
+        kwargs (dict): Dictionary with the values to be updated. Use the exact
+            name of the SAP configuration file for the key
+
+    Returns:
+        str: Configuration file path
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.update_conf_file /home/myuser /home/myuser/hana.conf sid=PRD
+    '''
+    return hana.HanaInstance.update_conf_file(conf_file, **kwargs)
+
+
+def install(software_path, conf_file, root_user, root_password):
+    '''
+    Install SAP HANA with configuration file
+
+    Parameters:
+        software_path (str): Path where SAP HANA software is downloaded
+        conf_file (str): Path where configuration file will be created
+        root_user (str): Root user name
+        root_password (str): Root user password
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.install /installation_path /home/myuser/hana.conf root root
+    '''
+    return hana.HanaInstance.install(
+        software_path, conf_file, root_user, root_password)
+
+
+def uninstall(
+        root_user, root_password, installation_folder=None,
+        sid=None, inst=None, password=None):
+    '''
+    Uninstall SAP HANA platform
+
+    Parameters:
+        root_user (str): Root user name
+        root_password (str): Root user password
+        installation_folder (str): Path where SAP HANA is installed (/hana/shared by default)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.uninstall root root
+    '''
+    hana_inst = _init(sid, inst, password)
+    kwargs = {}
+    if installation_folder:
+        kwargs.update('installation_folder', installation_folder)
+    hana_inst.uninstall(root_user, root_password, **kwargs)
+
+
 def is_running(sid=None, inst=None, password=None):
     '''
     Check if SAP HANA daemon is running
