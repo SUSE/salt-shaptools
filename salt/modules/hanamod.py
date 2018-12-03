@@ -81,7 +81,7 @@ def is_installed(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.is_installed prd 00 pass
+        salt '*' hana.is_installed prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     return hana_inst.is_installed()
@@ -198,7 +198,7 @@ def is_running(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.is_running prd 00 pass
+        salt '*' hana.is_running prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     return hana_inst.is_running()
@@ -213,7 +213,7 @@ def get_version(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.get_version prd 00 pass
+        salt '*' hana.get_version prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -230,7 +230,7 @@ def start(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.start prd 00 pass
+        salt '*' hana.start prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -247,7 +247,7 @@ def stop(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.stop prd 00 pass
+        salt '*' hana.stop prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -267,7 +267,7 @@ def get_sr_state(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.get_sr_state prd 00 pass
+        salt '*' hana.get_sr_state prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -287,7 +287,7 @@ def sr_enable_primary(name, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_enable_primary NUREMBERG prd 00 pass
+        salt '*' hana.sr_enable_primary NUREMBERG prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -304,7 +304,7 @@ def sr_disable_primary(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_disable_primary prd 00 pass
+        salt '*' hana.sr_disable_primary prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -330,7 +330,7 @@ def sr_register_secondary(
 
     .. code-block:: bash
 
-        salt '*' hana.sr_register_secondary PRAGUE hana01 00 sync logreplay prd 00 pass
+        salt '*' hana.sr_register_secondary PRAGUE hana01 00 sync logreplay prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -352,7 +352,7 @@ def sr_changemode_secondary(new_mode, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_changemode_secondary sync prd 00 pass
+        salt '*' hana.sr_changemode_secondary sync prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -372,7 +372,7 @@ def sr_unregister_secondary(primary_name, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_unregister_secondary NUREMBERG prd 00 pass
+        salt '*' hana.sr_unregister_secondary NUREMBERG prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -395,7 +395,7 @@ def check_user_key(key, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.check_user_key key prd 00 pass
+        salt '*' hana.check_user_key key prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -420,7 +420,7 @@ def create_user_key(
 
     .. code-block:: bash
 
-        salt '*' hana.create_user_key key hana01:30013 SYSTEM pass SYSTEMDB prd 00 pass
+        salt '*' hana.create_user_key key hana01:30013 SYSTEM pass SYSTEMDB prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -445,7 +445,7 @@ def create_backup(
 
     .. code-block:: bash
 
-        salt '*' hana.create_backup key pass SYSTEMDB backup prd 00 pass
+        salt '*' hana.create_backup key pass SYSTEMDB backup prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -466,7 +466,7 @@ def sr_cleanup(force=False, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_cleanup true prd 00 pass
+        salt '*' hana.sr_cleanup true prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
