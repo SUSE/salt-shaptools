@@ -1,0 +1,12 @@
+language: python
+python:
+    - "2.7"
+    - "3.6"
+install:
+    - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock
+    - git clone --depth=50 https://github.com/saltstack/salt.git arbulu89/salt
+    - git clone --depth=50 https://github.com/arbulu89/shaptools.git arbulu89/shaptools
+    - pip install arbulu89/salt
+    - pip install arbulu89/shaptools
+script:
+    - ./tests/run.sh
