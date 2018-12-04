@@ -8,5 +8,8 @@ install:
     - git clone --depth=50 https://github.com/arbulu89/shaptools.git arbulu89/shaptools
     - pip install arbulu89/salt
     - pip install arbulu89/shaptools
+    - pip install pytest pytest-cov mock coveralls
 script:
+    - cd arbulu89/salt-saphana
     - ./tests/run.sh
+    - coveralls
