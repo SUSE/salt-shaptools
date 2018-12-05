@@ -12,6 +12,7 @@ from salt import exceptions
 # Import Salt Testing Libs
 from tests.support.mixins import LoaderModuleMockMixin
 from tests.support.unit import TestCase, skipIf
+from tests.support import mock
 from tests.support.mock import (
     MagicMock,
     patch,
@@ -24,10 +25,59 @@ import salt.modules.hanamod as hanamod
 
 
 @skipIf(NO_MOCK, NO_MOCK_REASON)
-class HanaModuleTest(TestCase):
+class HanaModuleTest(TestCase, LoaderModuleMockMixin):
     '''
     This class contains a set of functions that test salt.modules.hana.
     '''
+
+    def setup_loader_modules(self):
+        return {hanamod: {}}
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_init_return(self, mock_hana):
+        '''
+        Test _init method
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana.return_value = mock_hana_inst
+        hana_inst = hanamod._init('prd', '00', 'pass')
+        mock_hana.assert_called_once_with('prd', '00', 'pass')
+        self.assertEqual(mock_hana_inst, hana_inst)
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_init_return_conf(self, mock_hana):
+        '''
+        Test _init method
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana.return_value = mock_hana_inst
+        mock_config = MagicMock(side_effect=[
+            'conf_sid',
+            'conf_inst',
+            'conf_password'
+        ])
+
+        with patch.dict(hanamod.__salt__, {'config.option': mock_config}):
+            hana_inst = hanamod._init()
+            mock_hana.assert_called_once_with(
+                'conf_sid', 'conf_inst', 'conf_password')
+            self.assertEqual(mock_hana_inst, hana_inst)
+            mock_config.assert_has_calls([
+                mock.call('hana.sid', None),
+                mock.call('hana.inst', None),
+                mock.call('hana.password', None)
+            ])
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_init_raise(self, mock_hana):
+        '''
+        Test _init method
+        '''
+        mock_hana.side_effect = TypeError('error')
+        with self.assertRaises(exceptions.SaltInvocationError) as err:
+            hanamod._init('prd', '00', 'pass')
+        mock_hana.assert_called_once_with('prd', '00', 'pass')
+        self.assertTrue('error' in str(err.exception))
 
     def test_is_installed_return_true(self):
         '''
@@ -52,6 +102,122 @@ class HanaModuleTest(TestCase):
             self.assertFalse(hanamod.is_installed('prd', '00', 'pass'))
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.is_installed.assert_called_once_with()
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_create_conf_file_return(self, mock_hana):
+        '''
+        Test create_conf_file method - return
+        '''
+        mock_hana.create_conf_file.return_value = 'hana.conf'
+        conf_file = hanamod.create_conf_file(
+            'software_path', 'hana.conf', 'root', 'root')
+        self.assertEqual(u'hana.conf', conf_file)
+        mock_hana.create_conf_file.assert_called_once_with(
+            'software_path', 'hana.conf', 'root', 'root')
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_create_conf_file_raise(self, mock_hana):
+        '''
+        Test create_conf_file method - raise
+        '''
+        mock_hana.create_conf_file.side_effect = hanamod.hana.HanaError(
+            'hana error'
+        )
+        with self.assertRaises(exceptions.CommandExecutionError) as err:
+            hanamod.create_conf_file('software_path', 'hana.conf', 'root', 'root')
+        mock_hana.create_conf_file.assert_called_once_with(
+            'software_path', 'hana.conf', 'root', 'root')
+        self.assertTrue('hana error' in str(err.exception))
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_update_conf_file_return(self, mock_hana):
+        '''
+        Test update_conf_file method - return
+        '''
+        mock_hana.update_conf_file.return_value = 'hana.conf'
+        conf_file = hanamod.update_conf_file(
+            'hana.conf', sid='sid', number='00')
+        self.assertEqual(u'hana.conf', conf_file)
+        mock_hana.update_conf_file.assert_called_once_with(
+            'hana.conf', sid='sid', number='00')
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_update_conf_file_raise(self, mock_hana):
+        '''
+        Test update_conf_file method - raise
+        '''
+        mock_hana.update_conf_file.side_effect = IOError('hana error')
+        with self.assertRaises(exceptions.CommandExecutionError) as err:
+            hanamod.update_conf_file('hana.conf', sid='sid', number='00')
+        mock_hana.update_conf_file.assert_called_once_with(
+            'hana.conf', sid='sid', number='00')
+        self.assertTrue('hana error' in str(err.exception))
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_install_return(self, mock_hana):
+        '''
+        Test install method - return
+        '''
+        mock_hana.install.return_value = 'hana.conf'
+        hanamod.install(
+            'software_path', 'hana.conf', 'root', 'root')
+        mock_hana.install.assert_called_once_with(
+            'software_path', 'hana.conf', 'root', 'root')
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_install_raise(self, mock_hana):
+        '''
+        Test install method - raise
+        '''
+        mock_hana.install.side_effect = hanamod.hana.HanaError(
+            'hana error'
+        )
+        with self.assertRaises(exceptions.CommandExecutionError) as err:
+            hanamod.install('software_path', 'hana.conf', 'root', 'root')
+        mock_hana.install.assert_called_once_with(
+            'software_path', 'hana.conf', 'root', 'root')
+        self.assertTrue('hana error' in str(err.exception))
+
+    def test_uninstall_return(self):
+        '''
+        Test uninstall method - return
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            hanamod.uninstall('root', 'pass', '/hana', 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with(
+                'prd', '00', 'pass')
+            mock_hana_inst.uninstall.assert_called_once_with(
+                'root', 'pass', installation_folder='/hana')
+
+    def test_uninstall_return_default(self):
+        '''
+        Test uninstall method - return
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            hanamod.uninstall('root', 'pass', None, 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with(
+                'prd', '00', 'pass')
+            mock_hana_inst.uninstall.assert_called_once_with('root', 'pass')
+
+    def test_uninstall_raise(self):
+        '''
+        Test uninstall method - raise
+        '''
+        mock_hana_inst = MagicMock()
+        mock_hana_inst.uninstall.side_effect = hanamod.hana.HanaError(
+            'hana error'
+        )
+        mock_hana = MagicMock(return_value=mock_hana_inst)
+        with patch.object(hanamod, '_init', mock_hana):
+            with self.assertRaises(exceptions.CommandExecutionError) as err:
+                hanamod.uninstall('root', 'pass', None, 'prd', '00', 'pass')
+            mock_hana.assert_called_once_with('prd', '00', 'pass')
+            mock_hana_inst.uninstall.assert_called_once_with('root', 'pass')
+            self.assertTrue('hana error' in str(err.exception))
 
     def test_is_running_return_true(self):
         '''

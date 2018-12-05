@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.com/arbulu89/salt-saphana.svg?branch=master)](https://travis-ci.com/arbulu89/salt-saphana)
+[![Coverage Status](https://coveralls.io/repos/github/arbulu89/salt-saphana/badge.svg?branch=master)](https://coveralls.io/github/arbulu89/salt-saphana?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/37235828d6a0a770b245/maintainability)](https://codeclimate.com/github/arbulu89/salt-saphana/maintainability)
+
 # SAP HANA salt module
 
 This module has been created to provision SAP HANA platform using salt. For that,

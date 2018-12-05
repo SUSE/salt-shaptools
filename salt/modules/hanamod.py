@@ -30,13 +30,13 @@ from salt import exceptions
 try:
     from shaptools import hana
     HAS_HANA = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_HANA = False
 
 __virtualname__ = 'hana'
 
 
-def __virtual__():
+def __virtual__():  # pragma: no cover
     '''
     Only load this module if shaptools python module is installed
     '''
@@ -81,10 +81,110 @@ def is_installed(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.is_installed prd 00 pass
+        salt '*' hana.is_installed prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     return hana_inst.is_installed()
+
+
+def create_conf_file(software_path, conf_file, root_user, root_password):
+    '''
+    Create SAP HANA configuration template file
+
+    Parameters:
+        software_path (str): Path where SAP HANA software is downloaded
+        conf_file (str): Path where configuration file will be created
+        root_user (str): Root user name
+        root_password (str): Root user password
+
+    Returns:
+        str: Configuration file path
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.create_conf_file /installation_path /home/myuser/hana.conf root root
+    '''
+    try:
+        return hana.HanaInstance.create_conf_file(
+            software_path, conf_file, root_user, root_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
+
+
+def update_conf_file(conf_file, **kwargs):
+    '''
+    Update SAP HANA installation configuration file
+
+    Parameters:
+        conf_file (str): Path to the existing configuration file
+        kwargs (dict): Dictionary with the values to be updated. Use the exact
+            name of the SAP configuration file for the key
+
+    Returns:
+        str: Configuration file path
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.update_conf_file /home/myuser /home/myuser/hana.conf sid=PRD
+    '''
+    try:
+        return hana.HanaInstance.update_conf_file(conf_file, **kwargs)
+    except IOError as err:
+        raise exceptions.CommandExecutionError(str(err))
+
+
+def install(software_path, conf_file, root_user, root_password):
+    '''
+    Install SAP HANA with configuration file
+
+    Parameters:
+        software_path (str): Path where SAP HANA software is downloaded
+        conf_file (str): Path where configuration file will be created
+        root_user (str): Root user name
+        root_password (str): Root user password
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.install /installation_path /home/myuser/hana.conf root root
+    '''
+    try:
+        hana.HanaInstance.install(
+            software_path, conf_file, root_user, root_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
+
+
+def uninstall(
+        root_user, root_password, installation_folder=None,
+        sid=None, inst=None, password=None):
+    '''
+    Uninstall SAP HANA platform
+
+    Parameters:
+        root_user (str): Root user name
+        root_password (str): Root user password
+        installation_folder (str): Path where SAP HANA is installed (/hana/shared by default)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.uninstall root root
+    '''
+    hana_inst = _init(sid, inst, password)
+    kwargs = {}
+    if installation_folder:
+        kwargs['installation_folder'] = installation_folder
+    try:
+        hana_inst.uninstall(root_user, root_password, **kwargs)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(str(err))
 
 
 def is_running(sid=None, inst=None, password=None):
@@ -98,7 +198,7 @@ def is_running(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.is_running prd 00 pass
+        salt '*' hana.is_running prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     return hana_inst.is_running()
@@ -113,7 +213,7 @@ def get_version(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.get_version prd 00 pass
+        salt '*' hana.get_version prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -130,7 +230,7 @@ def start(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.start prd 00 pass
+        salt '*' hana.start prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -147,7 +247,7 @@ def stop(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.stop prd 00 pass
+        salt '*' hana.stop prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -167,7 +267,7 @@ def get_sr_state(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.get_sr_state prd 00 pass
+        salt '*' hana.get_sr_state prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -187,7 +287,7 @@ def sr_enable_primary(name, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_enable_primary NUREMBERG prd 00 pass
+        salt '*' hana.sr_enable_primary NUREMBERG prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -204,7 +304,7 @@ def sr_disable_primary(sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_disable_primary prd 00 pass
+        salt '*' hana.sr_disable_primary prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -230,7 +330,7 @@ def sr_register_secondary(
 
     .. code-block:: bash
 
-        salt '*' hana.sr_register_secondary PRAGUE hana01 00 sync logreplay prd 00 pass
+        salt '*' hana.sr_register_secondary PRAGUE hana01 00 sync logreplay prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -252,7 +352,7 @@ def sr_changemode_secondary(new_mode, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_changemode_secondary sync prd 00 pass
+        salt '*' hana.sr_changemode_secondary sync prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -272,7 +372,7 @@ def sr_unregister_secondary(primary_name, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_unregister_secondary NUREMBERG prd 00 pass
+        salt '*' hana.sr_unregister_secondary NUREMBERG prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -295,7 +395,7 @@ def check_user_key(key, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.check_user_key key prd 00 pass
+        salt '*' hana.check_user_key key prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -320,7 +420,7 @@ def create_user_key(
 
     .. code-block:: bash
 
-        salt '*' hana.create_user_key key hana01:30013 SYSTEM pass SYSTEMDB prd 00 pass
+        salt '*' hana.create_user_key key hana01:30013 SYSTEM pass SYSTEMDB prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -345,7 +445,7 @@ def create_backup(
 
     .. code-block:: bash
 
-        salt '*' hana.create_backup key pass SYSTEMDB backup prd 00 pass
+        salt '*' hana.create_backup key pass SYSTEMDB backup prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
@@ -366,7 +466,7 @@ def sr_cleanup(force=False, sid=None, inst=None, password=None):
 
     .. code-block:: bash
 
-        salt '*' hana.sr_cleanup true prd 00 pass
+        salt '*' hana.sr_cleanup true prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
     try:
