@@ -717,7 +717,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 assert hanamod.sr_clean(
                     name, True, 'pdr', '00', 'pass') == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates.DISABLED')
+    @patch('salt.modules.hanamod.hana.SrStates')
     def test_sr_clean_test(self, mock_disabled):
         '''
         Test to check sr_clean when hana is not disabled
@@ -744,7 +744,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 assert hanamod.sr_clean(
                     name, True, 'pdr', '00', 'pass') == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates.DISABLED')
+    @patch('salt.modules.hanamod.hana.SrStates')
     def test_sr_clean_basic(self, mock_disabled):
         '''
         Test to check sr_clean when hana is already set as secondary
