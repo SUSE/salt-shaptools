@@ -6,7 +6,7 @@ Module to provide SAP HANA functionality to Salt
 
 :maintainer:    Xabier Arbulu Insausti <xarbulu@suse.com>
 :maturity:      alpha
-:depends:       shaptools
+:depends:       ``shaptools`` Python module
 :platform:      all
 
 :configuration: This module requires the shaptools python module and uses the
@@ -18,8 +18,6 @@ Module to provide SAP HANA functionality to Salt
     hana.inst: '00'
     hana.password: 'Qwerty1234'
 '''
-
-# TODO: Add parameters description in methods docstring, using :param format
 
 # Import Python libs
 from __future__ import absolute_import, unicode_literals, print_function
@@ -48,9 +46,19 @@ def __virtual__():  # pragma: no cover
         ' library is not available.')
 
 
-def _init(sid=None, inst=None, password=None):
+def _init(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Returns an instance of the hana instance
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
     '''
     if sid is None:
         sid = __salt__['config.option']('hana.sid', None)
@@ -62,17 +70,22 @@ def _init(sid=None, inst=None, password=None):
     try:
         return hana.HanaInstance(sid, inst, password)
     except TypeError as err:
-        raise exceptions.SaltInvocationError(str(err))
+        raise exceptions.SaltInvocationError(err)
 
 
-def is_installed(sid=None, inst=None, password=None):
+def is_installed(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Check if SAP HANA platform is installed
 
-    Parameters:
-        sid (str): HANA system id (PRD for example)
-        inst (str): HANA instance number (00 for example)
-        password (str): HANA instance password
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     Returns:
         bool: True if installed, False otherwise
@@ -87,15 +100,22 @@ def is_installed(sid=None, inst=None, password=None):
     return hana_inst.is_installed()
 
 
-def create_conf_file(software_path, conf_file, root_user, root_password):
+def create_conf_file(
+        software_path,
+        conf_file,
+        root_user,
+        root_password):
     '''
     Create SAP HANA configuration template file
 
-    Parameters:
-        software_path (str): Path where SAP HANA software is downloaded
-        conf_file (str): Path where configuration file will be created
-        root_user (str): Root user name
-        root_password (str): Root user password
+    software_path
+        Path where SAP HANA software is downloaded
+    conf_file
+        Path where configuration file will be created
+    root_user
+        Root user name
+    root_password
+        Root user password
 
     Returns:
         str: Configuration file path
@@ -110,17 +130,19 @@ def create_conf_file(software_path, conf_file, root_user, root_password):
         return hana.HanaInstance.create_conf_file(
             software_path, conf_file, root_user, root_password)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def update_conf_file(conf_file, **kwargs):
+def update_conf_file(
+        conf_file,
+        **extra_parameters):
     '''
     Update SAP HANA installation configuration file
 
-    Parameters:
-        conf_file (str): Path to the existing configuration file
-        kwargs (dict): Dictionary with the values to be updated. Use the exact
-            name of the SAP configuration file for the key
+    conf_file
+        Path to the existing configuration file
+    extra_parameters (dict): Dictionary with the values to be updated. Use the exact
+        name of the SAP configuration file for the key
 
     Returns:
         str: Configuration file path
@@ -132,20 +154,27 @@ def update_conf_file(conf_file, **kwargs):
         salt '*' hana.update_conf_file /home/myuser /home/myuser/hana.conf sid=PRD
     '''
     try:
-        return hana.HanaInstance.update_conf_file(conf_file, **kwargs)
+        return hana.HanaInstance.update_conf_file(conf_file, **extra_parameters)
     except IOError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def install(software_path, conf_file, root_user, root_password):
+def install(
+        software_path,
+        conf_file,
+        root_user,
+        root_password):
     '''
     Install SAP HANA with configuration file
 
-    Parameters:
-        software_path (str): Path where SAP HANA software is downloaded
-        conf_file (str): Path where configuration file will be created
-        root_user (str): Root user name
-        root_password (str): Root user password
+    software_path
+        Path where SAP HANA software is downloaded
+    conf_file
+        Path where configuration file will be created
+    root_user
+        Root user name
+    root_password
+        Root user password
 
     CLI Example:
 
@@ -157,19 +186,31 @@ def install(software_path, conf_file, root_user, root_password):
         hana.HanaInstance.install(
             software_path, conf_file, root_user, root_password)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
 def uninstall(
-        root_user, root_password, installation_folder=None,
-        sid=None, inst=None, password=None):
+        root_user,
+        root_password,
+        installation_folder=None,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Uninstall SAP HANA platform
 
-    Parameters:
-        root_user (str): Root user name
-        root_password (str): Root user password
-        installation_folder (str): Path where SAP HANA is installed (/hana/shared by default)
+    root_user
+        Root user name
+    root_password
+        Root user password
+    installation_folder
+        Path where SAP HANA is installed (/hana/shared by default)
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -184,12 +225,22 @@ def uninstall(
     try:
         hana_inst.uninstall(root_user, root_password, **kwargs)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def is_running(sid=None, inst=None, password=None):
+def is_running(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Check if SAP HANA daemon is running
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     Returns:
         bool: True if running, False otherwise
@@ -205,9 +256,19 @@ def is_running(sid=None, inst=None, password=None):
 
 
 # pylint:disable=W1401
-def get_version(sid=None, inst=None, password=None):
+def get_version(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Get SAP HANA version
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -219,12 +280,22 @@ def get_version(sid=None, inst=None, password=None):
     try:
         return hana_inst.get_version()
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def start(sid=None, inst=None, password=None):
+def start(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Start hana instance
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -236,12 +307,22 @@ def start(sid=None, inst=None, password=None):
     try:
         hana_inst.start()
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def stop(sid=None, inst=None, password=None):
+def stop(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Stop hana instance
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -253,12 +334,22 @@ def stop(sid=None, inst=None, password=None):
     try:
         hana_inst.stop()
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def get_sr_state(sid=None, inst=None, password=None):
+def get_sr_state(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Get system replication status in th current node
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     Returns:
         SrStates: System replication state
@@ -273,15 +364,25 @@ def get_sr_state(sid=None, inst=None, password=None):
     try:
         return hana_inst.get_sr_state()
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def sr_enable_primary(name, sid=None, inst=None, password=None):
+def sr_enable_primary(
+        name,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Enable SAP HANA system replication as primary node
 
-    Parameters:
-        name (str): Name to give to the node
+    name
+        Name to give to the node
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -293,12 +394,22 @@ def sr_enable_primary(name, sid=None, inst=None, password=None):
     try:
         hana_inst.sr_enable_primary(name)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def sr_disable_primary(sid=None, inst=None, password=None):
+def sr_disable_primary(
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Disable SAP HANA system replication as primary node
+
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -310,21 +421,37 @@ def sr_disable_primary(sid=None, inst=None, password=None):
     try:
         hana_inst.sr_disable_primary()
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
 def sr_register_secondary(
-        name, remote_host, remote_instance,
-        replication_mode, operation_mode, sid=None, inst=None, password=None):
+        name,
+        remote_host,
+        remote_instance,
+        replication_mode,
+        operation_mode,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Register SAP HANA system replication as secondary node
 
-    Parameters:
-        name (str): Name to give to the node
-        remote_host (str): Primary node hostname
-        remote_instance (str): Primary node instance
-        replication_mode (str): Replication mode
-        operation_mode (str): Operation mode
+    name
+        Name to give to the node
+    remote_host
+        Primary node hostname
+    remote_instance
+        Primary node instance
+    replication_mode
+        Replication mode
+    operation_mode
+        Operation mode
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -338,15 +465,25 @@ def sr_register_secondary(
             name, remote_host, remote_instance,
             replication_mode, operation_mode)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def sr_changemode_secondary(new_mode, sid=None, inst=None, password=None):
+def sr_changemode_secondary(
+        new_mode,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Change secondary synchronization mode
 
-    Parameters:
-        new_mode (str): New mode between sync|syncmem|async
+    new_mode
+        New mode between sync|syncmem|async
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -358,15 +495,25 @@ def sr_changemode_secondary(new_mode, sid=None, inst=None, password=None):
     try:
         hana_inst.sr_changemode_secondary(new_mode)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def sr_unregister_secondary(primary_name, sid=None, inst=None, password=None):
+def sr_unregister_secondary(
+        primary_name,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Unegister SAP HANA system replication from primary node
 
-    Parameters:
-        name (str): Name to give to the node
+    name
+        Name to give to the node
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -378,15 +525,25 @@ def sr_unregister_secondary(primary_name, sid=None, inst=None, password=None):
     try:
         hana_inst.sr_unregister_secondary(primary_name)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def check_user_key(key, sid=None, inst=None, password=None):
+def check_user_key(
+        key,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Check the use key existance
 
-    Parameters:
-        key (str): User key name
+    key
+        User key name
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     Returns:
         bool: True if it exists, False otherwise
@@ -401,20 +558,37 @@ def check_user_key(key, sid=None, inst=None, password=None):
     try:
         return hana_inst.check_user_key(key)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
 def create_user_key(
-        key, environment, user, user_password, database=None, sid=None, inst=None, password=None):
+        key,
+        environment,
+        user,
+        user_password,
+        database=None,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Create user key entry for the database
 
-    Parameters:
-        key (str): User key
-        environment (str): Key environment
-        user (srt): User name
-        user_password (str): User password
-        database (str, opt): Database name
+    key
+        User key
+    environment
+        Key environment
+    user
+        User name
+    user_password
+        User password
+    database
+        Database name
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -427,19 +601,34 @@ def create_user_key(
         hana_inst.create_user_key(
             key, environment, user, user_password, database)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
 def create_backup(
-        user_key, user_password, database, backup_name, sid=None, inst=None, password=None):
+        user_key,
+        user_password,
+        database,
+        backup_name,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Create the primary node backup
 
-    Parameters:
-        user_key (str): User key name
-        user_password (str): User key password
-        database (str): Database name
-        back_name (str): Backup name
+    user_key
+        User key name
+    user_password
+        User key password
+    database
+        Database name
+    back_name
+        Backup name
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -452,15 +641,25 @@ def create_backup(
         hana_inst.create_backup(
             user_key, user_password, database, backup_name)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
 
 
-def sr_cleanup(force=False, sid=None, inst=None, password=None):
+def sr_cleanup(
+        force=False,
+        sid=None,
+        inst=None,
+        password=None):
     '''
     Clean system replication state
 
-    Parameters:
-        force (bool): Force cleanup
+    force
+        Force cleanup
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
 
     CLI Example:
 
@@ -472,4 +671,4 @@ def sr_cleanup(force=False, sid=None, inst=None, password=None):
     try:
         hana_inst.sr_cleanup(force)
     except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(str(err))
+        raise exceptions.CommandExecutionError(err)
