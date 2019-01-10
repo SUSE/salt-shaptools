@@ -57,7 +57,7 @@ def cluster_status():
         salt '*' crm.status
     '''
     cmd = '{crm_command} cluster status'.format(crm_command=CRM_COMMAND)
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_start():
@@ -71,7 +71,7 @@ def cluster_start():
         salt '*' crm.start
     '''
     cmd = '{crm_command} cluster start'.format(crm_command=CRM_COMMAND)
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_stop():
@@ -85,7 +85,7 @@ def cluster_stop():
         salt '*' crm.stop
     '''
     cmd = '{crm_command} cluster stop'.format(crm_command=CRM_COMMAND)
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_run(
@@ -102,7 +102,7 @@ def cluster_run(
     '''
     cmd = '{crm_command} cluster run "{cmd}"'.format(
         crm_command=CRM_COMMAND, cmd=cmd)
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_health():
@@ -116,7 +116,7 @@ def cluster_health():
         salt '*' crm.health
     '''
     cmd = '{crm_command} cluster health'.format(crm_command=CRM_COMMAND)
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def wait_for_startup(
@@ -141,7 +141,7 @@ def wait_for_startup(
         if not isinstance(timeout, int):
             raise exceptions.SaltInvocationError('timeout must be integer type')
         cmd = '{cmd} {timeout}'.format(cmd=cmd, timeout=timeout)
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_init(
@@ -199,7 +199,7 @@ def cluster_init(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_join(
@@ -237,7 +237,7 @@ def cluster_join(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)
 
 
 def cluster_remove(
@@ -250,7 +250,7 @@ def cluster_remove(
     host
         Hostname or ip address of a node of an existing cluster
     force
-        Force removal. If the node
+        Force removal. If the host is itself it's mandatory
     quiet:
         execute the command in quiet mode (no output)
 
@@ -258,7 +258,7 @@ def cluster_remove(
 
     .. code-block:: bash
 
-        salt '*' crm.remove 192.168.1.41 true
+        salt '*' crm.remove 192.168.1.41 True
     '''
     cmd = '{crm_command} cluster remove -y -c {host}'.format(
         crm_command=CRM_COMMAND, host=host)
@@ -267,4 +267,4 @@ def cluster_remove(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
-    return __salt__['cmd.run'](cmd)
+    return __salt__['cmd.retcode'](cmd)

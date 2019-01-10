@@ -40,7 +40,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_status()
             assert result
             mock_cmd_run.assert_called_once_with('{crm_command} cluster status'.format(
@@ -52,7 +52,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_start()
             assert result
             mock_cmd_run.assert_called_once_with('{crm_command} cluster start'.format(
@@ -64,7 +64,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_stop()
             assert result
             mock_cmd_run.assert_called_once_with('{crm_command} cluster stop'.format(
@@ -76,7 +76,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_run('ls -la')
             assert result
             mock_cmd_run.assert_called_once_with(
@@ -89,7 +89,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_health()
             assert result
             mock_cmd_run.assert_called_once_with('{crm_command} cluster health'.format(
@@ -101,7 +101,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.wait_for_startup()
             assert result
             mock_cmd_run.assert_called_once_with(
@@ -114,7 +114,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.wait_for_startup(5)
             assert result
             mock_cmd_run.assert_called_once_with(
@@ -127,7 +127,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             with pytest.raises(exceptions.SaltInvocationError) as err:
                 crmshmod.wait_for_startup(5.0)
             assert 'timeout must be integer type' in str(err)
@@ -138,7 +138,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_init('hacluster')
             assert result
             mock_cmd_run.assert_called_once_with(
@@ -151,7 +151,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_init(
                 'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
             assert result
@@ -165,7 +165,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_join('192.168.1.50')
             assert result
             mock_cmd_run.assert_called_once_with(
@@ -178,7 +178,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_join(
                 '192.168.1.50', 'dog', 'eth1', True)
             assert result
@@ -192,7 +192,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_remove('192.168.1.50')
             assert result
             mock_cmd_run.assert_called_once_with(
@@ -205,7 +205,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod.cluster_remove(
                 '192.168.1.50', True, True)
             assert result
