@@ -62,7 +62,7 @@ def cluster_absent(
            'result': False,
            'comment': ''}
 
-    if __salt__['crm.cluster_status']():
+    if __salt__['crm.status']():
         ret['result'] = True
         ret['comment'] = 'Cluster is not running already'
         return ret
@@ -131,7 +131,7 @@ def cluster_initialized(
            'result': False,
            'comment': ''}
 
-    if not __salt__['crm.cluster_status']():
+    if not __salt__['crm.status']():
         ret['result'] = True
         ret['comment'] = 'Cluster is already initialized'
         return ret
@@ -190,7 +190,7 @@ def cluster_joined(
            'result': False,
            'comment': ''}
 
-    if not __salt__['crm.cluster_status']():
+    if not __salt__['crm.status']():
         ret['result'] = True
         ret['comment'] = 'Node is already joined to a cluster'
         return ret
@@ -217,6 +217,62 @@ def cluster_joined(
 
         ret['changes']['name'] = name
         ret['comment'] = 'Node joined to cluster'
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+
+
+def cluster_configured(
+        method,
+        url,
+        is_xml=None):
+    """
+    Machine is congifured with the provided configuration file
+
+    method
+        Used method. replace, update or push
+    url
+        Configuration file path or url
+    is_xml:
+        True if the configuration file is xml type, False otherwise
+    """
+    ret = {'name': method,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Cluster would be configured with method {} and file {}'.format(
+            method, url)
+        ret['changes']['method'] = method
+        ret['changes']['url'] = url
+        return ret
+
+    try:
+        #  Here starts the actual process
+        if __salt__['crm.status']():
+            ret['result'] = False
+            ret['comment'] = 'Cluster is not created yet. Run cluster_initialized before'
+            return ret
+
+        result = __salt__['crm.configure_load'](
+            method=method,
+            url=url,
+            is_xml=is_xml)
+
+        if result:
+            ret['comment'] = 'Error configuring the cluster with method {} and file {}'.format(
+                method, url)
+            ret['result'] = False
+            return ret
+
+        ret['changes']['method'] = method
+        ret['changes']['url'] = url
+        ret['comment'] = 'Cluster properly configured'
         ret['result'] = True
         return ret
 

@@ -34,6 +34,18 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
     def setup_loader_modules(self):
         return {crmshmod: {}}
 
+    def test_status(self):
+        '''
+        Test status method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.status()
+            assert result
+            mock_cmd_run.assert_called_once_with('{crm_command} status'.format(
+                crm_command=crmshmod.CRM_COMMAND))
+
     def test_cluster_status(self):
         '''
         Test cluster_status method
@@ -212,3 +224,33 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             mock_cmd_run.assert_called_once_with(
                 '{} cluster remove -y -c {} --force -q'.format(
                     crmshmod.CRM_COMMAND, '192.168.1.50'))
+
+    def test_configure_load_basic(self):
+        '''
+        Test configure_load method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_load('update', 'file.conf')
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure load {method} {url}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    method='update',
+                    url='file.conf'))
+
+    def test_configure_load_complete(self):
+        '''
+        Test cluster_remove method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_load('update', 'file.conf', True)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure load xml {method} {url}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    method='update',
+                    url='file.conf'))

@@ -46,6 +46,21 @@ def __virtual__():  # pragma: no cover
         ' library is not available.')
 
 
+def status():
+    '''
+    Show cluster status. The status is displayed by crm_mon. Supply additional
+    arguments for more information or different format.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' crm.status
+    '''
+    cmd = '{crm_command} status'.format(crm_command=CRM_COMMAND)
+    return __salt__['cmd.retcode'](cmd)
+
+
 def cluster_status():
     '''
     Reports the status for the cluster messaging layer on the local node
@@ -54,7 +69,7 @@ def cluster_status():
 
     .. code-block:: bash
 
-        salt '*' crm.status
+        salt '*' crm.cluster_status
     '''
     cmd = '{crm_command} cluster status'.format(crm_command=CRM_COMMAND)
     return __salt__['cmd.retcode'](cmd)
@@ -68,7 +83,7 @@ def cluster_start():
 
     .. code-block:: bash
 
-        salt '*' crm.start
+        salt '*' crm.cluster_start
     '''
     cmd = '{crm_command} cluster start'.format(crm_command=CRM_COMMAND)
     return __salt__['cmd.retcode'](cmd)
@@ -82,7 +97,7 @@ def cluster_stop():
 
     .. code-block:: bash
 
-        salt '*' crm.stop
+        salt '*' crm.cluster_stop
     '''
     cmd = '{crm_command} cluster stop'.format(crm_command=CRM_COMMAND)
     return __salt__['cmd.retcode'](cmd)
@@ -98,7 +113,7 @@ def cluster_run(
 
     .. code-block:: bash
 
-        salt '*' crm.run "pwd"
+        salt '*' crm.cluster_run "pwd"
     '''
     cmd = '{crm_command} cluster run "{cmd}"'.format(
         crm_command=CRM_COMMAND, cmd=cmd)
@@ -113,7 +128,7 @@ def cluster_health():
 
     .. code-block:: bash
 
-        salt '*' crm.health
+        salt '*' crm.cluster_health
     '''
     cmd = '{crm_command} cluster health'.format(crm_command=CRM_COMMAND)
     return __salt__['cmd.retcode'](cmd)
@@ -134,7 +149,7 @@ def wait_for_startup(
 
     .. code-block:: bash
 
-        salt '*' crm.health
+        salt '*' crm.wait_for_startup
     '''
     cmd = '{crm_command} cluster wait_for_startup'.format(crm_command=CRM_COMMAND)
     if timeout:
@@ -180,7 +195,7 @@ def cluster_init(
 
     .. code-block:: bash
 
-        salt '*' crm.init hacluster
+        salt '*' crm.cluster_init hacluster
     '''
     cmd = '{crm_command} cluster init -y -n {name}'.format(
         crm_command=CRM_COMMAND, name=name)
@@ -226,7 +241,7 @@ def cluster_join(
 
     .. code-block:: bash
 
-        salt '*' crm.join 192.168.1.41
+        salt '*' crm.cluster_join 192.168.1.41
     '''
     cmd = '{crm_command} cluster join -y -c {host}'.format(
         crm_command=CRM_COMMAND, host=host)
@@ -258,7 +273,7 @@ def cluster_remove(
 
     .. code-block:: bash
 
-        salt '*' crm.remove 192.168.1.41 True
+        salt '*' crm.cluster_remove 192.168.1.41 True
     '''
     cmd = '{crm_command} cluster remove -y -c {host}'.format(
         crm_command=CRM_COMMAND, host=host)
@@ -266,5 +281,38 @@ def cluster_remove(
         cmd = '{cmd} --force'.format(cmd=cmd)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
+
+    return __salt__['cmd.retcode'](cmd)
+
+
+def configure_load(
+        method,
+        url,
+        is_xml=None):
+    '''
+    Load a part of configuration (or all of it) from a local file or a
+    network URL. The replace method replaces the current configuration with
+    the one from the source. The update method tries to import the contents
+    into the current configuration. The push method imports the contents into
+    the current configuration and removes any lines that are not present in
+    the given configuration. The file may be a CLI file or an XML file.
+
+    method
+        Used method (check in the description)
+    url
+        Used configuration file url (or path if it's a local file)
+    is_xml:
+        Set to true if the file is an xml file
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' crm.configure_load update file.conf
+    '''
+    cmd = '{crm_command} configure load {xml}{method} {url}'.format(
+        crm_command=CRM_COMMAND,
+        xml='xml ' if is_xml else '',
+        method=method, url=url)
 
     return __salt__['cmd.retcode'](cmd)
