@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.com/arbulu89/salt-saphana.svg?branch=master)](https://travis-ci.com/arbulu89/salt-saphana)
-[![Coverage Status](https://coveralls.io/repos/github/arbulu89/salt-saphana/badge.svg?branch=master)](https://coveralls.io/github/arbulu89/salt-saphana?branch=master)
-[![Maintainability](https://api.codeclimate.com/v1/badges/37235828d6a0a770b245/maintainability)](https://codeclimate.com/github/arbulu89/salt-saphana/maintainability)
+[![Build Status](https://travis-ci.org/SUSE/salt-saphana.svg?branch=master)](https://travis-ci.org/SUSE/salt-saphana)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/93d708a68b4295163e68/test_coverage)](https://codeclimate.com/github/SUSE/salt-saphana/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/93d708a68b4295163e68/maintainability)](https://codeclimate.com/github/SUSE/salt-saphana/maintainability)
 
 # SAP HANA salt module
 
