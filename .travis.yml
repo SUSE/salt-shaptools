@@ -18,4 +18,4 @@ before_script:
 script:
     - ./tests/run.sh
 after_script:
-  - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p ../salt
+  - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p $(readlink -f ../salt)
