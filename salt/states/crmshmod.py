@@ -64,12 +64,12 @@ def cluster_absent(
 
     if __salt__['crm.status']():
         ret['result'] = True
-        ret['comment'] = 'Cluster is not running already'
+        ret['comment'] = 'Cluster is already not running'
         return ret
 
     if __opts__['test']:
         ret['result'] = None
-        ret['comment'] = 'Cluster in {} would be removed'.format(name)
+        ret['comment'] = 'Cluster node {} would be removed'.format(name)
         ret['changes']['name'] = name
         return ret
 
@@ -82,12 +82,12 @@ def cluster_absent(
 
         if result:
             ret['changes']['name'] = name
-            ret['comment'] = 'Error removing cluster'
+            ret['comment'] = 'Error removing cluster node'
             ret['result'] = False
             return ret
 
         ret['changes']['name'] = name
-        ret['comment'] = 'Cluster removed'
+        ret['comment'] = 'Cluster node removed'
         ret['result'] = True
         return ret
 
@@ -211,12 +211,12 @@ def cluster_joined(
 
         if result:
             ret['changes']['name'] = name
-            ret['comment'] = 'Error joining to cluster'
+            ret['comment'] = 'Error joining to the cluster'
             ret['result'] = False
             return ret
 
         ret['changes']['name'] = name
-        ret['comment'] = 'Node joined to cluster'
+        ret['comment'] = 'Node joined to the cluster'
         ret['result'] = True
         return ret
 

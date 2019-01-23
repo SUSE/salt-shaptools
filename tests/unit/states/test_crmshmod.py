@@ -41,7 +41,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'localhost',
                'changes': {},
                'result': True,
-               'comment': 'Cluster is not running already'}
+               'comment': 'Cluster is already not running'}
 
         mock_status = MagicMock(return_value=1)
         with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
@@ -56,7 +56,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'localhost',
                'changes': {'name': 'localhost'},
                'result': None,
-               'comment': 'Cluster in {} would be removed'.format('localhost')}
+               'comment': 'Cluster node {} would be removed'.format('localhost')}
 
         mock_status = MagicMock(return_value=0)
         with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
@@ -72,7 +72,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'localhost',
                'changes': {'name': 'localhost'},
                'result': True,
-               'comment': 'Cluster removed'}
+               'comment': 'Cluster node removed'}
 
         mock_status = MagicMock(return_value=0)
         mock_remove = MagicMock(return_value=0)
@@ -91,7 +91,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'localhost',
                'changes': {'name': 'localhost'},
                'result': False,
-               'comment': 'Error removing cluster'}
+               'comment': 'Error removing cluster node'}
 
         mock_status = MagicMock(return_value=0)
         mock_remove = MagicMock(return_value=1)
@@ -299,7 +299,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'master',
                'changes': {'name': 'master'},
                'result': True,
-               'comment': 'Node joined to cluster'}
+               'comment': 'Node joined to the cluster'}
 
         mock_status = MagicMock(return_value=1)
         mock_join = MagicMock(return_value=0)
@@ -325,7 +325,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'master',
                'changes': {'name': 'master'},
                'result': False,
-               'comment': 'Error joining to cluster'}
+               'comment': 'Error joining to the cluster'}
 
         mock_status = MagicMock(return_value=1)
         mock_join = MagicMock(return_value=1)
