@@ -4,7 +4,7 @@ python:
     - "3.6"
 install:
     - pip install --upgrade pip
-    - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock
+    - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov enum34
     - git clone --depth=50 https://github.com/openSUSE/salt ../salt
     - rm ../salt/tests/conftest.py
     - git clone --depth=50 https://github.com/arbulu89/shaptools.git ../shaptools
