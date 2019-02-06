@@ -5,7 +5,7 @@
 # SAP HANA salt module
 
 This module has been created to provision SAP HANA platform using salt. For that,
-it wraps the [shaptools](https://github.com/arbulu89/shaptools) project code. The
+it wraps the [shaptools](https://github.com/SUSE/shaptools) project code. The
 main idea is to use this module in salt formulas to deploye the HANA platform
 easily.
 
