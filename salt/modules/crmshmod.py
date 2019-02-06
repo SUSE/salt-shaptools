@@ -21,13 +21,8 @@ Module to provide CRM shell (HA cluster) functionality to Salt
 from __future__ import absolute_import, unicode_literals, print_function
 
 from salt import exceptions
+import salt.utils.path
 
-# Import third party libs
-try: # pragma: no cover
-    import crmsh
-    HAS_CRMSH = True
-except ImportError:
-    HAS_CRMSH = False
 
 __virtualname__ = 'crm'
 
@@ -38,7 +33,7 @@ def __virtual__():  # pragma: no cover
     '''
     Only load this module if shaptools python module is installed
     '''
-    if HAS_CRMSH:
+    if bool(salt.utils.path.which(CRM_COMMAND)):
         return __virtualname__
     return (
         False,
