@@ -180,7 +180,7 @@ def installed(
                 conf_file=config_file,
                 sid=sid.upper(),
                 password=password,
-                number=inst,
+                number='{:0>2}'.format(inst),
                 root_user=root_user,
                 root_password=root_password,
                 sapadm_password=sapadm_password,
