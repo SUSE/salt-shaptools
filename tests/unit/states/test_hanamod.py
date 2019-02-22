@@ -126,7 +126,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.install': mock_install,
                                            'file.remove': mock_remove}):
             assert hanamod.installed(
-                'prd', '00', 'pass', '/software',
+                'prd', 0, 'pass', '/software',
                 'root', 'pass',
                 system_user_password='sys_pass',
                 sapadm_password='pass',
