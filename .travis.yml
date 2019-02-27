@@ -52,6 +52,7 @@ jobs:
           - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p $(readlink -f ../salt)
 
     - stage: delivery
+      if: type != pull_request
       env:
         global:
           - FOLDER=/package
@@ -72,7 +73,7 @@ jobs:
           /bin/bash -c "cd /package;/scripts/upload.sh"
 
     - stage: submit
-      if: branch = master
+      if: type != pull_request AND branch = master
       env:
         global:
           - PACKAGE_NAME=salt-saphana
