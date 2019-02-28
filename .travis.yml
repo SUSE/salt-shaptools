@@ -1,21 +1,93 @@
+sudo: required
+services:
+  - docker
+
 language: python
-python:
-    - "2.7"
-    - "3.6"
-install:
-    - pip install --upgrade pip
-    - pip install --upgrade pytest
-    - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov enum34
-    - git clone --depth=50 https://github.com/openSUSE/salt ../salt
-    - rm ../salt/tests/conftest.py
-    - git clone --depth=50 https://github.com/SUSE/shaptools.git ../shaptools
-    - pip install ../salt
-    - pip install ../shaptools
-before_script:
-    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-    - chmod +x ./cc-test-reporter
-    - ./cc-test-reporter before-build
-script:
-    - ./tests/run.sh
-after_script:
-  - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p $(readlink -f ../salt)
+
+stages:
+  - test
+  - delivery
+  - submit
+
+jobs:
+  include:
+    - stage: test
+      python: 2.7
+      install:
+          - pip install --upgrade pip
+          - pip install --upgrade pytest
+          - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov enum34
+          - git clone --depth=50 https://github.com/openSUSE/salt ../salt
+          - rm ../salt/tests/conftest.py
+          - git clone --depth=50 https://github.com/arbulu89/shaptools.git ../shaptools
+          - pip install ../salt
+          - pip install ../shaptools
+      before_script:
+          - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          - chmod +x ./cc-test-reporter
+          - ./cc-test-reporter before-build
+      script:
+          - ./tests/run.sh
+      after_script:
+          - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p $(readlink -f ../salt)
+
+    - stage: test
+      python: 3.6
+      install:
+          - pip install --upgrade pip
+          - pip install --upgrade pytest
+          - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov enum34
+          - git clone --depth=50 https://github.com/openSUSE/salt ../salt
+          - rm ../salt/tests/conftest.py
+          - git clone --depth=50 https://github.com/arbulu89/shaptools.git ../shaptools
+          - pip install ../salt
+          - pip install ../shaptools
+      before_script:
+          - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          - chmod +x ./cc-test-reporter
+          - ./cc-test-reporter before-build
+      script:
+          - ./tests/run.sh
+      after_script:
+          - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p $(readlink -f ../salt)
+
+    - stage: delivery
+      if: type != pull_request
+      env:
+        global:
+          - FOLDER=/package
+          - PACKAGE_NAME=salt-saphana
+
+      before_install:
+        - docker pull shap/continuous_deliver:latest
+
+      script:
+        - |
+          docker run -t -v "$(pwd):/package" \
+          -e OBS_USER=$OBS_USER \
+          -e OBS_PASS=$OBS_PASS \
+          -e FOLDER=$FOLDER \
+          -e OBS_PROJECT=$OBS_PROJECT \
+          -e PACKAGE_NAME=$PACKAGE_NAME \
+          shap/continuous_deliver \
+          /bin/bash -c "cd /package;/scripts/upload.sh"
+
+    - stage: submit
+      if: type != pull_request AND branch = master
+      env:
+        global:
+          - PACKAGE_NAME=salt-saphana
+
+      before_install:
+        - docker pull shap/continuous_deliver:latest
+
+      script:
+        - |
+          docker run -t -v "$(pwd):/package" \
+          -e OBS_USER=$OBS_USER \
+          -e OBS_PASS=$OBS_PASS \
+          -e OBS_PROJECT=$OBS_PROJECT \
+          -e PACKAGE_NAME=$PACKAGE_NAME \
+          -e TARGET_PROJECT=$TARGET_PROJECT \
+          shap/continuous_deliver \
+          /bin/bash -c "cd /package;/scripts/submit.sh"
