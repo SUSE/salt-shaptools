@@ -26,7 +26,7 @@ State module to provide SAP HANA functionality to Salt
         - root_user: 'root'
         - root_password: 's'
         - software_path: '/root/sap_inst/51052481'
-        - sid: 'prd'
+        - name: 'prd'
         - inst: '00'
         - password: 'Qwerty1234'
         - config_file: salt://hana_conf/hana.conf
@@ -96,7 +96,7 @@ def _parse_dict(dict_params):
 
 
 def installed(
-        sid,
+        name,
         inst,
         password,
         software_path,
@@ -112,7 +112,7 @@ def installed(
     using the *config_file* option, or if this value is not set, the sapadm_password
     and system_user_password values are mandatory
 
-    sid
+    name
         System id of the installed hana platform
     inst
         Instance number of the installed hana platform
@@ -139,6 +139,8 @@ def installed(
     extra_parameters
         Optional configuration parameters (exact name as in the config file as a key)
     """
+    sid = name
+
     ret = {'name': sid,
            'changes': {},
            'result': False,
@@ -211,7 +213,7 @@ def installed(
 
 
 def uninstalled(
-        sid,
+        name,
         inst,
         password,
         root_user,
@@ -219,8 +221,7 @@ def uninstalled(
         installation_folder=None):
     '''
     Uninstall SAP HANA from node
-
-    sid
+    name
         System id of the installed hana platform
     inst
         Instance number of the installed hana platform
@@ -233,6 +234,8 @@ def uninstalled(
     instalation_folder
         HANA installation folder
     '''
+    sid = name
+
     ret = {'name': sid,
            'changes': {},
            'result': False,
@@ -491,25 +494,24 @@ def sr_secondary_registered(
 
 def sr_clean(
         name,
-        force,
-        sid,
         inst,
-        password):
+        password,
+        force):
     '''
     Clean the current node system replication mode
     name:
-        Just for logging purposes
-    force
-        Force cleanup process
-    sid
         System id of the installed hana platform
     inst
         Instance number of the installed hana platform
     password
         Password of the installed hana platform user
+    force
+        Force cleanup process
     '''
 
-    ret = {'name': name,
+    sid = name
+
+    ret = {'name': sid,
            'changes': {},
            'result': False,
            'comment': ''}
@@ -549,10 +551,10 @@ def sr_clean(
                 inst=inst,
                 password=password)
         __salt__['hana.sr_cleanup'](
-            force=force,
             sid=sid,
             inst=inst,
-            password=password)
+            password=password,
+            force=force)
         new_state = __salt__['hana.get_sr_state'](
             sid=sid,
             inst=inst,

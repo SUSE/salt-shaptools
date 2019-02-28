@@ -54,9 +54,8 @@ jobs:
     - stage: delivery
       if: type != pull_request
       env:
-        global:
-          - FOLDER=/package
-          - PACKAGE_NAME=salt-saphana
+        - FOLDER=/package
+        - PACKAGE_NAME=salt-saphana
 
       before_install:
         - docker pull shap/continuous_deliver:latest
@@ -75,8 +74,7 @@ jobs:
     - stage: submit
       if: type != pull_request AND branch = master
       env:
-        global:
-          - PACKAGE_NAME=salt-saphana
+        - PACKAGE_NAME=salt-saphana
 
       before_install:
         - docker pull shap/continuous_deliver:latest

@@ -596,7 +596,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_hana_inst = MagicMock()
         mock_hana = MagicMock(return_value=mock_hana_inst)
         with patch.object(hanamod, '_init', mock_hana):
-            hanamod.sr_cleanup(True, 'prd', '00', 'pass')
+            hanamod.sr_cleanup('prd', '00', 'pass', True)
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_cleanup.assert_called_once_with(True)
 
@@ -611,7 +611,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_hana = MagicMock(return_value=mock_hana_inst)
         with patch.object(hanamod, '_init', mock_hana):
             with pytest.raises(exceptions.CommandExecutionError) as err:
-                hanamod.sr_cleanup(False, 'prd', '00', 'pass')
+                hanamod.sr_cleanup('prd', '00', 'pass', False)
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_cleanup.assert_called_once_with(False)
             assert 'hana error' in str(err)

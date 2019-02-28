@@ -226,19 +226,21 @@ def cluster_joined(
 
 
 def cluster_configured(
-        method,
+        name,
         url,
         is_xml=None):
     """
     Machine is congifured with the provided configuration file
 
-    method
+    name
         Used method. replace, update or push
     url
         Configuration file path or url
     is_xml:
         True if the configuration file is xml type, False otherwise
     """
+    method = name
+
     ret = {'name': method,
            'changes': {},
            'result': False,

@@ -681,7 +681,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         '''
         Test to check sr_clean when hana is not installed
         '''
-        name = 'SITE1'
+        name = 'pdr'
 
         ret = {'name': name,
                'changes': {},
@@ -691,7 +691,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         mock_installed = MagicMock(return_value=False)
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed}):
             assert hanamod.sr_clean(
-                name, True, 'pdr', '00', 'pass') == ret
+                'pdr', '00', 'pass', True) == ret
 
     @patch('salt.modules.hanamod.hana.SrStates')
     def test_sr_clean(self, mock_disabled):
@@ -699,7 +699,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         Test to check sr_clean when hana is already disabled
         node
         '''
-        name = 'SITE1'
+        name = 'pdr'
 
         ret = {'name': name,
                'changes': {},
@@ -715,7 +715,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             with patch.dict(hanamod.__salt__, {'hana.is_running': mock_running,
                                                'hana.get_sr_state': mock_state}):
                 assert hanamod.sr_clean(
-                    name, True, 'pdr', '00', 'pass') == ret
+                    'pdr', '00', 'pass', True) == ret
 
     @patch('salt.modules.hanamod.hana.SrStates')
     def test_sr_clean_test(self, mock_disabled):
@@ -723,7 +723,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         Test to check sr_clean when hana is not disabled
         node in test mode
         '''
-        name = 'SITE1'
+        name = 'pdr'
 
         ret = {'name': name,
                'changes': {
@@ -742,7 +742,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.get_sr_state': mock_state}):
             with patch.dict(hanamod.__opts__, {'test': True}):
                 assert hanamod.sr_clean(
-                    name, True, 'pdr', '00', 'pass') == ret
+                    'pdr', '00', 'pass', True) == ret
 
     @patch('salt.modules.hanamod.hana.SrStates')
     def test_sr_clean_basic(self, mock_disabled):
@@ -750,7 +750,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         Test to check sr_clean when hana is already set as secondary
         node with basic setup
         '''
-        name = 'SITE1'
+        name = 'pdr'
 
         ret = {'name': name,
                'changes': {
@@ -774,16 +774,16 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.stop': mock_stop,
                                            'hana.sr_cleanup': mock_clean}):
             assert hanamod.sr_clean(
-                name, True, 'pdr', '00', 'pass') == ret
+                'pdr', '00', 'pass', True) == ret
             mock_stop.assert_called_once_with(
                 sid='pdr',
                 inst='00',
                 password='pass')
             mock_clean.assert_called_once_with(
-                force=True,
                 sid='pdr',
                 inst='00',
-                password='pass')
+                password='pass',
+                force=True)
 
     @patch('salt.modules.hanamod.hana.SrStates')
     def test_sr_clean_error(self, mock_disabled):
@@ -791,7 +791,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         Test to check sr_clean when hana is already not disabled
         node and some hana command fail
         '''
-        name = 'SITE1'
+        name = 'pdr'
 
         ret = {'name': name,
                'changes': {},
@@ -810,9 +810,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.get_sr_state': mock_state,
                                            'hana.sr_cleanup': mock_clean}):
             assert hanamod.sr_clean(
-                name, True, 'pdr', '00', 'pass') == ret
+                'pdr', '00', 'pass', True) == ret
             mock_clean.assert_called_once_with(
-                force=True,
                 sid='pdr',
                 inst='00',
-                password='pass')
+                password='pass',
+                force=True)

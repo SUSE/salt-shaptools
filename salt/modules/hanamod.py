@@ -645,21 +645,21 @@ def create_backup(
 
 
 def sr_cleanup(
-        force=False,
         sid=None,
         inst=None,
-        password=None):
+        password=None,
+        force=False):
     '''
     Clean system replication state
 
-    force
-        Force cleanup
     sid
         HANA system id (PRD for example)
     inst
         HANA instance number (00 for example)
     password
         HANA instance password
+    force
+        Force cleanup
 
     CLI Example:
 
