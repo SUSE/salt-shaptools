@@ -423,17 +423,17 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                'comment': 'HANA node set as {}'.format('PRIMARY')}
 
         userkey = [
-            {'key': 'key'},
+            {'key_name': 'key'},
             {'environment': 'env'},
-            {'key_user': 'user'},
-            {'key_password': 'password'},
+            {'user_name': 'user'},
+            {'user_password': 'password'},
             {'database': 'database'}
         ]
 
         backup = [
-            {'key': 'key'},
-            {'key_user': 'user'},
-            {'key_password': 'password'},
+            {'key_name': 'key'},
+            {'user_name': 'user'},
+            {'user_password': 'password'},
             {'database': 'database'},
             {'file': 'file'}
         ]
@@ -467,18 +467,18 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 inst='00',
                 password='pass')
             mock_userkey.assert_called_once_with(
-                key='key',
+                key_name='key',
                 environment='env',
-                key_user='user',
-                key_password='password',
+                user_name='user',
+                user_password='password',
                 database='database',
                 sid='pdr',
                 inst='00',
                 password='pass')
             mock_backup.assert_called_once_with(
-                key='key',
-                key_user='user',
-                key_password='password',
+                key_name='key',
+                user_name='user',
+                user_password='password',
                 database='database',
                 backup_name='file',
                 sid='pdr',

@@ -562,10 +562,10 @@ def check_user_key(
 
 
 def create_user_key(
-        key,
+        key_name,
         environment,
-        key_user,
-        key_password,
+        user_name,
+        user_password,
         database=None,
         sid=None,
         inst=None,
@@ -573,11 +573,11 @@ def create_user_key(
     '''
     Create user key entry for the database
 
-    key
+    key_name
         User key
     environment
         Key environment
-    user
+    user_name
         User name
     user_password
         User password
@@ -599,7 +599,7 @@ def create_user_key(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.create_user_key(
-            key, environment, key_user, key_password, database)
+            key_name, environment, user_name, user_password, database)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
@@ -607,26 +607,27 @@ def create_user_key(
 def create_backup(
         database,
         backup_name,
-        key=None,
-        key_user=None,
-        key_password=None,
+        key_name=None,
+        user_name=None,
+        user_password=None,
         sid=None,
         inst=None,
         password=None):
     '''
     Create the primary node backup.
 
-    keystore or user/password combination, one of them must be provided
+    key_name or user_name/user_password combination,
+    one of them must be provided
 
     database
         Database name
     back_name
         Backup name
-    keystore
+    key_name
         Keystore to connect to sap hana db
-    user
+    user_name
         User to connect to sap hana db
-    password
+    user_password
         Password to connecto to sap hana db
     sid
         HANA system id (PRD for example)
@@ -644,7 +645,7 @@ def create_backup(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.create_backup(
-            database, backup_name, key, key_user, key_password)
+            database, backup_name, key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
