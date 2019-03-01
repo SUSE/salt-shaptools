@@ -564,8 +564,8 @@ def check_user_key(
 def create_user_key(
         key,
         environment,
-        user,
-        user_password,
+        key_user,
+        key_password,
         database=None,
         sid=None,
         inst=None,
@@ -599,30 +599,35 @@ def create_user_key(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.create_user_key(
-            key, environment, user, user_password, database)
+            key, environment, key_user, key_password, database)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
 
 def create_backup(
-        user_key,
-        user_password,
         database,
         backup_name,
+        key=None,
+        key_user=None,
+        key_password=None,
         sid=None,
         inst=None,
         password=None):
     '''
-    Create the primary node backup
+    Create the primary node backup.
 
-    user_key
-        User key name
-    user_password
-        User key password
+    keystore or user/password combination, one of them must be provided
+
     database
         Database name
     back_name
         Backup name
+    keystore
+        Keystore to connect to sap hana db
+    user
+        User to connect to sap hana db
+    password
+        Password to connecto to sap hana db
     sid
         HANA system id (PRD for example)
     inst
@@ -639,7 +644,7 @@ def create_backup(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.create_backup(
-            user_key, user_password, database, backup_name)
+            database, backup_name, key, key_user, key_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 

@@ -425,14 +425,15 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         userkey = [
             {'key': 'key'},
             {'environment': 'env'},
-            {'user': 'user'},
-            {'password': 'password'},
+            {'key_user': 'user'},
+            {'key_password': 'password'},
             {'database': 'database'}
         ]
 
         backup = [
-            {'user': 'user'},
-            {'password': 'password'},
+            {'key': 'key'},
+            {'key_user': 'user'},
+            {'key_password': 'password'},
             {'database': 'database'},
             {'file': 'file'}
         ]
@@ -468,15 +469,16 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             mock_userkey.assert_called_once_with(
                 key='key',
                 environment='env',
-                user='user',
-                user_password='password',
+                key_user='user',
+                key_password='password',
                 database='database',
                 sid='pdr',
                 inst='00',
                 password='pass')
             mock_backup.assert_called_once_with(
-                user_key='user',
-                user_password='password',
+                key='key',
+                key_user='user',
+                key_password='password',
                 database='database',
                 backup_name='file',
                 sid='pdr',

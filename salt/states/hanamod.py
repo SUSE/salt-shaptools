@@ -292,28 +292,30 @@ def sr_primary_enabled(
         Instance number of the installed hana platform
     password
         Password of the installed hana platform user
-    backup (optional)
-        Create a new backup of the current database
-        user:
-            Database user
-        password:
-            Database user password
-        database:
-            Database name to backup
-        file:
-            Backup file name
     userkey (optional)
         Create a new key user
         key (str):
             Key name
         environment:
             Database location (host:port)
-        user:
-            User name
-        user_password
-            User password
+        key_user:
+            User to connect to sap hana db
+        key_password
+            Password to connect to sap hana db
         database (optional)
             Database name in MDC environment
+    backup (optional)
+        Create a new backup of the current database
+        key
+            Keystore to connect to sap hana db
+        key_user
+            User to connect to sap hana db
+        key_password
+            Password to connect to sap hana db
+        database:
+            Database name to backup
+        file:
+            Backup file name
     '''
 
     ret = {'name': name,
@@ -359,8 +361,8 @@ def sr_primary_enabled(
             __salt__['hana.create_user_key'](
                 key=userkey_data.get('key'),
                 environment=userkey_data.get('environment'),
-                user=userkey_data.get('user'),
-                user_password=userkey_data.get('password'),
+                key_user=userkey_data.get('key_user'),
+                key_password=userkey_data.get('key_password'),
                 database=userkey_data.get('database', None),
                 sid=sid,
                 inst=inst,
@@ -369,8 +371,9 @@ def sr_primary_enabled(
         if backup:
             backup_data = _parse_dict(backup)
             __salt__['hana.create_backup'](
-                user_key=backup_data.get('user'),
-                user_password=backup_data.get('password'),
+                key=backup_data.get('key', None),
+                key_user=backup_data.get('key_user', None),
+                key_password=backup_data.get('key_password', None),
                 database=backup_data.get('database'),
                 backup_name=backup_data.get('file'),
                 sid=sid,

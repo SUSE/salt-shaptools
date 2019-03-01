@@ -566,10 +566,11 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_hana = MagicMock(return_value=mock_hana_inst)
         with patch.object(hanamod, '_init', mock_hana):
             hanamod.create_backup(
-                'key', 'pass', 'db', 'bakcup', 'prd', '00', 'pass')
+                'db', 'backup', 'key', 'key_user', 'key_password',
+                'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.create_backup.assert_called_once_with(
-                'key', 'pass', 'db', 'bakcup')
+                'db', 'backup', 'key', 'key_user', 'key_password')
 
     def test_create_backup_raise(self):
         '''
@@ -583,10 +584,11 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.object(hanamod, '_init', mock_hana):
             with pytest.raises(exceptions.CommandExecutionError) as err:
                 hanamod.create_backup(
-                    'key', 'pass', 'db', 'bakcup', 'prd', '00', 'pass')
+                    'db', 'backup', 'key', 'key_user', 'key_password',
+                    'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.create_backup.assert_called_once_with(
-                'key', 'pass', 'db', 'bakcup')
+                'db', 'backup', 'key', 'key_user', 'key_password')
             assert 'hana error' in str(err)
 
     def test_sr_cleanup_return(self):
