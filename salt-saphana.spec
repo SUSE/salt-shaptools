@@ -1,7 +1,7 @@
 #
 # spec file for package salt-saphana
 #
-# Copyright (c) 2016 SUSE LLC, Nuernberg, Germany.
+# Copyright (c) 2019 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -18,16 +18,18 @@
 
 # See also http://en.opensuse.org/openSUSE:Specfile_guidelines
 
+%{?!python_module:%define python_module() python-%{**} python3-%{**}}
 Name:           salt-saphana
 Version:        0.3.0
 Release:        1
 Summary:        Salt modules and states for SAP HANA
 
 License:        Apache-2.0
-Url:            https://github.com/arbulu89/%{name}
+Url:            https://github.com/SUSE/%{name}
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
+Requires:       %{python_module shaptools}
 
 %define fname hana
 
@@ -60,4 +62,4 @@ cp -R salt/states/crmshmod.py %{buildroot}/srv/salt/_states
 %dir %attr(0755, root, salt) /srv/salt/_modules
 %dir %attr(0755, root, salt) /srv/salt/_states
 
-%changelog CHANGELOG.md
+%changelog
