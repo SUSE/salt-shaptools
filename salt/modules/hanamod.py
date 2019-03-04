@@ -562,9 +562,9 @@ def check_user_key(
 
 
 def create_user_key(
-        key,
+        key_name,
         environment,
-        user,
+        user_name,
         user_password,
         database=None,
         sid=None,
@@ -573,11 +573,11 @@ def create_user_key(
     '''
     Create user key entry for the database
 
-    key
+    key_name
         User key
     environment
         Key environment
-    user
+    user_name
         User name
     user_password
         User password
@@ -599,30 +599,36 @@ def create_user_key(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.create_user_key(
-            key, environment, user, user_password, database)
+            key_name, environment, user_name, user_password, database)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
 
 def create_backup(
-        user_key,
-        user_password,
         database,
         backup_name,
+        key_name=None,
+        user_name=None,
+        user_password=None,
         sid=None,
         inst=None,
         password=None):
     '''
-    Create the primary node backup
+    Create the primary node backup.
 
-    user_key
-        User key name
-    user_password
-        User key password
+    key_name or user_name/user_password combination,
+    one of them must be provided
+
     database
         Database name
     back_name
         Backup name
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
     sid
         HANA system id (PRD for example)
     inst
@@ -639,27 +645,27 @@ def create_backup(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.create_backup(
-            user_key, user_password, database, backup_name)
+            database, backup_name, key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
 
 def sr_cleanup(
-        force=False,
         sid=None,
         inst=None,
-        password=None):
+        password=None,
+        force=False):
     '''
     Clean system replication state
 
-    force
-        Force cleanup
     sid
         HANA system id (PRD for example)
     inst
         HANA instance number (00 for example)
     password
         HANA instance password
+    force
+        Force cleanup
 
     CLI Example:
 

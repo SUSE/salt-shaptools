@@ -26,7 +26,7 @@ State module to provide SAP HANA functionality to Salt
         - root_user: 'root'
         - root_password: 's'
         - software_path: '/root/sap_inst/51052481'
-        - sid: 'prd'
+        - name: 'prd'
         - inst: '00'
         - password: 'Qwerty1234'
         - config_file: salt://hana_conf/hana.conf
@@ -96,7 +96,7 @@ def _parse_dict(dict_params):
 
 
 def installed(
-        sid,
+        name,
         inst,
         password,
         software_path,
@@ -112,7 +112,7 @@ def installed(
     using the *config_file* option, or if this value is not set, the sapadm_password
     and system_user_password values are mandatory
 
-    sid
+    name
         System id of the installed hana platform
     inst
         Instance number of the installed hana platform
@@ -139,6 +139,8 @@ def installed(
     extra_parameters
         Optional configuration parameters (exact name as in the config file as a key)
     """
+    sid = name
+
     ret = {'name': sid,
            'changes': {},
            'result': False,
@@ -211,7 +213,7 @@ def installed(
 
 
 def uninstalled(
-        sid,
+        name,
         inst,
         password,
         root_user,
@@ -219,8 +221,7 @@ def uninstalled(
         installation_folder=None):
     '''
     Uninstall SAP HANA from node
-
-    sid
+    name
         System id of the installed hana platform
     inst
         Instance number of the installed hana platform
@@ -233,6 +234,8 @@ def uninstalled(
     instalation_folder
         HANA installation folder
     '''
+    sid = name
+
     ret = {'name': sid,
            'changes': {},
            'result': False,
@@ -289,28 +292,30 @@ def sr_primary_enabled(
         Instance number of the installed hana platform
     password
         Password of the installed hana platform user
+    userkey (optional)
+        Create a new key user
+        key_name (str):
+            Key name
+        environment:
+            Database location (host:port)
+        user_name:
+            User to connect to sap hana db
+        user_password
+            Password to connect to sap hana db
+        database (optional)
+            Database name in MDC environment
     backup (optional)
         Create a new backup of the current database
-        user:
-            Database user
-        password:
-            Database user password
+        key_name
+            Keystore to connect to sap hana db
+        user_name
+            User to connect to sap hana db
+        user_password
+            Password to connect to sap hana db
         database:
             Database name to backup
         file:
             Backup file name
-    userkey (optional)
-        Create a new key user
-        key (str):
-            Key name
-        environment:
-            Database location (host:port)
-        user:
-            User name
-        user_password
-            User password
-        database (optional)
-            Database name in MDC environment
     '''
 
     ret = {'name': name,
@@ -354,20 +359,21 @@ def sr_primary_enabled(
         if userkey:
             userkey_data = _parse_dict(userkey)
             __salt__['hana.create_user_key'](
-                key=userkey_data.get('key'),
+                key_name=userkey_data.get('key_name'),
                 environment=userkey_data.get('environment'),
-                user=userkey_data.get('user'),
-                user_password=userkey_data.get('password'),
+                user_name=userkey_data.get('user_name'),
+                user_password=userkey_data.get('user_password'),
                 database=userkey_data.get('database', None),
                 sid=sid,
                 inst=inst,
                 password=password)
-            ret['changes']['userkey'] = userkey_data.get('key')
+            ret['changes']['userkey'] = userkey_data.get('key_name')
         if backup:
             backup_data = _parse_dict(backup)
             __salt__['hana.create_backup'](
-                user_key=backup_data.get('user'),
-                user_password=backup_data.get('password'),
+                key_name=backup_data.get('key_name', None),
+                user_name=backup_data.get('user_name', None),
+                user_password=backup_data.get('user_password', None),
                 database=backup_data.get('database'),
                 backup_name=backup_data.get('file'),
                 sid=sid,
@@ -491,25 +497,24 @@ def sr_secondary_registered(
 
 def sr_clean(
         name,
-        force,
-        sid,
         inst,
-        password):
+        password,
+        force):
     '''
     Clean the current node system replication mode
     name:
-        Just for logging purposes
-    force
-        Force cleanup process
-    sid
         System id of the installed hana platform
     inst
         Instance number of the installed hana platform
     password
         Password of the installed hana platform user
+    force
+        Force cleanup process
     '''
 
-    ret = {'name': name,
+    sid = name
+
+    ret = {'name': sid,
            'changes': {},
            'result': False,
            'comment': ''}
@@ -549,10 +554,10 @@ def sr_clean(
                 inst=inst,
                 password=password)
         __salt__['hana.sr_cleanup'](
-            force=force,
             sid=sid,
             inst=inst,
-            password=password)
+            password=password,
+            force=force)
         new_state = __salt__['hana.get_sr_state'](
             sid=sid,
             inst=inst,

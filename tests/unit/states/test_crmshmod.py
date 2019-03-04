@@ -416,7 +416,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
                                             'crm.configure_load': mock_configured}):
             assert crmshmod.cluster_configured(
-                method='update',
+                name='update',
                 url='file.config',
                 is_xml=False) == ret
             mock_status.assert_called_once_with()
@@ -441,7 +441,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
                                             'crm.configure_load': mock_configured}):
             assert crmshmod.cluster_configured(
-                method='update',
+                name='update',
                 url='file.config',
                 is_xml=False) == ret
             mock_status.assert_called_once_with()
@@ -466,7 +466,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
                                             'crm.configure_load': mock_configured}):
             assert crmshmod.cluster_configured(
-                method='update',
+                name='update',
                 url='file.config',
                 is_xml=False) == ret
             mock_status.assert_called_once_with()
