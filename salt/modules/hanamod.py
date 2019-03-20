@@ -678,3 +678,71 @@ def sr_cleanup(
         hana_inst.sr_cleanup(force)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
+
+
+def set_ini_parameter(
+        database,
+        file_name,
+        layer,
+        section_name,
+        parameter_name,
+        parameter_value,
+        layer_name=None,
+        reconfig=False,
+        key_name=None,
+        user_name=None,
+        user_password=None,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Update HANA ini configuration parameter
+
+    key_name or user_name/user_password combination,
+    one of them must be provided
+
+    database
+        Database name
+    file_name
+        ini configuration file name
+    layer
+        target layer for the configuration change
+    layer_name
+        target either a tenant name or a host name(optional)
+    section_name
+        section name of parameter in ini file
+    parameter_name
+        name of the parameter to be modified
+    parameter_value
+        the value of the parameter to be set
+    reconfig
+        if apply changes to running HANA instance(optional)
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.set_ini_parameter key pass SYSTEMDB
+        global.ini HOST node01 row_engine consistency_check_at_startup true
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.set_ini_parameter(
+            database, file_name, layer,
+            section_name, parameter_name, parameter_value,
+            layer_name, reconfig,
+            key_name, user_name, user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
