@@ -746,3 +746,87 @@ def set_ini_parameter(
             key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
+
+def reduce_memory_resources(
+        global_allocation_limit_value,
+        preload_column_tables_value=False,
+        key_name=None,
+        user_name=None,
+        user_password=None,
+        sid=None,
+        inst=None,
+        password=None
+        ):
+    '''
+    reduce memory resources needed by hana
+
+    global_allocation_limit_value
+        max memory size in MB to be used by hana instance
+    preload_column_tables_value
+        hana system replication parameter preload column tables 
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.reduce_memory_resources 25000 prd '"00"' pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.reduce_memory_resources(
+            global_allocation_limit_value, preload_column_tables_value,
+            key_name, user_name, user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
+
+def reset_memory_parameters(
+        key_name=None,
+        user_name=None,
+        user_password=None,
+        sid=None,
+        inst=None,
+        password=None
+        ):
+    '''
+    reset memory resources related parameters of hana to defaults
+    i.e global_allocation_limit and preload_column_tables
+
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.reset_memory_parameters prd '"00"' pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.reset_memory_parameters(
+            key_name, user_name, user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
