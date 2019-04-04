@@ -570,3 +570,82 @@ def sr_clean(
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
+
+def memory_resources_reduced(
+        global_allocation_limit,
+        sid,
+        inst,
+        password,
+        userkey=None):
+    '''
+    Reduce memory resources of a running HANA system by disabling column preload
+    and reducing the memory allocation size of HANA instance
+    name:
+        System id of the installed hana platform
+    sid
+        System id of the installed hana platform
+    inst
+        Instance number of the installed hana platform
+    password
+        Password of the installed hana platform user
+    '''
+    
+    ret = {'name': sid,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+    
+    if userkey:
+        userkey_data = _parse_dict(userkey)
+        user_name=userkey_data.get('user_name')
+        user_password=userkey_data.get('user_password')
+        key_name=userkey_data.get('key_name')
+
+    if not __salt__['hana.is_installed'](
+            sid=sid,
+            inst=inst,
+            password=password):
+        ret['comment'] = 'HANA is not installed properly with the provided data'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Memory resources would be reduced on {}'.format(sid)
+        ret['changes']['sid'] = sid
+        return ret
+
+    running = __salt__['hana.is_running'](
+        sid=sid,
+        inst=inst,
+        password=password)
+    #TODO: check existing memory settings
+    try:
+        if not running:
+            __salt__['hana.start'](
+                sid=sid,
+                inst=inst,
+                password=password)
+        __salt__['hana.reduce_memory_resources'](
+            global_allocation_limit_value=global_allocation_limit_value,
+            user_name=user_name,
+            user_password=user_password,
+            key_name=key_name
+            sid=sid,
+            inst=inst,
+            password=password)
+        #restart HANA for changes to take effect
+        if running:
+            __salt__['hana.stop'](
+                sid=sid,
+                inst=inst,
+                password=password)
+        if not running:
+            __salt__['hana.start'](
+                sid=sid,
+                inst=inst,
+                password=password)
+
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
