@@ -684,9 +684,7 @@ def set_ini_parameter(
         database,
         file_name,
         layer,
-        section_name,
-        parameter_name,
-        parameter_value,
+        parameter_list,
         sid=None,
         inst=None,
         password=None,
@@ -705,12 +703,8 @@ def set_ini_parameter(
         target layer for the configuration change
     layer_name
         target either a tenant name or a host name(optional)
-    section_name
-        section name of parameter in ini file
-    parameter_name
-        name of the parameter to be modified
-    parameter_value
-        the value of the parameter to be set
+    parameter_list
+        list containing parameter details:section_name, parameter_name, parameter_value
     reconfig
         if apply changes to running HANA instance(optional)
     key_name
@@ -744,7 +738,7 @@ def set_ini_parameter(
     try:
         hana_inst.set_ini_parameter(
             database, file_name, layer,
-            section_name, parameter_name, parameter_value,
+            parameter_list,
             layer_name, reconfig,
             key_name, user_name, user_password)
     except hana.HanaError as err:
@@ -754,8 +748,7 @@ def unset_ini_parameter(
         database,
         file_name,
         layer,
-        section_name,
-        parameter_name,
+        parameter_list,
         sid=None,
         inst=None,
         password=None,
@@ -774,12 +767,8 @@ def unset_ini_parameter(
         target layer for the configuration change
     layer_name
         target either a tenant name or a host name(optional)
-    section_name
-        section name of parameter in ini file
-    parameter_name
-        name of the parameter to be modified
-    parameter_value
-        the value of the parameter to be set
+    parameter_list
+        list containing parameter details:section_name, parameter_name
     reconfig
         if apply changes to running HANA instance(optional)
     key_name
@@ -812,7 +801,7 @@ def unset_ini_parameter(
     try:
         hana_inst.unset_ini_parameter(
             database, file_name, layer,
-            section_name, parameter_name,
+            parameter_list,
             layer_name,
             key_name, user_name, user_password)
     except hana.HanaError as err:
