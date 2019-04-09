@@ -684,17 +684,11 @@ def set_ini_parameter(
         database,
         file_name,
         layer,
-        section_name,
-        parameter_name,
-        parameter_value,
-        layer_name=None,
-        reconfig=False,
-        key_name=None,
-        user_name=None,
-        user_password=None,
+        parameter_list,
         sid=None,
         inst=None,
-        password=None):
+        password=None,
+        **kwargs):
     '''
     Update HANA ini configuration parameter
 
@@ -709,12 +703,8 @@ def set_ini_parameter(
         target layer for the configuration change
     layer_name
         target either a tenant name or a host name(optional)
-    section_name
-        section name of parameter in ini file
-    parameter_name
-        name of the parameter to be modified
-    parameter_value
-        the value of the parameter to be set
+    parameter_list
+        list containing parameter details:section_name, parameter_name, parameter_value
     reconfig
         if apply changes to running HANA instance(optional)
     key_name
@@ -737,12 +727,174 @@ def set_ini_parameter(
         salt '*' hana.set_ini_parameter key pass SYSTEMDB
         global.ini HOST node01 row_engine consistency_check_at_startup true
     '''
+    key_name = kwargs.get('key_name', None)
+    user_name = kwargs.get('user_name', None)
+    user_password = kwargs.get('user_password', None)
+
+    layer_name = kwargs.get('layer_name', None)
+    reconfig = kwargs.get('reconfig', False)
+
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.set_ini_parameter(
             database, file_name, layer,
-            section_name, parameter_name, parameter_value,
+            parameter_list,
             layer_name, reconfig,
+            key_name, user_name, user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
+
+def unset_ini_parameter(
+        database,
+        file_name,
+        layer,
+        parameter_list,
+        sid=None,
+        inst=None,
+        password=None,
+        **kwargs):
+    '''
+    Update HANA ini configuration parameter
+
+    key_name or user_name/user_password combination,
+    one of them must be provided
+
+    database
+        Database name
+    file_name
+        ini configuration file name
+    layer
+        target layer for the configuration change
+    layer_name
+        target either a tenant name or a host name(optional)
+    parameter_list
+        list containing parameter details:section_name, parameter_name
+    reconfig
+        if apply changes to running HANA instance(optional)
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.set_ini_parameter key pass SYSTEMDB
+        global.ini HOST node01 row_engine consistency_check_at_startup true
+    '''
+    key_name = kwargs.get('key_name', None)
+    user_name = kwargs.get('user_name', None)
+    user_password = kwargs.get('user_password', None)
+
+    layer_name = kwargs.get('layer_name', None)
+    
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.unset_ini_parameter(
+            database, file_name, layer,
+            parameter_list,
+            layer_name,
+            key_name, user_name, user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
+
+def reduce_memory_resources(
+        database,
+        file_name,
+        layer,
+        parameter_list,
+        sid=None,
+        inst=None,
+        password=None,
+        **kwargs):
+    '''
+    reduce memory resources needed by hana
+
+    global_allocation_limit_value
+        max memory size in MB to be used by hana instance
+    preload_column_tables_value
+        hana system replication parameter preload column tables 
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.reduce_memory_resources 25000 prd '"00"' pass
+    '''
+    key_name = kwargs.get('key_name', None)
+    user_name = kwargs.get('user_name', None)
+    user_password = kwargs.get('user_password', None)
+
+    layer_name = kwargs.get('layer_name', None)
+    reconfig = kwargs.get('reconfig', True)
+
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.reduce_memory_resources(
+            database, file_name, layer,
+            parameter_list,
+            layer_name, reconfig,
+            key_name, user_name, user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
+
+def reset_memory_parameters(
+        key_name=None,
+        user_name=None,
+        user_password=None,
+        sid=None,
+        inst=None,
+        password=None
+        ):
+    '''
+    reset memory resources related parameters of hana to defaults
+    i.e global_allocation_limit and preload_column_tables
+
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.reset_memory_parameters prd '"00"' pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.reset_memory_parameters(
             key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
