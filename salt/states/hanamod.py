@@ -571,15 +571,20 @@ def sr_clean(
         ret['comment'] = six.text_type(err)
         return ret
 
-def memory_resources_reduced(
+def memory_resources_updated(
         global_allocation_limit,
+        preload_column_tables,
         sid,
         inst,
         password,
         userkey=None):
     '''
-    Reduce memory resources of a running HANA system by disabling column preload
-    and reducing the memory allocation size of HANA instance
+    Update memory resources of a running HANA system by changing column preload behavior
+    and changing the memory allocation size of HANA instance
+    global_allocation_limit:
+        max memory allocation limit for hana instance
+    preload_column_tables:
+        if preload HANA column tables on startup
     name:
         System id of the installed hana platform
     sid
@@ -594,12 +599,6 @@ def memory_resources_reduced(
            'changes': {},
            'result': False,
            'comment': ''}
-    
-    if userkey:
-        userkey_data = _parse_dict(userkey)
-        user_name=userkey_data.get('user_name')
-        user_password=userkey_data.get('user_password')
-        key_name=userkey_data.get('key_name')
 
     if not __salt__['hana.is_installed'](
             sid=sid,
@@ -610,8 +609,9 @@ def memory_resources_reduced(
 
     if __opts__['test']:
         ret['result'] = None
-        ret['comment'] = 'Memory resources would be reduced on {}'.format(sid)
+        ret['comment'] = 'Memory resources would be updated on {}'.format(sid)
         ret['changes']['sid'] = sid
+        ret['changes']['global_allocation_limit'] = global_allocation_limit
         return ret
 
     running = __salt__['hana.is_running'](
@@ -619,35 +619,49 @@ def memory_resources_reduced(
         inst=inst,
         password=password)
     #TODO: check existing memory settings
-
-    parameter_list = {('system_replication', 'preload_column_tables'): 'false', (\
+    
+    parameter_list = {('system_replication', 'preload_column_tables'): preload_column_tables, (\
                        'memorymanager', 'global_allocation_limit') : global_allocation_limit}
+    file_name = 'global.ini'
+    layer = 'SYSTEM'
+    #TODO: update logic to avoid hardcoded params for SQL to update memory
     try:
-        if not running:
-            __salt__['hana.start'](
+        if userkey:
+            userkey_data = _parse_dict(userkey)
+            #ensure HANA is running for SQL to execute
+            if not running:
+                __salt__['hana.start'](
+                    sid=sid,
+                    inst=inst,
+                    password=password)
+            
+            __salt__['hana.update_memory_resources'](
+                database=userkey_data.get('database', None),
+                file_name=file_name,
+                layer=layer,
+                parameter_list=parameter_list,
+                key_name=userkey_data.get('key_name'),
+                user_name=userkey_data.get('user_name'),
+                user_password=userkey_data.get('user_password'),
                 sid=sid,
                 inst=inst,
                 password=password)
-        __salt__['hana.reduce_memory_resources'](
-            parameter_list=parameter_list,
-            user_name=user_name,
-            user_password=user_password,
-            key_name=key_name
-            sid=sid,
-            inst=inst,
-            password=password)
-        #restart HANA for changes to take effect
-        if running:
-            __salt__['hana.stop'](
-                sid=sid,
-                inst=inst,
-                password=password)
-        if not running:
-            __salt__['hana.start'](
-                sid=sid,
-                inst=inst,
-                password=password)
-
+            ret['changes']['global_allocation_limit'] = global_allocation_limit
+            #restart HANA for memory changes to take effect
+            if running:
+                __salt__['hana.stop'](
+                    sid=sid,
+                    inst=inst,
+                    password=password)
+            if not running:
+                __salt__['hana.start'](
+                    sid=sid,
+                    inst=inst,
+                    password=password)
+        ret['changes']['sid'] = sid
+        ret['comment'] = 'Memory resources would be updated on {}'.format(sid)
+        ret['result'] = True
+        return ret
 
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
