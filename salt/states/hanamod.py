@@ -619,6 +619,9 @@ def memory_resources_reduced(
         inst=inst,
         password=password)
     #TODO: check existing memory settings
+
+    parameter_list = {('system_replication', 'preload_column_tables'): 'false', (\
+                       'memorymanager', 'global_allocation_limit') : global_allocation_limit}
     try:
         if not running:
             __salt__['hana.start'](
@@ -626,7 +629,7 @@ def memory_resources_reduced(
                 inst=inst,
                 password=password)
         __salt__['hana.reduce_memory_resources'](
-            global_allocation_limit_value=global_allocation_limit_value,
+            parameter_list=parameter_list,
             user_name=user_name,
             user_password=user_password,
             key_name=key_name

@@ -808,15 +808,14 @@ def unset_ini_parameter(
         raise exceptions.CommandExecutionError(err)
 
 def reduce_memory_resources(
-        global_allocation_limit_value,
-        preload_column_tables_value=False,
-        key_name=None,
-        user_name=None,
-        user_password=None,
+        database,
+        file_name,
+        layer,
+        parameter_list,
         sid=None,
         inst=None,
-        password=None
-        ):
+        password=None,
+        **kwargs):
     '''
     reduce memory resources needed by hana
 
@@ -844,10 +843,19 @@ def reduce_memory_resources(
 
         salt '*' hana.reduce_memory_resources 25000 prd '"00"' pass
     '''
+    key_name = kwargs.get('key_name', None)
+    user_name = kwargs.get('user_name', None)
+    user_password = kwargs.get('user_password', None)
+
+    layer_name = kwargs.get('layer_name', None)
+    reconfig = kwargs.get('reconfig', True)
+
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.reduce_memory_resources(
-            global_allocation_limit_value, preload_column_tables_value,
+            database, file_name, layer,
+            parameter_list,
+            layer_name, reconfig,
             key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
