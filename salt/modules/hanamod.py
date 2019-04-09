@@ -807,7 +807,7 @@ def unset_ini_parameter(
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
-def reduce_memory_resources(
+def update_memory_resources(
         database,
         file_name,
         layer,
@@ -817,11 +817,11 @@ def reduce_memory_resources(
         password=None,
         **kwargs):
     '''
-    reduce memory resources needed by hana
+    update memory resources needed by hana
 
-    global_allocation_limit_value
+    global_allocation_limit
         max memory size in MB to be used by hana instance
-    preload_column_tables_value
+    preload_column_tables
         hana system replication parameter preload column tables 
     key_name
         Keystore to connect to sap hana db
@@ -841,7 +841,9 @@ def reduce_memory_resources(
 
     .. code-block:: bash
 
-        salt '*' hana.reduce_memory_resources 25000 prd '"00"' pass
+        salt '*' hana.update_memory_resources global_allocation_limit=25000
+        preload_column_tables=false
+        prd '"00"' pass
     '''
     key_name = kwargs.get('key_name', None)
     user_name = kwargs.get('user_name', None)
@@ -852,7 +854,7 @@ def reduce_memory_resources(
 
     hana_inst = _init(sid, inst, password)
     try:
-        hana_inst.reduce_memory_resources(
+        hana_inst.update_memory_resources(
             database, file_name, layer,
             parameter_list,
             layer_name, reconfig,
