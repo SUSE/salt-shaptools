@@ -698,15 +698,15 @@ def set_ini_parameter(
     database
         Database name
     file_name
-        ini configuration file name
+        INI configuration file name
     layer
-        target layer for the configuration change
+        Target layer for the configuration change
     layer_name
-        target either a tenant name or a host name(optional)
+        Target either a tenant name or a host name(optional)
     parameter_list
-        list containing parameter details:section_name, parameter_name, parameter_value
+        List containing parameter details:section_name, parameter_name, parameter_value
     reconfig
-        if apply changes to running HANA instance(optional)
+        If apply changes to running HANA instance(optional)
     key_name
         Keystore to connect to sap hana db
     user_name
@@ -762,15 +762,15 @@ def unset_ini_parameter(
     database
         Database name
     file_name
-        ini configuration file name
+        INI configuration file name
     layer
-        target layer for the configuration change
+        Target layer for the configuration change
     layer_name
-        target either a tenant name or a host name(optional)
+        Target either a tenant name or a host name(optional)
     parameter_list
         list containing parameter details:section_name, parameter_name
     reconfig
-        if apply changes to running HANA instance(optional)
+        If apply changes to running HANA instance(optional)
     key_name
         Keystore to connect to sap hana db
     user_name
@@ -820,9 +820,9 @@ def update_memory_resources(
     update memory resources needed by hana
 
     global_allocation_limit
-        max memory size in MB to be used by hana instance
+        Max memory size in MB to be used by hana instance
     preload_column_tables
-        hana system replication parameter preload column tables 
+        Hana system replication parameter preload column tables 
     key_name
         Keystore to connect to sap hana db
     user_name
@@ -871,7 +871,7 @@ def reset_memory_parameters(
         password=None
         ):
     '''
-    reset memory resources related parameters of hana to defaults
+    Reset memory resources related parameters of hana to defaults
     i.e global_allocation_limit and preload_column_tables
 
     key_name
