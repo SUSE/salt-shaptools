@@ -681,20 +681,27 @@ def sr_cleanup(
 
 
 def set_ini_parameter(
+        ini_parameter_values,
         database,
         file_name,
         layer,
-        parameter_list,
+        layer_name=None,
+        reconfig=False,
+        key_name=None,
+        user_name=None,
+        user_password=None,
         sid=None,
         inst=None,
-        password=None,
-        **kwargs):
+        password=None):
     '''
     Update HANA ini configuration parameter
 
     key_name or user_name/user_password combination,
     one of them must be provided
 
+    ini_parameter_values
+        Dictionary containing HANA parameters & their values
+        where key = ('section_name', 'parameter_name') and value = 'parameter_value'
     database
         Database name
     file_name
@@ -703,8 +710,6 @@ def set_ini_parameter(
         Target layer for the configuration change
     layer_name
         Target either a tenant name or a host name(optional)
-    parameter_list
-        List containing parameter details:section_name, parameter_name, parameter_value
     reconfig
         If apply changes to running HANA instance(optional)
     key_name
@@ -724,41 +729,42 @@ def set_ini_parameter(
 
     .. code-block:: bash
 
-        salt '*' hana.set_ini_parameter key pass SYSTEMDB
-        global.ini HOST node01 row_engine consistency_check_at_startup true
+        salt '*' hana.set_ini_parameter {('memorymanager','global_allocation_limit'): '21000',
+        ('system_replication', 'preload_column_tables'):'False'}
+        SYSTEMDB global.ini HOST node01 key prd '"00"' pass
     '''
-    key_name = kwargs.get('key_name', None)
-    user_name = kwargs.get('user_name', None)
-    user_password = kwargs.get('user_password', None)
-
-    layer_name = kwargs.get('layer_name', None)
-    reconfig = kwargs.get('reconfig', False)
-
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.set_ini_parameter(
-            database, file_name, layer,
-            parameter_list,
-            layer_name, reconfig,
+            ini_parameter_values, database,
+            file_name, layer,
+            layer_name,reconfig,
             key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
 def unset_ini_parameter(
+        ini_parameter_names,
         database,
         file_name,
         layer,
-        parameter_list,
+        layer_name=None,
+        reconfig=False,
+        key_name=None,
+        user_name=None,
+        user_password=None,
         sid=None,
         inst=None,
-        password=None,
-        **kwargs):
+        password=None):
     '''
     Update HANA ini configuration parameter
 
     key_name or user_name/user_password combination,
     one of them must be provided
 
+    ini_parameter_names: 
+        List of HANA parameter names where each entry looks like
+        (<section_name>,<parameter_name>)
     database
         Database name
     file_name
@@ -767,8 +773,6 @@ def unset_ini_parameter(
         Target layer for the configuration change
     layer_name
         Target either a tenant name or a host name(optional)
-    parameter_list
-        list containing parameter details:section_name, parameter_name
     reconfig
         If apply changes to running HANA instance(optional)
     key_name
@@ -788,21 +792,16 @@ def unset_ini_parameter(
 
     .. code-block:: bash
 
-        salt '*' hana.set_ini_parameter key pass SYSTEMDB
-        global.ini HOST node01 row_engine consistency_check_at_startup true
+        salt '*' hana.unset_ini_parameter [('memorymanager', 'global_allocation_limit'), 
+        ('system_replication', 'preload_column_tables')]
+        SYSTEMDB global.ini SYSTEM key prd '"00"' pass
     '''
-    key_name = kwargs.get('key_name', None)
-    user_name = kwargs.get('user_name', None)
-    user_password = kwargs.get('user_password', None)
-
-    layer_name = kwargs.get('layer_name', None)
-    
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.unset_ini_parameter(
-            database, file_name, layer,
-            parameter_list,
-            layer_name,
+            ini_parameter_names, database,
+            file_name, layer,
+            layer_name, reconfig,
             key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
