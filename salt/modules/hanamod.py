@@ -700,7 +700,7 @@ def set_ini_parameter(
     one of them must be provided
 
     ini_parameter_values
-        list containing HANA parameter details where each entry looks like:
+        List containing HANA parameter details where each entry looks like:
         [section_name, parameter_name,parameter_value]
     database
         Database name
@@ -729,8 +729,8 @@ def set_ini_parameter(
 
     .. code-block:: bash
 
-        salt '*' hana.set_ini_parameter {('memorymanager','global_allocation_limit'): '21000',
-        ('system_replication', 'preload_column_tables'):'False'}
+        salt '*' hana.set_ini_parameter '[["system_replication","preload_column_tables","False"],
+        ["memorymanager","global_allocation_limit","28000"]]'
         SYSTEMDB global.ini HOST node01 key prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
@@ -792,8 +792,8 @@ def unset_ini_parameter(
 
     .. code-block:: bash
 
-        salt '*' hana.unset_ini_parameter [('memorymanager', 'global_allocation_limit'), 
-        ('system_replication', 'preload_column_tables')]
+        salt '*' hana.unset_ini_parameter '[["system_replication","preload_column_tables"],
+        ["memorymanager","global_allocation_limit"]]'
         SYSTEMDB global.ini SYSTEM key prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
