@@ -700,8 +700,8 @@ def set_ini_parameter(
     one of them must be provided
 
     ini_parameter_values
-        Dictionary containing HANA parameters & their values
-        where key = ('section_name', 'parameter_name') and value = 'parameter_value'
+        list containing HANA parameter details where each entry looks like:
+        [section_name, parameter_name,parameter_value]
     database
         Database name
     file_name
@@ -764,7 +764,7 @@ def unset_ini_parameter(
 
     ini_parameter_names: 
         List of HANA parameter names where each entry looks like
-        (<section_name>,<parameter_name>)
+        [section_name,parameter_name]
     database
         Database name
     file_name
