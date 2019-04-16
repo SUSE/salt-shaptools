@@ -700,8 +700,8 @@ def set_ini_parameter(
     one of them must be provided
 
     ini_parameter_values
-        Dictionary containing HANA parameters & their values
-        where key = ('section_name', 'parameter_name') and value = 'parameter_value'
+        List containing HANA parameter details where each entry looks like:
+        [section_name, parameter_name,parameter_value]
     database
         Database name
     file_name
@@ -729,8 +729,8 @@ def set_ini_parameter(
 
     .. code-block:: bash
 
-        salt '*' hana.set_ini_parameter {('memorymanager','global_allocation_limit'): '21000',
-        ('system_replication', 'preload_column_tables'):'False'}
+        salt '*' hana.set_ini_parameter '[["system_replication","preload_column_tables","False"],
+        ["memorymanager","global_allocation_limit","28000"]]'
         SYSTEMDB global.ini HOST node01 key prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
@@ -764,7 +764,7 @@ def unset_ini_parameter(
 
     ini_parameter_names: 
         List of HANA parameter names where each entry looks like
-        (<section_name>,<parameter_name>)
+        [section_name,parameter_name]
     database
         Database name
     file_name
@@ -792,8 +792,8 @@ def unset_ini_parameter(
 
     .. code-block:: bash
 
-        salt '*' hana.unset_ini_parameter [('memorymanager', 'global_allocation_limit'), 
-        ('system_replication', 'preload_column_tables')]
+        salt '*' hana.unset_ini_parameter '[["system_replication","preload_column_tables"],
+        ["memorymanager","global_allocation_limit"]]'
         SYSTEMDB global.ini SYSTEM key prd '"00"' pass
     '''
     hana_inst = _init(sid, inst, password)
@@ -802,100 +802,6 @@ def unset_ini_parameter(
             ini_parameter_names, database,
             file_name, layer,
             layer_name, reconfig,
-            key_name, user_name, user_password)
-    except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(err)
-
-def update_memory_resources(
-        database,
-        file_name,
-        layer,
-        parameter_list,
-        sid=None,
-        inst=None,
-        password=None,
-        **kwargs):
-    '''
-    update memory resources needed by hana
-
-    global_allocation_limit
-        Max memory size in MB to be used by hana instance
-    preload_column_tables
-        Hana system replication parameter preload column tables 
-    key_name
-        Keystore to connect to sap hana db
-    user_name
-        User to connect to sap hana db
-    user_password
-        Password to connecto to sap hana db
-    sid
-        HANA system id (PRD for example)
-    inst
-        HANA instance number (00 for example)
-    password
-        HANA instance password
-
-
-    CLI Example:
-
-    .. code-block:: bash
-
-        salt '*' hana.update_memory_resources global_allocation_limit=25000
-        preload_column_tables=false
-        prd '"00"' pass
-    '''
-    key_name = kwargs.get('key_name', None)
-    user_name = kwargs.get('user_name', None)
-    user_password = kwargs.get('user_password', None)
-
-    layer_name = kwargs.get('layer_name', None)
-    reconfig = kwargs.get('reconfig', True)
-
-    hana_inst = _init(sid, inst, password)
-    try:
-        hana_inst.update_memory_resources(
-            database, file_name, layer,
-            parameter_list,
-            layer_name, reconfig,
-            key_name, user_name, user_password)
-    except hana.HanaError as err:
-        raise exceptions.CommandExecutionError(err)
-
-def reset_memory_parameters(
-        key_name=None,
-        user_name=None,
-        user_password=None,
-        sid=None,
-        inst=None,
-        password=None
-        ):
-    '''
-    Reset memory resources related parameters of hana to defaults
-    i.e global_allocation_limit and preload_column_tables
-
-    key_name
-        Keystore to connect to sap hana db
-    user_name
-        User to connect to sap hana db
-    user_password
-        Password to connecto to sap hana db
-    sid
-        HANA system id (PRD for example)
-    inst
-        HANA instance number (00 for example)
-    password
-        HANA instance password
-
-
-    CLI Example:
-
-    .. code-block:: bash
-
-        salt '*' hana.reset_memory_parameters prd '"00"' pass
-    '''
-    hana_inst = _init(sid, inst, password)
-    try:
-        hana_inst.reset_memory_parameters(
             key_name, user_name, user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
