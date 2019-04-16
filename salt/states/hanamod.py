@@ -612,6 +612,7 @@ def memory_resources_updated(
         ret['comment'] = 'Memory resources would be updated on {}'.format(sid)
         ret['changes']['sid'] = sid
         ret['changes']['global_allocation_limit'] = global_allocation_limit
+        ret['changes']['preload_column_tables'] = preload_column_tables
         return ret
 
     running = __salt__['hana.is_running'](
@@ -624,10 +625,10 @@ def memory_resources_updated(
                             ['memorymanager','global_allocation_limit',global_allocation_limit]]
     file_name = 'global.ini'
     layer = 'SYSTEM'
+    userkey_data = {'database':'SYSTEMDB', 'user_name': 'system', 'user_password':'YourPassword1234'}
     #TODO: update logic to avoid hardcoded params for SQL to update memory
     try:
-        if userkey:
-            userkey_data = _parse_dict(userkey)
+        if userkey_data:
             #ensure HANA is running for SQL to execute
             if not running:
                 __salt__['hana.start'](
@@ -636,30 +637,30 @@ def memory_resources_updated(
                     password=password)
             
             __salt__['hana.set_ini_parameter'](
-                database=userkey_data.get('database', None),
+                database=userkey_data.get('database'),
                 file_name=file_name,
                 layer=layer,
                 ini_parameter_values=ini_parameter_values,
-                key_name=userkey_data.get('key_name'),
-                user_name=userkey_data.get('user_name'),
-                user_password=userkey_data.get('user_password'),
+                key_name=userkey_data.get('key_name', None),
+                user_name=userkey_data.get('user_name', None),
+                user_password=userkey_data.get('user_password', None),
                 sid=sid,
                 inst=inst,
                 password=password)
             ret['changes']['global_allocation_limit'] = global_allocation_limit
+            ret['changes']['preload_column_tables'] = preload_column_tables
             #restart HANA for memory changes to take effect
             if running:
                 __salt__['hana.stop'](
                     sid=sid,
                     inst=inst,
                     password=password)
-            if not running:
                 __salt__['hana.start'](
                     sid=sid,
                     inst=inst,
                     password=password)
         ret['changes']['sid'] = sid
-        ret['comment'] = 'Memory resources would be updated on {}'.format(sid)
+        ret['comment'] = 'Memory resources updated on {}'.format(sid)
         ret['result'] = True
         return ret
 
