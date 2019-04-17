@@ -34,6 +34,77 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
     def setup_loader_modules(self):
         return {crmshmod: {}}
 
+    @mock.patch('logging.Logger.info')
+    @mock.patch('salt.utils.path.which')
+    def test_virtual_crm(self, mock_which, logger):
+        mock_pkg_version = MagicMock(return_value='1.0.0')
+        mock_pkg_version_cmp = MagicMock(return_value=1)
+
+        mock_which.side_effect = [True, True]
+        with patch.dict(crmshmod.__salt__, {
+                'pkg.version': mock_pkg_version,
+                'pkg.version_cmp': mock_pkg_version_cmp}):
+            assert crmshmod.__virtual__() == 'crm'
+            mock_which.assert_called_once_with(crmshmod.CRM_COMMAND)
+            logger.assert_has_calls([
+                mock.call('crmsh version: %s', '1.0.0'),
+                mock.call('%s will be used', 'crm')
+            ])
+
+    @mock.patch('salt.utils.path.which')
+    def test_virtual_crm_error(self, mock_which):
+
+        mock_which.side_effect = [False, True]
+        response = crmshmod.__virtual__()
+        assert response == (
+            False, 'The crmsh execution module failed to load: the crm package'
+            ' is not available.')
+        mock_which.assert_called_once_with(crmshmod.CRM_COMMAND)
+
+    @mock.patch('logging.Logger.info')
+    @mock.patch('salt.utils.path.which')
+    def test_virtual_ha(self, mock_which, logger):
+        mock_pkg_version = MagicMock(return_value='1.0.0')
+        mock_pkg_version_cmp = MagicMock(return_value=-1)
+
+        mock_which.side_effect = [True, True]
+        with patch.dict(crmshmod.__salt__, {
+                'pkg.version': mock_pkg_version,
+                'pkg.version_cmp': mock_pkg_version_cmp}):
+            assert crmshmod.__virtual__() == 'crm'
+            logger.assert_has_calls([
+                mock.call('crmsh version: %s', '1.0.0'),
+                mock.call('%s will be used', 'ha-cluster')
+            ])
+            mock_which.assert_has_calls([
+                mock.call(crmshmod.CRM_COMMAND),
+                mock.call(crmshmod.HA_INIT_COMMAND)
+            ])
+
+    @mock.patch('logging.Logger.info')
+    @mock.patch('salt.utils.path.which')
+    def test_virtual_ha_error(self, mock_which, logger):
+        mock_pkg_version = MagicMock(return_value='1.0.0')
+        mock_pkg_version_cmp = MagicMock(return_value=-1)
+
+        mock_which.side_effect = [True, False]
+        with patch.dict(crmshmod.__salt__, {
+                'pkg.version': mock_pkg_version,
+                'pkg.version_cmp': mock_pkg_version_cmp}):
+            response = crmshmod.__virtual__()
+            logger.assert_has_calls([
+                mock.call('crmsh version: %s', '1.0.0'),
+                mock.call('%s will be used', 'ha-cluster')
+            ])
+            mock_which.assert_has_calls([
+                mock.call(crmshmod.CRM_COMMAND),
+                mock.call(crmshmod.HA_INIT_COMMAND)
+            ])
+            assert response == (
+                False,
+                'The crmsh execution module failed to load: the ha-cluster-init'
+                ' package is not available.')
+
     def test_status(self):
         '''
         Test status method
@@ -144,59 +215,164 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 crmshmod.wait_for_startup(5.0)
             assert 'timeout must be integer type' in str(err)
 
-    def test_cluster_init_basic(self):
+    def test_crm_init_basic(self):
         '''
-        Test cluster_init method
+        Test _crm_init method
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod.cluster_init('hacluster')
+            result = crmshmod._crm_init('hacluster')
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{crm_command} cluster init -y -n {name}'.format(
                     crm_command=crmshmod.CRM_COMMAND, name='hacluster'))
 
-    def test_cluster_init_complete(self):
+    def test_crm_init_complete(self):
         '''
-        Test cluster_init method
+        Test _crm_init method
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod.cluster_init(
+            result = crmshmod._crm_init(
                 'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} --enable-sbd -s {} -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'sbd_dev'))
 
-    def test_cluster_join_basic(self):
+    def test_ha_cluster_init_basic(self):
         '''
-        Test cluster_join method
+        Test _ha_cluster_init method
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod.cluster_join('192.168.1.50')
+            result = crmshmod._ha_cluster_init()
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{command} -y'.format(command=crmshmod.HA_INIT_COMMAND))
+
+    def test_ha_cluster_init_complete(self):
+        '''
+        Test _ha_cluster_init method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod._ha_cluster_init(
+                'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{} -y -i {} -u -A {} -S -s {} -q'.format(
+                    crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'sbd_dev'))
+
+    @mock.patch('salt.modules.crmshmod._crm_init')
+    def test_cluster_init_crm(self, crm_init):
+        '''
+        Test cluster_init with crm option
+        '''
+        crmshmod.__crmnewversion__ = True
+        crm_init.return_value = 0
+        value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
+        assert value == 0
+        crm_init.assert_called_once_with(
+            'hacluster', 'dog', 'eth1', None, None, None, None, None)
+
+    @mock.patch('logging.Logger.warn')
+    @mock.patch('salt.modules.crmshmod._ha_cluster_init')
+    def test_cluster_init_ha(self, ha_cluster_init, logger):
+        '''
+        Test cluster_init with ha_cluster_init option
+        '''
+        crmshmod.__crmnewversion__ = False
+        ha_cluster_init.return_value = 0
+        value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
+        assert value == 0
+        logger.assert_called_once_with(
+            'The parameters name and watchdog are not considered!')
+        ha_cluster_init.assert_called_once_with(
+            'eth1', None, None, None, None, None)
+
+    def test_crm_join_basic(self):
+        '''
+        Test _crm_join method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod._crm_join('192.168.1.50')
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{crm_command} cluster join -y -c {host}'.format(
                     crm_command=crmshmod.CRM_COMMAND, host='192.168.1.50'))
 
-    def test_cluster_join_complete(self):
+    def test_crm_join_complete(self):
         '''
         Test cluster_join method
         '''
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod.cluster_join(
+            result = crmshmod._crm_join(
                 '192.168.1.50', 'dog', 'eth1', True)
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} cluster join -y -c {} -w {} -i {} -q'.format(
                     crmshmod.CRM_COMMAND, '192.168.1.50', 'dog', 'eth1'))
+
+    def test_ha_cluster_join_basic(self):
+        '''
+        Test _ha_cluster_join method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod._ha_cluster_join('192.168.1.50')
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{command} -y -c {host}'.format(
+                    command=crmshmod.HA_JOIN_COMMAND, host='192.168.1.50'))
+
+    def test_ha_cluster_join_complete(self):
+        '''
+        Test _ha_cluster_join method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod._ha_cluster_join('192.168.1.50', 'eth1', True)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{} -y -c {} -i {} -q'.format(
+                    crmshmod.HA_JOIN_COMMAND, '192.168.1.50', 'eth1'))
+
+    @mock.patch('salt.modules.crmshmod._crm_join')
+    def test_cluster_join_crm(self, crm_join):
+        '''
+        Test cluster_join with crm option
+        '''
+        crmshmod.__crmnewversion__ = True
+        crm_join.return_value = 0
+        value = crmshmod.cluster_join('host', 'dog', 'eth1')
+        assert value == 0
+        crm_join.assert_called_once_with(
+            'host', 'dog', 'eth1', None)
+
+    @mock.patch('logging.Logger.warn')
+    @mock.patch('salt.modules.crmshmod._ha_cluster_join')
+    def test_cluster_join_ha(self, ha_cluster_join, logger):
+        '''
+        Test cluster_join with ha_cluster_join option
+        '''
+        crmshmod.__crmnewversion__ = False
+        ha_cluster_join.return_value = 0
+        value = crmshmod.cluster_join('host', 'dog', 'eth1')
+        assert value == 0
+        logger.assert_called_once_with(
+            'The parameter watchdog is not considered!')
+        ha_cluster_join.assert_called_once_with('host', 'eth1', None)
 
     def test_cluster_remove_basic(self):
         '''
