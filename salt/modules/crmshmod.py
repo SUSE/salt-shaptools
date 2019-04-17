@@ -182,6 +182,25 @@ def wait_for_startup(
     return __salt__['cmd.retcode'](cmd)
 
 
+def _add_watchdog_sbd(watchdog):
+    '''
+    Update /etc/sysconfig/sbd file to add the watchdog device.
+    Specifically the line 'SBD_WATCHDOG_DEV=/dev/watchdog' is updated/added
+
+    **INFO: This method is used when the ha-cluster-init/join options
+    are used**
+
+    watchdog:
+        Watchdog device to add to sbd configuration file
+    '''
+    __salt__['file.replace'](
+        path='/etc/sysconfig/sbd',
+        pattern='^SBD_WATCHDOG_DEV=.*',
+        repl='SBD_WATCHDOG_DEV={}'.format(watchdog),
+        append_if_not_found=True
+    )
+
+
 def _crm_init(
         name,
         watchdog=None,
@@ -215,6 +234,7 @@ def _crm_init(
 
 
 def _ha_cluster_init(
+        watchdog=None,
         interface=None,
         unicast=None,
         admin_ip=None,
@@ -224,6 +244,9 @@ def _ha_cluster_init(
     '''
     ha-cluster-init command execution
     '''
+    if watchdog:
+        _add_watchdog_sbd(watchdog)
+
     cmd = '{ha_init_command} -y'.format(
         ha_init_command=HA_INIT_COMMAND)
     if interface:
@@ -259,8 +282,7 @@ def cluster_init(
     name
         Cluster name (only used in crmsh version higher than CRM_NEW_VERSION)
     watchdog
-        Watchdog to set. If None the watchdog is not set (
-        only used in crmsh version higher than CRM_NEW_VERSION)
+        Watchdog to set. If None default watchdog (/dev/watchdog) is used
     interface
         Network interface to bind the cluster. If None wlan0 is used
     unicast
@@ -287,8 +309,9 @@ def cluster_init(
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
-    LOGGER.warn('The parameters name and watchdog are not considered!')
-    return _ha_cluster_init(interface, unicast, admin_ip, sbd, sbd_dev, quiet)
+    LOGGER.warn('The parameter name is not considered!')
+    return _ha_cluster_init(
+        watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
 
 def _crm_join(
@@ -313,11 +336,15 @@ def _crm_join(
 
 def _ha_cluster_join(
         host,
+        watchdog=None,
         interface=None,
         quiet=None):
     '''
     ha-cluster-join command execution
     '''
+    if watchdog:
+        _add_watchdog_sbd(watchdog)
+
     cmd = '{ha_join_command} -y -c {host}'.format(
         ha_join_command=HA_JOIN_COMMAND, host=host)
     if interface:
@@ -360,8 +387,7 @@ def cluster_join(
     if __salt__['crmsh.version']:
         return _crm_join(host, watchdog, interface, quiet)
 
-    LOGGER.warn("The parameter watchdog is not considered!")
-    return _ha_cluster_join(host, interface, quiet)
+    return _ha_cluster_join(host, watchdog, interface, quiet)
 
 
 def cluster_remove(

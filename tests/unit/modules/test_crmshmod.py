@@ -215,6 +215,18 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 crmshmod.wait_for_startup(5.0)
             assert 'timeout must be integer type' in str(err)
 
+    def test_add_watchdog_sbd(self):
+        mock_file_replace = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'file.replace': mock_file_replace}):
+            crmshmod._add_watchdog_sbd('dog')
+            mock_file_replace.assert_called_once_with(
+                path='/etc/sysconfig/sbd',
+                pattern='^SBD_WATCHDOG_DEV=.*',
+                repl='SBD_WATCHDOG_DEV={}'.format('dog'),
+                append_if_not_found=True
+            )
+
     def test_crm_init_basic(self):
         '''
         Test _crm_init method
@@ -259,11 +271,14 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         Test _ha_cluster_init method
         '''
         mock_cmd_run = MagicMock(return_value=True)
+        mock_watchdog = MagicMock()
+        crmshmod._add_watchdog_sbd = mock_watchdog
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._ha_cluster_init(
-                'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
+                'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
             assert result
+            mock_watchdog.assert_called_once_with('dog')
             mock_cmd_run.assert_called_once_with(
                 '{} -y -i {} -u -A {} -S -s {} -q'.format(
                     crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'sbd_dev'))
@@ -291,9 +306,9 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
             logger.assert_called_once_with(
-                'The parameters name and watchdog are not considered!')
+                'The parameter name is not considered!')
             ha_cluster_init.assert_called_once_with(
-                'eth1', None, None, None, None, None)
+                'dog', 'eth1', None, None, None, None, None)
 
     def test_crm_join_basic(self):
         '''
@@ -342,7 +357,8 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod._ha_cluster_join('192.168.1.50', 'eth1', True)
+            result = crmshmod._ha_cluster_join(
+                '192.168.1.50', 'dog', 'eth1', True)
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} -y -c {} -i {} -q'.format(
@@ -360,9 +376,8 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             crm_join.assert_called_once_with(
                 'host', 'dog', 'eth1', None)
 
-    @mock.patch('logging.Logger.warn')
     @mock.patch('salt.modules.crmshmod._ha_cluster_join')
-    def test_cluster_join_ha(self, ha_cluster_join, logger):
+    def test_cluster_join_ha(self, ha_cluster_join):
         '''
         Test cluster_join with ha_cluster_join option
         '''
@@ -370,9 +385,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             ha_cluster_join.return_value = 0
             value = crmshmod.cluster_join('host', 'dog', 'eth1')
             assert value == 0
-            logger.assert_called_once_with(
-                'The parameter watchdog is not considered!')
-            ha_cluster_join.assert_called_once_with('host', 'eth1', None)
+            ha_cluster_join.assert_called_once_with('host', 'dog', 'eth1', None)
 
     def test_cluster_remove_basic(self):
         '''
