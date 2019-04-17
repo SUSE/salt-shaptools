@@ -15,10 +15,14 @@ Module to provide CRM shell (HA cluster) functionality to Salt
 .. code-block:: yaml
 
     #TODO: create some default configuration parameters if needed
+
+    Disclaimer: Only the methods status, init and join are tested using the
+    ha-cluster-init and ha-cluster-join methods
 '''
 
 # Import Python libs
 from __future__ import absolute_import, unicode_literals, print_function
+import logging
 
 from salt import exceptions
 import salt.utils.path
@@ -26,19 +30,43 @@ import salt.utils.path
 
 __virtualname__ = 'crm'
 
+CRMSH = 'crmsh'
 CRM_COMMAND = '/usr/sbin/crm'
+HA_INIT_COMMAND = '/usr/sbin/ha-cluster-init'
+HA_JOIN_COMMAND = '/usr/sbin/ha-cluster-join'
+# Below this version ha-cluster-init will be used to create the cluster
+CRM_NEW_VERSION = '3.0.0'
+
+LOGGER = logging.getLogger(__name__)
+# True if current execution has a newer version that CRM_NEW_VERSION
+__crmnewversion__ = None
 
 
-def __virtual__():  # pragma: no cover
+def __virtual__():
     '''
-    Only load this module if shaptools python module is installed
+    Only load this module if crm package is installed
     '''
     if bool(salt.utils.path.which(CRM_COMMAND)):
-        return __virtualname__
-    return (
-        False,
-        'The crmsh execution module failed to load: the crmsh python'
-        ' library is not available.')
+        version = __salt__['pkg.version'](CRMSH)
+        __crmnewversion__ = __salt__['pkg.version_cmp'](
+            version, CRM_NEW_VERSION) >= 0
+        LOGGER.info('crmsh version: %s', version)
+        LOGGER.info(
+            '%s will be used', 'crm' if __crmnewversion__ else 'ha-cluster')
+
+    else:
+        return (
+            False,
+            'The crmsh execution module failed to load: the crm package'
+            ' is not available.')
+
+    if not __crmnewversion__ and not bool(salt.utils.path.which(HA_INIT_COMMAND)):
+        return (
+            False,
+            'The crmsh execution module failed to load: the ha-cluster-init'
+            ' package is not available.')
+
+    return __virtualname__
 
 
 def status():
@@ -154,7 +182,7 @@ def wait_for_startup(
     return __salt__['cmd.retcode'](cmd)
 
 
-def cluster_init(
+def _crm_init(
         name,
         watchdog=None,
         interface=None,
@@ -164,33 +192,7 @@ def cluster_init(
         sbd_dev=None,
         quiet=None):
     '''
-    Initialize a cluster from scratch.
-
-    INFO: This action will remove any old configuration (corosync, pacemaker, etc)
-
-    name
-        Cluster name
-    watchdog
-        Watchdog to set. If None the watchdog is not set
-    interface
-        Network interface to bind the cluster. If None wlan0 is used
-    unicast
-        Set the cluster in unicast mode. If None multicast is used
-    admin_ip
-        Virtual IP address. If None the virtual address is not set
-    sbd
-        Enable sbd usage. If None sbd is not set
-    sbd_dev
-        sbd device path. To be used "sbd" parameter must be used too. If None,
-            the sbd is set as diskless.
-    quiet:
-        execute the command in quiet mode (no output)
-
-    CLI Example:
-
-    .. code-block:: bash
-
-        salt '*' crm.cluster_init hacluster
+    crm cluster init command execution
     '''
     cmd = '{crm_command} cluster init -y -n {name}'.format(
         crm_command=CRM_COMMAND, name=name)
@@ -212,6 +214,120 @@ def cluster_init(
     return __salt__['cmd.retcode'](cmd)
 
 
+def _ha_cluster_init(
+        interface=None,
+        unicast=None,
+        admin_ip=None,
+        sbd=None,
+        sbd_dev=None,
+        quiet=None):
+    '''
+    ha-cluster-init command execution
+    '''
+    cmd = '{ha_init_command} -y'.format(
+        ha_init_command=HA_INIT_COMMAND)
+    if interface:
+        cmd = '{cmd} -i {interface}'.format(cmd=cmd, interface=interface)
+    if unicast:
+        cmd = '{cmd} -u'.format(cmd=cmd)
+    if admin_ip:
+        cmd = '{cmd} -A {admin_ip}'.format(cmd=cmd, admin_ip=admin_ip)
+    if sbd:
+        cmd = '{cmd} -S'.format(cmd=cmd)
+        if sbd_dev:
+            cmd = '{cmd} -s {sbd_dev}'.format(cmd=cmd, sbd_dev=sbd_dev)
+    if quiet:
+        cmd = '{cmd} -q'.format(cmd=cmd)
+
+    return __salt__['cmd.retcode'](cmd)
+
+
+def cluster_init(
+        name,
+        watchdog=None,
+        interface=None,
+        unicast=None,
+        admin_ip=None,
+        sbd=None,
+        sbd_dev=None,
+        quiet=None):
+    '''
+    Initialize a cluster from scratch.
+
+    INFO: This action will remove any old configuration (corosync, pacemaker, etc)
+
+    name
+        Cluster name (only used in crmsh version higher than CRM_NEW_VERSION)
+    watchdog
+        Watchdog to set. If None the watchdog is not set (
+        only used in crmsh version higher than CRM_NEW_VERSION)
+    interface
+        Network interface to bind the cluster. If None wlan0 is used
+    unicast
+        Set the cluster in unicast mode. If None multicast is used
+    admin_ip
+        Virtual IP address. If None the virtual address is not set
+    sbd
+        Enable sbd usage. If None sbd is not set
+    sbd_dev
+        sbd device path. To be used "sbd" parameter must be used too. If None,
+            the sbd is set as diskless.
+    quiet:
+        execute the command in quiet mode (no output)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' crm.cluster_init hacluster
+    '''
+    # INFO: 2 different methods are created to make easy to read/understand
+    # and create the corresponing UT
+    if __crmnewversion__:
+        return _crm_init(
+            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
+
+    LOGGER.warn('The parameters name and watchdog are not considered!')
+    return _ha_cluster_init(interface, unicast, admin_ip, sbd, sbd_dev, quiet)
+
+
+def _crm_join(
+        host,
+        watchdog=None,
+        interface=None,
+        quiet=None):
+    '''
+    crm cluster join command execution
+    '''
+    cmd = '{crm_command} cluster join -y -c {host}'.format(
+        crm_command=CRM_COMMAND, host=host)
+    if watchdog:
+        cmd = '{cmd} -w {watchdog}'.format(cmd=cmd, watchdog=watchdog)
+    if interface:
+        cmd = '{cmd} -i {interface}'.format(cmd=cmd, interface=interface)
+    if quiet:
+        cmd = '{cmd} -q'.format(cmd=cmd)
+
+    return __salt__['cmd.retcode'](cmd)
+
+
+def _ha_cluster_join(
+        host,
+        interface=None,
+        quiet=None):
+    '''
+    ha-cluster-join command execution
+    '''
+    cmd = '{ha_join_command} -y -c {host}'.format(
+        ha_join_command=HA_JOIN_COMMAND, host=host)
+    if interface:
+        cmd = '{cmd} -i {interface}'.format(cmd=cmd, interface=interface)
+    if quiet:
+        cmd = '{cmd} -q'.format(cmd=cmd)
+
+    return __salt__['cmd.retcode'](cmd)
+
+
 def cluster_join(
         host,
         watchdog=None,
@@ -226,7 +342,8 @@ def cluster_join(
     host
         Hostname or ip address of a node of an existing cluster
     watchdog
-        Watchdog to set. If None the watchdog is not set
+        Watchdog to set. If None the watchdog is not set (
+        only used in crmsh version higher than CRM_NEW_VERSION)
     interface
         Network interface to bind the cluster. If None wlan0 is used
     quiet:
@@ -238,16 +355,13 @@ def cluster_join(
 
         salt '*' crm.cluster_join 192.168.1.41
     '''
-    cmd = '{crm_command} cluster join -y -c {host}'.format(
-        crm_command=CRM_COMMAND, host=host)
-    if watchdog:
-        cmd = '{cmd} -w {watchdog}'.format(cmd=cmd, watchdog=watchdog)
-    if interface:
-        cmd = '{cmd} -i {interface}'.format(cmd=cmd, interface=interface)
-    if quiet:
-        cmd = '{cmd} -q'.format(cmd=cmd)
+    # INFO: 2 different methods are created to make easy to read/understand
+    # and create the corresponing UT
+    if __crmnewversion__:
+        return _crm_join(host, watchdog, interface, quiet)
 
-    return __salt__['cmd.retcode'](cmd)
+    LOGGER.warn("The parameter watchdog is not considered!")
+    return _ha_cluster_join(host, interface, quiet)
 
 
 def cluster_remove(
