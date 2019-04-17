@@ -38,8 +38,7 @@ HA_JOIN_COMMAND = '/usr/sbin/ha-cluster-join'
 CRM_NEW_VERSION = '3.0.0'
 
 LOGGER = logging.getLogger(__name__)
-# True if current execution has a newer version that CRM_NEW_VERSION
-__crmnewversion__ = None
+# True if current execution has a newer version than CRM_NEW_VERSION
 
 
 def __virtual__():
@@ -48,11 +47,11 @@ def __virtual__():
     '''
     if bool(salt.utils.path.which(CRM_COMMAND)):
         version = __salt__['pkg.version'](CRMSH)
-        __crmnewversion__ = __salt__['pkg.version_cmp'](
+        use_crm = __salt__['pkg.version_cmp'](
             version, CRM_NEW_VERSION) >= 0
         LOGGER.info('crmsh version: %s', version)
         LOGGER.info(
-            '%s will be used', 'crm' if __crmnewversion__ else 'ha-cluster')
+            '%s will be used', 'crm' if use_crm else 'ha-cluster')
 
     else:
         return (
@@ -60,12 +59,13 @@ def __virtual__():
             'The crmsh execution module failed to load: the crm package'
             ' is not available.')
 
-    if not __crmnewversion__ and not bool(salt.utils.path.which(HA_INIT_COMMAND)):
+    if not use_crm and not bool(salt.utils.path.which(HA_INIT_COMMAND)):
         return (
             False,
             'The crmsh execution module failed to load: the ha-cluster-init'
             ' package is not available.')
 
+    __salt__['crmsh.version'] = use_crm
     return __virtualname__
 
 
@@ -283,7 +283,7 @@ def cluster_init(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __crmnewversion__:
+    if __salt__['crmsh.version']:
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
@@ -357,7 +357,7 @@ def cluster_join(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __crmnewversion__:
+    if __salt__['crmsh.version']:
         return _crm_join(host, watchdog, interface, quiet)
 
     LOGGER.warn("The parameter watchdog is not considered!")

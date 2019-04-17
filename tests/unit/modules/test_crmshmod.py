@@ -273,12 +273,12 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_init with crm option
         '''
-        crmshmod.__crmnewversion__ = True
-        crm_init.return_value = 0
-        value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
-        assert value == 0
-        crm_init.assert_called_once_with(
-            'hacluster', 'dog', 'eth1', None, None, None, None, None)
+        with patch.dict(crmshmod.__salt__, {'crmsh.version': True}):
+            crm_init.return_value = 0
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
+            assert value == 0
+            crm_init.assert_called_once_with(
+                'hacluster', 'dog', 'eth1', None, None, None, None, None)
 
     @mock.patch('logging.Logger.warn')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')
@@ -286,14 +286,14 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_init with ha_cluster_init option
         '''
-        crmshmod.__crmnewversion__ = False
-        ha_cluster_init.return_value = 0
-        value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
-        assert value == 0
-        logger.assert_called_once_with(
-            'The parameters name and watchdog are not considered!')
-        ha_cluster_init.assert_called_once_with(
-            'eth1', None, None, None, None, None)
+        with patch.dict(crmshmod.__salt__, {'crmsh.version': False}):
+            ha_cluster_init.return_value = 0
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
+            assert value == 0
+            logger.assert_called_once_with(
+                'The parameters name and watchdog are not considered!')
+            ha_cluster_init.assert_called_once_with(
+                'eth1', None, None, None, None, None)
 
     def test_crm_join_basic(self):
         '''
@@ -353,12 +353,12 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_join with crm option
         '''
-        crmshmod.__crmnewversion__ = True
-        crm_join.return_value = 0
-        value = crmshmod.cluster_join('host', 'dog', 'eth1')
-        assert value == 0
-        crm_join.assert_called_once_with(
-            'host', 'dog', 'eth1', None)
+        with patch.dict(crmshmod.__salt__, {'crmsh.version': True}):
+            crm_join.return_value = 0
+            value = crmshmod.cluster_join('host', 'dog', 'eth1')
+            assert value == 0
+            crm_join.assert_called_once_with(
+                'host', 'dog', 'eth1', None)
 
     @mock.patch('logging.Logger.warn')
     @mock.patch('salt.modules.crmshmod._ha_cluster_join')
@@ -366,13 +366,13 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_join with ha_cluster_join option
         '''
-        crmshmod.__crmnewversion__ = False
-        ha_cluster_join.return_value = 0
-        value = crmshmod.cluster_join('host', 'dog', 'eth1')
-        assert value == 0
-        logger.assert_called_once_with(
-            'The parameter watchdog is not considered!')
-        ha_cluster_join.assert_called_once_with('host', 'eth1', None)
+        with patch.dict(crmshmod.__salt__, {'crmsh.version': False}):
+            ha_cluster_join.return_value = 0
+            value = crmshmod.cluster_join('host', 'dog', 'eth1')
+            assert value == 0
+            logger.assert_called_once_with(
+                'The parameter watchdog is not considered!')
+            ha_cluster_join.assert_called_once_with('host', 'eth1', None)
 
     def test_cluster_remove_basic(self):
         '''

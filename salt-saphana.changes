@@ -2,7 +2,7 @@
 Wed Apr 17 08:28:30 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
 
 - Add ha-cluster-init and ha-cluster-join usage when crmsh version
-  is older that 3.0.0 
+  is older than 3.0.0 
 
 -------------------------------------------------------------------
 Mon Mar  4 15:17:24 UTC 2019 - xarbulu@suse.com
@@ -11,7 +11,7 @@ Mon Mar  4 15:17:24 UTC 2019 - xarbulu@suse.com
   the user_name/user_password is not needed.
 - Removed salt warnings because of non usage of 'name' parameter as
   the first parameter of the state.
-     
+
 -------------------------------------------------------------------
 Mon Feb  25 10:22:24 UTC 2019 - dakechi@suse.com
 
@@ -21,7 +21,7 @@ Mon Feb  25 10:22:24 UTC 2019 - dakechi@suse.com
 -------------------------------------------------------------------
 Wed Feb  6 14:09:24 UTC 2019 - xarbulu@suse.com
 
-- Update the way crm installation is checked 
+- Update the way crm installation is checked
 
 -------------------------------------------------------------------
 Thu Jan 17 13:24:33 UTC 2019 - xarbulu@suse.com
@@ -31,9 +31,9 @@ Thu Jan 17 13:24:33 UTC 2019 - xarbulu@suse.com
 -------------------------------------------------------------------
 Fri Jan 11 08:22:59 UTC 2019 - xarbulu@suse.com
 
-- Create crmsh core functionalities salt module and states code 
+- Create crmsh core functionalities salt module and states code
 
 -------------------------------------------------------------------
 Thu Dec 20 08:33:10 UTC 2018 - xarbulu@suse.com
 
-- First package version 
+- First package version
