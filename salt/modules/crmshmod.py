@@ -201,6 +201,26 @@ def _add_watchdog_sbd(watchdog):
     )
 
 
+def _update_corosync_conf(path, value):
+    '''
+    Update corosync configuration file value with a new entry.
+
+    By default /etc/corosync/corosync.conf is used.
+
+    Example:
+        update transport mode to unicast
+        _update_corosync_conf('totem.transport', 'udpu')
+    '''
+    cmd = '{crm_command} corosync set {path} {value}'.format(
+        crm_command=CRM_COMMAND, path=path, value=value)
+    return_code = __salt__['cmd.retcode'](cmd)
+    if return_code:
+        return return_code
+
+    cmd = '{crm_command} corosync reload'.format(crm_command=CRM_COMMAND)
+    return __salt__['cmd.retcode'](cmd)
+
+
 def _crm_init(
         name,
         watchdog=None,
@@ -251,8 +271,6 @@ def _ha_cluster_init(
         ha_init_command=HA_INIT_COMMAND)
     if interface:
         cmd = '{cmd} -i {interface}'.format(cmd=cmd, interface=interface)
-    if unicast:
-        cmd = '{cmd} -u'.format(cmd=cmd)
     if admin_ip:
         cmd = '{cmd} -A {admin_ip}'.format(cmd=cmd, admin_ip=admin_ip)
     if sbd:
@@ -262,7 +280,12 @@ def _ha_cluster_init(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
-    return __salt__['cmd.retcode'](cmd)
+    return_code = __salt__['cmd.retcode'](cmd)
+
+    if not return_code and unicast:
+        return_code = _update_corosync_conf('totem.transport', 'udpu')
+
+    return return_code
 
 
 def cluster_init(
