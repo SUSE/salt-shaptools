@@ -325,8 +325,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             assert hanamod.sr_primary_enabled(
                 name, 'pdr', '00', 'pass') == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates')
-    def test_sr_primary_enabled(self, mock_primary):
+    def test_sr_primary_enabled(self):
         '''
         Test to check sr_primary_enabled when hana is already set as primary
         node
@@ -341,7 +340,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         mock_installed = MagicMock(return_value=True)
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed}):
             mock_running = MagicMock(return_value=True)
-            mock_state = MagicMock(return_value=mock_primary.PRIMARY)
+            mock_state = MagicMock(return_value='PRIMARY')
 
             with patch.dict(hanamod.__salt__, {'hana.is_running': mock_running,
                                                'hana.get_sr_state': mock_state}):
@@ -389,10 +388,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=True)
-        state = MagicMock()
-        state_primary = MagicMock()
-        state_primary.name = 'PRIMARY'
-        mock_state = MagicMock(side_effect=[state, state_primary])
+        mock_state = MagicMock(side_effect=['DISABLED', 'PRIMARY'])
         mock_enable = MagicMock()
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
                                            'hana.is_running': mock_running,
@@ -440,10 +436,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=False)
-        state = MagicMock()
-        state_primary = MagicMock()
-        state_primary.name = 'PRIMARY'
-        mock_state = MagicMock(side_effect=[state, state_primary])
+        mock_state = MagicMock(side_effect=['DISABLED', 'PRIMARY'])
         mock_start = MagicMock()
         mock_enable = MagicMock()
         mock_userkey = MagicMock()
@@ -499,10 +492,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=False)
-        state = MagicMock()
-        state_primary = MagicMock()
-        state_primary.name = 'PRIMARY'
-        mock_state = MagicMock(side_effect=[state, state_primary])
+        mock_state = MagicMock(side_effect=['DISABLED', 'PRIMARY'])
         mock_start = MagicMock()
         mock_enable = MagicMock(
             side_effect=exceptions.CommandExecutionError('hana command error'))
@@ -542,8 +532,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 name, 'pdr', '00', 'pass', 'hana01', '00', 'sync',
                 'logreplay') == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates')
-    def test_sr_secondary_registered(self, mock_secondary):
+    def test_sr_secondary_registered(self):
         '''
         Test to check sr_secondary_registered when hana is already set as secondary
         node
@@ -558,7 +547,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         mock_installed = MagicMock(return_value=True)
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed}):
             mock_running = MagicMock(return_value=True)
-            mock_state = MagicMock(return_value=mock_secondary.SECONDARY)
+            mock_state = MagicMock(return_value='SECONDARY')
 
             with patch.dict(hanamod.__salt__, {'hana.is_running': mock_running,
                                                'hana.get_sr_state': mock_state}):
@@ -582,8 +571,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=True)
-        state = MagicMock()
-        mock_state = MagicMock(return_value=state)
+        mock_state = MagicMock(return_value='DISABLED')
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
                                            'hana.is_running': mock_running,
                                            'hana.get_sr_state': mock_state}):
@@ -608,10 +596,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=True)
-        state = MagicMock()
-        state_secondary = MagicMock()
-        state_secondary.name = 'SECONDARY'
-        mock_state = MagicMock(side_effect=[state, state_secondary])
+        mock_state = MagicMock(side_effect=['DISABLED', 'SECONDARY'])
         mock_stop = MagicMock()
         mock_start = MagicMock()
         mock_register = MagicMock()
@@ -656,8 +641,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=False)
-        state = MagicMock()
-        mock_state = MagicMock(return_value=state)
+        mock_state = MagicMock(return_value='SECONDARY')
         mock_register = MagicMock(
             side_effect=exceptions.CommandExecutionError('hana command error'))
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
@@ -695,8 +679,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             assert hanamod.sr_clean(
                 'pdr', '00', 'pass', True) == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates')
-    def test_sr_clean(self, mock_disabled):
+    def test_sr_clean(self):
         '''
         Test to check sr_clean when hana is already disabled
         node
@@ -708,19 +691,17 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                'result': True,
                'comment': 'HANA node already clean'}
 
-        mock_disabled.name = 'DISABLED'
         mock_installed = MagicMock(return_value=True)
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed}):
             mock_running = MagicMock(return_value=True)
-            mock_state = MagicMock(return_value=mock_disabled.DISABLED)
+            mock_state = MagicMock(return_value='DISABLED')
 
             with patch.dict(hanamod.__salt__, {'hana.is_running': mock_running,
                                                'hana.get_sr_state': mock_state}):
                 assert hanamod.sr_clean(
                     'pdr', '00', 'pass', True) == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates')
-    def test_sr_clean_test(self, mock_disabled):
+    def test_sr_clean_test(self):
         '''
         Test to check sr_clean when hana is not disabled
         node in test mode
@@ -734,11 +715,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                'result': None,
                'comment': '{} would be clean'.format(name)}
 
-        mock_disabled.DISABLED.name = 'DISABLED'
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=True)
-        state = MagicMock()
-        mock_state = MagicMock(return_value=state)
+        mock_state = MagicMock(return_value='PRIMARY')
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
                                            'hana.is_running': mock_running,
                                            'hana.get_sr_state': mock_state}):
@@ -746,8 +725,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 assert hanamod.sr_clean(
                     'pdr', '00', 'pass', True) == ret
 
-    @patch('salt.modules.hanamod.hana.SrStates')
-    def test_sr_clean_basic(self, mock_disabled):
+    def test_sr_clean_basic(self):
         '''
         Test to check sr_clean when hana is already set as secondary
         node with basic setup
@@ -761,13 +739,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                'result': True,
                'comment': 'HANA node set as {}'.format('DISABLED')}
 
-        mock_disabled.DISABLED.name = 'DISABLED'
         mock_installed = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=True)
-        state = MagicMock()
-        state_disabled = MagicMock()
-        state_disabled.name = 'DISABLED'
-        mock_state = MagicMock(side_effect=[state, state_disabled])
+        mock_state = MagicMock(side_effect=['PRIMARY', 'DISABLED'])
         mock_stop = MagicMock()
         mock_clean = MagicMock()
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
@@ -787,8 +761,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 password='pass',
                 force=True)
 
-    @patch('salt.modules.hanamod.hana.SrStates')
-    def test_sr_clean_error(self, mock_disabled):
+    def test_sr_clean_error(self):
         '''
         Test to check sr_clean when hana is already not disabled
         node and some hana command fail
@@ -800,7 +773,6 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                'result': False,
                'comment': 'hana command error'}
 
-        mock_disabled.DISABLED.name = 'DISABLED'
         mock_insatlled = MagicMock(return_value=True)
         mock_running = MagicMock(return_value=False)
         state = MagicMock()
