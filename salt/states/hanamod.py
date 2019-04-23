@@ -63,12 +63,6 @@ from __future__ import absolute_import, unicode_literals, print_function
 from salt import exceptions
 from salt.ext import six
 
-# Import third party libs
-try:
-    from shaptools import hana
-    HAS_HANA = True
-except ImportError:  # pragma: no cover
-    HAS_HANA = False
 
 __virtualname__ = 'hana'
 
@@ -79,9 +73,7 @@ def __virtual__():  # pragma: no cover
     '''
     Only load if the hana module is in __salt__
     '''
-    if 'hana.is_installed' in __salt__ and HAS_HANA:
-        return __virtualname__
-    return False
+    return 'hana.is_installed' in __salt__
 
 
 def _parse_dict(dict_params):
@@ -336,7 +328,7 @@ def sr_primary_enabled(
         inst=inst,
         password=password)
 
-    if running and current_state == hana.SrStates.PRIMARY:
+    if running and current_state == 'PRIMARY':
         ret['result'] = True
         ret['comment'] = 'HANA node already set as primary and running'
         return ret
@@ -390,7 +382,7 @@ def sr_primary_enabled(
             inst=inst,
             password=password)
         ret['changes']['primary'] = name
-        ret['comment'] = 'HANA node set as {}'.format(new_state.name)
+        ret['comment'] = 'HANA node set as {}'.format(new_state)
         ret['result'] = True
         return ret
 
@@ -450,7 +442,7 @@ def sr_secondary_registered(
         inst=inst,
         password=password)
 
-    if running and current_state == hana.SrStates.SECONDARY:
+    if running and current_state == 'SECONDARY':
         ret['result'] = True
         ret['comment'] = 'HANA node already set as secondary and running'
         return ret
@@ -486,7 +478,7 @@ def sr_secondary_registered(
             inst=inst,
             password=password)
         ret['changes']['secondary'] = name
-        ret['comment'] = 'HANA node set as {}'.format(new_state.name)
+        ret['comment'] = 'HANA node set as {}'.format(new_state)
         ret['result'] = True
         return ret
 
@@ -535,7 +527,7 @@ def sr_clean(
         inst=inst,
         password=password)
 
-    if current_state == hana.SrStates.DISABLED:
+    if current_state == 'DISABLED':
         ret['result'] = True
         ret['comment'] = 'HANA node already clean'
         return ret
@@ -563,7 +555,7 @@ def sr_clean(
             inst=inst,
             password=password)
         ret['changes']['disabled'] = name
-        ret['comment'] = 'HANA node set as {}'.format(new_state.name)
+        ret['comment'] = 'HANA node set as {}'.format(new_state)
         ret['result'] = True
         return ret
 
