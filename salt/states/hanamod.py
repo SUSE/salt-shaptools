@@ -626,6 +626,8 @@ def memory_resources_updated(
                             ['memorymanager','global_allocation_limit',global_allocation_limit]]
     file_name = 'global.ini'
     layer = 'SYSTEM'
+    layer_name= None
+    reconfig= True
     userkey_data = {'database':'SYSTEMDB', 'user_name': 'system', 'user_password':'YourPassword1234'}
     #TODO: update logic to avoid hardcoded params for SQL to update memory
     try:
@@ -638,10 +640,12 @@ def memory_resources_updated(
                     password=password)
             
             __salt__['hana.set_ini_parameter'](
+                ini_parameter_values=ini_parameter_values,
                 database=userkey_data.get('database'),
                 file_name=file_name,
                 layer=layer,
-                ini_parameter_values=ini_parameter_values,
+                layer_name=layer_name,
+                reconfig=reconfig,
                 key_name=userkey_data.get('key_name', None),
                 user_name=userkey_data.get('user_name', None),
                 user_password=userkey_data.get('user_password', None),
