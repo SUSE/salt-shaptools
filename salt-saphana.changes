@@ -4,6 +4,11 @@ Tue Apr 23 14:40:53 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
 - Remove python shaptools dependency from spec file 
 
 -------------------------------------------------------------------
+Tue Apr 23 13:44:07 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
+
+- Update system replication states constants usage 
+
+-------------------------------------------------------------------
 Mon Mar  4 15:17:24 UTC 2019 - xarbulu@suse.com
 
 - Improved the use of keystore access. When the key_name is informed,
