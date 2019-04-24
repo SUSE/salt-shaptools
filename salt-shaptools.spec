@@ -45,6 +45,8 @@ cp -R salt/modules/hanamod.py %{buildroot}/srv/salt/_modules
 cp -R salt/states/hanamod.py %{buildroot}/srv/salt/_states
 cp -R salt/modules/crmshmod.py %{buildroot}/srv/salt/_modules
 cp -R salt/states/crmshmod.py %{buildroot}/srv/salt/_states
+cp -R salt/modules/drbd.py %{buildroot}/srv/salt/_modules
+cp -R salt/states/drbd.py %{buildroot}/srv/salt/_states
 
 
 %files
