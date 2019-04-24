@@ -572,6 +572,7 @@ def sr_clean(
         return ret
 
 def memory_resources_updated(
+        name,
         global_allocation_limit,
         preload_column_tables,
         sid,
@@ -581,12 +582,12 @@ def memory_resources_updated(
     '''
     Update memory resources of a running HANA system by changing column preload behavior
     and changing the memory allocation size of HANA instance
+    name:
+        Host name of system installed hana platform
     global_allocation_limit:
         max memory allocation limit for hana instance
     preload_column_tables:
         if preload HANA column tables on startup
-    name:
-        System id of the installed hana platform
     sid
         System id of the installed hana platform
     inst
@@ -609,7 +610,7 @@ def memory_resources_updated(
 
     if __opts__['test']:
         ret['result'] = None
-        ret['comment'] = 'Memory resources would be updated on {}'.format(sid)
+        ret['comment'] = 'Memory resources would be updated on {}-{}'.format(name, sid)
         ret['changes']['sid'] = sid
         ret['changes']['global_allocation_limit'] = global_allocation_limit
         ret['changes']['preload_column_tables'] = preload_column_tables
@@ -660,7 +661,7 @@ def memory_resources_updated(
                     inst=inst,
                     password=password)
         ret['changes']['sid'] = sid
-        ret['comment'] = 'Memory resources updated on {}'.format(sid)
+        ret['comment'] = 'Memory resources updated on {}-{}'.format(name, sid)
         ret['result'] = True
         return ret
 
