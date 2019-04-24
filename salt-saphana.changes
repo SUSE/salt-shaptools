@@ -1,8 +1,14 @@
 -------------------------------------------------------------------
+Tue Apr 23 13:44:07 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
+
+- Update system replication states constants usage
+
+-------------------------------------------------------------------
 Wed Apr 17 08:28:30 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
 
 - Add ha-cluster-init and ha-cluster-join usage when crmsh version
   is older than 3.0.0 
+- Add methods to customize sbd and corosync configuration files
 
 -------------------------------------------------------------------
 Mon Mar  4 15:17:24 UTC 2019 - xarbulu@suse.com
