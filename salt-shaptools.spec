@@ -31,8 +31,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 Requires:       %{python_module shaptools}
 
-%define fname hana
-
 %description
 Salt modules and states for SAP Applications and SLE-HA components management
 
