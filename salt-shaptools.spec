@@ -1,5 +1,5 @@
 #
-# spec file for package salt-saphana
+# spec file for package salt-shaptools
 #
 # Copyright (c) 2019 SUSE LLC
 #
@@ -18,23 +18,19 @@
 
 # See also http://en.opensuse.org/openSUSE:Specfile_guidelines
 
-%{?!python_module:%define python_module() python-%{**} python3-%{**}}
-Name:           salt-saphana
-Version:        0.3.0
+Name:           salt-shaptools
+Version:        0.1.0
 Release:        1
-Summary:        Salt modules and states for SAP HANA
+Summary:        Salt modules and states for SAP Applications and SLE-HA components management
 
 License:        Apache-2.0
 Url:            https://github.com/SUSE/%{name}
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
-Requires:       %{python_module shaptools}
-
-%define fname hana
 
 %description
-Salt modules and states for SAP HANA
+Salt modules and states for SAP Applications and SLE-HA components management
 
 %prep
 %setup -q
