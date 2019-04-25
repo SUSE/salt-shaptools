@@ -36,6 +36,7 @@ HA_INIT_COMMAND = '/usr/sbin/ha-cluster-init'
 HA_JOIN_COMMAND = '/usr/sbin/ha-cluster-join'
 # Below this version ha-cluster-init will be used to create the cluster
 CRM_NEW_VERSION = '3.0.0'
+COROSYNC_CONF = '/etc/corosync/corosync.conf'
 
 LOGGER = logging.getLogger(__name__)
 # True if current execution has a newer version than CRM_NEW_VERSION
@@ -201,11 +202,9 @@ def _add_watchdog_sbd(watchdog):
     )
 
 
-def _update_corosync_conf(path, value):
+def _set_corosync_value(path, value):
     '''
-    Update corosync configuration file value with a new entry.
-
-    By default /etc/corosync/corosync.conf is used.
+    Set value to a parameter in the corosync configuration file
 
     Example:
         update transport mode to unicast
@@ -213,12 +212,74 @@ def _update_corosync_conf(path, value):
     '''
     cmd = '{crm_command} corosync set {path} {value}'.format(
         crm_command=CRM_COMMAND, path=path, value=value)
-    return_code = __salt__['cmd.retcode'](cmd)
-    if return_code:
-        return return_code
+    __salt__['cmd.run'](cmd)
 
-    cmd = '{crm_command} corosync reload'.format(crm_command=CRM_COMMAND)
-    return __salt__['cmd.retcode'](cmd)
+
+def _add_node_corosync(addr, name):
+    '''
+    Set value to a parameter in the corosync configuration file
+    '''
+    if not __salt__['file.contains_regex'](
+            path=COROSYNC_CONF, regex='^nodelist.*'):
+        __salt__['file.append'](path=COROSYNC_CONF, args='nodelist {}')
+
+    cmd = '{crm_command} corosync add-node {addr} {name}'.format(
+        crm_command=CRM_COMMAND, addr=addr, name=name or '')
+    __salt__['cmd.run'](cmd)
+
+
+def _create_corosync_authkey():
+    '''
+    Create corosync authkey
+    '''
+    cmd = 'corosync-keygen'
+    __salt__['cmd.run'](cmd)
+
+
+def _set_corosync_unicast(addr, name=None):
+    '''
+    Update corosync configuration file value with a new entry.
+
+    By default /etc/corosync/corosync.conf is used.
+
+    Raises:
+        salt.exceptions.CommandExecutionError: If any salt cmd.run fails
+    '''
+    cmd = '{crm_command} cluster stop'.format(crm_command=CRM_COMMAND)
+    __salt__['cmd.run'](cmd)
+
+    __salt__['file.line'](
+        path=COROSYNC_CONF, match='.*mcastaddr:.*', mode='delete')
+    _set_corosync_value('totem.transport', 'udpu')
+    _add_node_corosync(addr, name)
+    _create_corosync_authkey()
+
+    cmd = '{crm_command} cluster start'.format(crm_command=CRM_COMMAND)
+    __salt__['cmd.run'](cmd)
+
+
+def _join_corosync_unicast(host, interface=None):
+    '''
+    Check if first node is configured as unicast and in that case add the
+    new node information to the configuration file
+
+    Warning: SSH connection must be available
+    '''
+    unicast = __salt__['cmd.run'](
+        'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
+        'root@{host} "grep \'transport: udpu\' {conf}"'.format(
+            host=host, conf=COROSYNC_CONF))
+    if not unicast:
+        LOGGER.info('cluster not set as unicast')
+        return
+
+    name = __salt__['network.get_hostname']()
+    addr = __salt__['network.interface_ip'](interface or 'eth0')
+
+    cmd = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '\
+        'root@{host} "sudo {crm_command} corosync add-node {addr} {name}"'.format(
+            host=host, crm_command=CRM_COMMAND, addr=addr, name=name)
+    __salt__['cmd.run'](cmd)
 
 
 def _crm_init(
@@ -281,10 +342,10 @@ def _ha_cluster_init(
         cmd = '{cmd} -q'.format(cmd=cmd)
 
     return_code = __salt__['cmd.retcode'](cmd)
-
     if not return_code and unicast:
-        return_code = _update_corosync_conf('totem.transport', 'udpu')
-
+        name = __salt__['network.get_hostname']()
+        addr = __salt__['network.interface_ip'](interface or 'eth0')
+        _set_corosync_unicast(addr, name)
     return return_code
 
 
@@ -368,6 +429,8 @@ def _ha_cluster_join(
     if watchdog:
         _add_watchdog_sbd(watchdog)
 
+    # To logic to apply unicast is done in _join_corosync_unicast
+    _join_corosync_unicast(host, interface)
     cmd = '{ha_join_command} -y -c {host}'.format(
         ha_join_command=HA_JOIN_COMMAND, host=host)
     if interface:
@@ -375,6 +438,11 @@ def _ha_cluster_join(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
+    return_code = __salt__['cmd.retcode'](cmd)
+    if return_code:
+        return return_code
+
+    cmd = '{ha_join_command} resource refresh'.format(ha_join_command=HA_JOIN_COMMAND)
     return __salt__['cmd.retcode'](cmd)
 
 

@@ -230,36 +230,119 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 append_if_not_found=True
             )
 
-    def test_update_corosync_conf_error(self):
+    def test_add_node_corosync(self):
         '''
-        Test _update_corosync_conf
+        Test _add_node_corosync
         '''
-        mock_cmd_run = MagicMock(side_effect=[1, 0])
+        mock_cmd_run = MagicMock()
+        mock_contains_regex = MagicMock(return_value=0)
+        mock_file_append = MagicMock()
 
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod._update_corosync_conf('path', 'value')
-            assert result == 1
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.run': mock_cmd_run,
+                'file.contains_regex': mock_contains_regex,
+                'file.append': mock_file_append}):
+            crmshmod._add_node_corosync('1.0.1.0', 'node')
+            mock_contains_regex.assert_called_once_with(
+                path='/etc/corosync/corosync.conf', regex='^nodelist.*')
+            mock_file_append.assert_called_once_with(
+                path='/etc/corosync/corosync.conf', args='nodelist {}')
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} corosync add-node {addr} {name}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    addr='1.0.1.0', name='node'))
+
+    def test_set_corosync_value(self):
+        '''
+        Test _set_corosync_value
+        '''
+        mock_cmd_run = MagicMock()
+
+        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+            crmshmod._set_corosync_value('path', 'value')
             mock_cmd_run.assert_called_once_with(
                 '{crm_command} corosync set {path} {value}'.format(
-                    crm_command=crmshmod.CRM_COMMAND, path='path', value='value')
-            )
-
-    def test_update_corosync_conf(self):
-        '''
-        Test _update_corosync_conf
-        '''
-        mock_cmd_run = MagicMock(side_effect=[0, 0])
-
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod._update_corosync_conf('path', 'value')
-            assert result == 0
-            mock_cmd_run.assert_has_calls([
-                mock.call('{crm_command} corosync set {path} {value}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
-                    path='path', value='value')),
-                mock.call('{crm_command} corosync reload'.format(
+                    path='path', value='value'))
+
+    def test_create_corosync_authkey(self):
+        '''
+        Test _create_corosync_authkey
+        '''
+        mock_cmd_run = MagicMock()
+
+        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+            crmshmod._create_corosync_authkey()
+            mock_cmd_run.assert_called_once_with('corosync-keygen')
+
+    @mock.patch('salt.modules.crmshmod._set_corosync_value')
+    @mock.patch('salt.modules.crmshmod._add_node_corosync')
+    @mock.patch('salt.modules.crmshmod._create_corosync_authkey')
+    def test_set_corosync_unicast(self, mock_authkey, mock_add, mock_set):
+        '''
+        Test _set_corosync_unicast
+        '''
+        mock_cmd_run = MagicMock()
+        mock_file_line = MagicMock()
+
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.run': mock_cmd_run,
+                'file.line': mock_file_line}):
+            crmshmod._set_corosync_unicast('1.0.1.0', 'node')
+            mock_file_line.assert_called_once_with(
+                path='/etc/corosync/corosync.conf',
+                match='.*mcastaddr:.*',
+                mode='delete')
+            mock_cmd_run.assert_has_calls([
+                mock.call('{crm_command} cluster stop'.format(
+                    crm_command=crmshmod.CRM_COMMAND)),
+                mock.call('{crm_command} cluster start'.format(
                     crm_command=crmshmod.CRM_COMMAND))
             ])
+            mock_set.assert_called_once_with('totem.transport', 'udpu')
+            mock_add.assert_called_once_with('1.0.1.0', 'node')
+            mock_authkey.assert_called_once_with()
+
+    def test_join_corosync_unicast(self):
+        '''
+        Test _join_corosync_unicast
+        '''
+        mock_cmd_run = MagicMock(side_effect=['udpu', ''])
+        mock_get_hostname = MagicMock(return_value='node')
+        mock_interface_ip = MagicMock(return_value='1.0.1.0')
+
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.run': mock_cmd_run,
+                'network.get_hostname': mock_get_hostname,
+                'network.interface_ip': mock_interface_ip}):
+            crmshmod._join_corosync_unicast('main_node', 'eth1')
+            mock_cmd_run.assert_has_calls([
+                mock.call(
+                    'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
+                    'root@{host} "grep \'transport: udpu\' {conf}"'.format(
+                        host='main_node', conf='/etc/corosync/corosync.conf')),
+                mock.call(
+                    'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
+                    'root@{host} "sudo {crm_command} corosync add-node {addr} {name}"'.format(
+                        host='main_node', crm_command=crmshmod.CRM_COMMAND,
+                        addr='1.0.1.0', name='node'))
+            ])
+            mock_interface_ip.assert_called_once_with('eth1')
+
+    @mock.patch('logging.Logger.info')
+    def test_join_corosync_not_unicast(self, logger):
+        '''
+        Test _join_corosync_unicast
+        '''
+        mock_cmd_run = MagicMock(side_effect=[''])
+
+        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+            crmshmod._join_corosync_unicast('main_node', 'eth1')
+            mock_cmd_run.assert_called_once_with((
+                    'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
+                    'root@{host} "grep \'transport: udpu\' {conf}"'.format(
+                        host='main_node', conf='/etc/corosync/corosync.conf')))
+            logger.assert_called_once_with('cluster not set as unicast')
 
     def test_crm_init_basic(self):
         '''
@@ -301,39 +384,25 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 '{command} -y'.format(command=crmshmod.HA_INIT_COMMAND))
 
     @mock.patch('salt.modules.crmshmod._add_watchdog_sbd')
-    @mock.patch('salt.modules.crmshmod._update_corosync_conf')
+    @mock.patch('salt.modules.crmshmod._set_corosync_unicast')
     def test_ha_cluster_init_complete(self, mock_corosync, mock_watchdog):
         '''
         Test _ha_cluster_init method
         '''
         mock_cmd_run = MagicMock(return_value=0)
-        mock_corosync.return_value = 0
+        mock_get_hostname = MagicMock(return_value='node')
+        mock_interface_ip = MagicMock(return_value='1.0.1.0')
 
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.retcode': mock_cmd_run,
+                'network.get_hostname': mock_get_hostname,
+                'network.interface_ip': mock_interface_ip}):
             result = crmshmod._ha_cluster_init(
                 'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
             assert result == 0
             mock_watchdog.assert_called_once_with('dog')
-            mock_corosync.assert_called_once_with('totem.transport', 'udpu')
-            mock_cmd_run.assert_called_once_with(
-                '{} -y -i {} -A {} -S -s {} -q'.format(
-                    crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'sbd_dev'))
-
-    @mock.patch('salt.modules.crmshmod._add_watchdog_sbd')
-    @mock.patch('salt.modules.crmshmod._update_corosync_conf')
-    def test_ha_cluster_init_corosync_error(self, mock_corosync, mock_watchdog):
-        '''
-        Test _ha_cluster_init method
-        '''
-        mock_cmd_run = MagicMock(return_value=0)
-        mock_corosync.return_value = 1
-
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod._ha_cluster_init(
-                'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
-            assert result == 1
-            mock_watchdog.assert_called_once_with('dog')
-            mock_corosync.assert_called_once_with('totem.transport', 'udpu')
+            mock_corosync.assert_called_once_with('1.0.1.0', 'node')
+            mock_interface_ip.assert_called_once_with('eth1')
             mock_cmd_run.assert_called_once_with(
                 '{} -y -i {} -A {} -S -s {} -q'.format(
                     crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'sbd_dev'))
@@ -392,7 +461,8 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 '{} cluster join -y -c {} -w {} -i {} -q'.format(
                     crmshmod.CRM_COMMAND, '192.168.1.50', 'dog', 'eth1'))
 
-    def test_ha_cluster_join_basic(self):
+    @mock.patch('salt.modules.crmshmod._join_corosync_unicast')
+    def test_ha_cluster_join_basic(self, mock_corosync):
         '''
         Test _ha_cluster_join method
         '''
@@ -401,24 +471,47 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._ha_cluster_join('192.168.1.50')
             assert result
+            mock_corosync.assert_called_once_with('192.168.1.50', None)
             mock_cmd_run.assert_called_once_with(
                 '{command} -y -c {host}'.format(
                     command=crmshmod.HA_JOIN_COMMAND, host='192.168.1.50'))
 
     @mock.patch('salt.modules.crmshmod._add_watchdog_sbd')
-    def test_ha_cluster_join_complete(self, mock_watchdog):
+    @mock.patch('salt.modules.crmshmod._join_corosync_unicast')
+    def test_ha_cluster_join_complete(self, mock_corosync, mock_watchdog):
         '''
         Test _ha_cluster_join method
         '''
-        mock_cmd_run = MagicMock(return_value=True)
+        mock_cmd_run = MagicMock(side_effect=[0, 0])
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._ha_cluster_join(
                 '192.168.1.50', 'dog', 'eth1', True)
-            assert result
+            assert result == 0
+            mock_corosync.assert_called_once_with('192.168.1.50', 'eth1')
             mock_watchdog.assert_called_once_with('dog')
-            mock_cmd_run.assert_called_once_with(
-                '{} -y -c {} -i {} -q'.format(
+            mock_cmd_run.assert_has_calls([
+                mock.call('{} -y -c {} -i {} -q'.format(
+                    crmshmod.HA_JOIN_COMMAND, '192.168.1.50', 'eth1')),
+                mock.call('{} resource refresh'.format(
+                    crmshmod.HA_JOIN_COMMAND))
+            ])
+
+    @mock.patch('salt.modules.crmshmod._add_watchdog_sbd')
+    @mock.patch('salt.modules.crmshmod._join_corosync_unicast')
+    def test_ha_cluster_join_complete_error(self, mock_corosync, mock_watchdog):
+        '''
+        Test _ha_cluster_join method
+        '''
+        mock_cmd_run = MagicMock(side_effect=[1, 0])
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod._ha_cluster_join(
+                '192.168.1.50', 'dog', 'eth1', True)
+            assert result == 1
+            mock_corosync.assert_called_once_with('192.168.1.50', 'eth1')
+            mock_watchdog.assert_called_once_with('dog')
+            mock_cmd_run.assert_called_once_with('{} -y -c {} -i {} -q'.format(
                     crmshmod.HA_JOIN_COMMAND, '192.168.1.50', 'eth1'))
 
     @mock.patch('salt.modules.crmshmod._crm_join')
