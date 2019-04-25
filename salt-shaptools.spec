@@ -20,7 +20,7 @@
 
 %{?!python_module:%define python_module() python-%{**} python3-%{**}}
 Name:           salt-shaptools
-Version:        0.3.0
+Version:        0.1.0
 Release:        1
 Summary:        Salt modules and states for SAP Applications and SLE-HA components management
 
