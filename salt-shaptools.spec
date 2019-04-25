@@ -18,7 +18,6 @@
 
 # See also http://en.opensuse.org/openSUSE:Specfile_guidelines
 
-%{?!python_module:%define python_module() python-%{**} python3-%{**}}
 Name:           salt-shaptools
 Version:        0.1.0
 Release:        1
@@ -29,7 +28,6 @@ Url:            https://github.com/SUSE/%{name}
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
-Requires:       %{python_module shaptools}
 
 %description
 Salt modules and states for SAP Applications and SLE-HA components management
