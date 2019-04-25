@@ -22,7 +22,7 @@
 Name:           salt-shaptools
 Version:        0.3.0
 Release:        1
-Summary:        Salt modules and states for SAP Applications and SLE-HA Components
+Summary:        Salt modules and states for SAP Applications and SLE-HA components management
 
 License:        Apache-2.0
 Url:            https://github.com/SUSE/%{name}
@@ -34,7 +34,7 @@ Requires:       %{python_module shaptools}
 %define fname hana
 
 %description
-Salt modules and states for SAP HANA
+Salt modules and states for SAP Applications and SLE-HA components management
 
 %prep
 %setup -q

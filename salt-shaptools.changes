@@ -3,7 +3,7 @@ Tue Apr 25 10:24:07 UTC 2019 - Diego Vinicius Akechi <dakechi@suse.com>
 
 - Renamed the package from salt-saphana to salt-shaptools
   * This package is intended to host SAP Applications and SLE-HA 
-    salt modules and states, so a more meaninful name is needed.
+    salt modules and states, so a more meaningful name is needed.
     
 -------------------------------------------------------------------
 Tue Apr 23 13:44:07 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
