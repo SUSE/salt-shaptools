@@ -4,9 +4,9 @@
 
 # SAP Applications and SUSE Linux Enterprise High Availability salt modules and States
 
-This project has been created to provide salt  modules and states for SAP HANA and other SAP applications and the SLE-HA clustering tools. For that,
+This project has been created to provide salt modules and states for SAP HANA and other SAP applications and the SLE-HA clustering tools. For that,
 it wraps the [shaptools](https://github.com/SUSE/shaptools) project code. The
-main idea is to use this module in salt formulas to deploye the these applications easily.
+main idea is to use this module in salt formulas to deploy the these applications easily.
 
 ## Installation and usage
 **INFO:** Currently this project has been created as an independent project, but
