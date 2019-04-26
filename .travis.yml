@@ -19,17 +19,11 @@ jobs:
           - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov enum34
           - git clone --depth=50 https://github.com/openSUSE/salt ../salt
           - rm ../salt/tests/conftest.py
-          - git clone --depth=50 https://github.com/arbulu89/shaptools.git ../shaptools
+          - git clone --depth=50 https://github.com/SUSE/shaptools.git ../shaptools
           - pip install ../salt
           - pip install ../shaptools
-      before_script:
-          - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-          - chmod +x ./cc-test-reporter
-          - ./cc-test-reporter before-build
       script:
           - ./tests/run.sh
-      after_script:
-          - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT -p $(readlink -f ../salt)
 
     - stage: test
       python: 3.6
@@ -39,7 +33,7 @@ jobs:
           - pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov enum34
           - git clone --depth=50 https://github.com/openSUSE/salt ../salt
           - rm ../salt/tests/conftest.py
-          - git clone --depth=50 https://github.com/arbulu89/shaptools.git ../shaptools
+          - git clone --depth=50 https://github.com/SUSE/shaptools.git ../shaptools
           - pip install ../salt
           - pip install ../shaptools
       before_script:
@@ -55,7 +49,7 @@ jobs:
       if: type != pull_request
       env:
         - FOLDER=/package
-        - PACKAGE_NAME=salt-saphana
+        - PACKAGE_NAME=salt-shaptools
 
       before_install:
         - docker pull shap/continuous_deliver:latest
@@ -74,7 +68,7 @@ jobs:
     - stage: submit
       if: type != pull_request AND branch = master
       env:
-        - PACKAGE_NAME=salt-saphana
+        - PACKAGE_NAME=salt-shaptools
 
       before_install:
         - docker pull shap/continuous_deliver:latest
