@@ -442,7 +442,7 @@ def _ha_cluster_join(
     if return_code:
         return return_code
 
-    cmd = '{ha_join_command} resource refresh'.format(ha_join_command=HA_JOIN_COMMAND)
+    cmd = '{crm_command} resource refresh'.format(crm_command=CRM_COMMAND)
     return __salt__['cmd.retcode'](cmd)
 
 
