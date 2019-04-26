@@ -494,7 +494,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 mock.call('{} -y -c {} -i {} -q'.format(
                     crmshmod.HA_JOIN_COMMAND, '192.168.1.50', 'eth1')),
                 mock.call('{} resource refresh'.format(
-                    crmshmod.HA_JOIN_COMMAND))
+                    crmshmod.CRM_COMMAND))
             ])
 
     @mock.patch('salt.modules.crmshmod._add_watchdog_sbd')
