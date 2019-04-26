@@ -49,7 +49,12 @@ cp -R salt/states/crmshmod.py %{buildroot}/srv/salt/_states
 
 %files
 %defattr(-,root,root,-)
+# %license macro is not available on older releases
+%if 0%{?sle_version} <= 120300
+%doc LICENSE
+%else
 %license LICENSE
+%endif
 %doc README.md
 /srv/salt/_modules
 /srv/salt/_states
