@@ -71,8 +71,6 @@ def _analyse_status_type(line):
         if x in line:
             return ret[x]
 
-    return 'UNKNOWN'
-
 
 def _add_res(line):
     '''
@@ -167,7 +165,7 @@ def _is_local_all_uptodated(name):
     ret = False
 
     res = status(name)
-    if not res:
+    if not res or len(res) == 0:
         return ret
 
     # Since name is not all, res only have one element
@@ -190,7 +188,7 @@ def _is_peers_uptodated(name, peernode='all'):
     ret = None
 
     res = status(name)
-    if not res:
+    if not res or len(res) == 0:
         return ret
 
     # Since name is not all, res only have one element
