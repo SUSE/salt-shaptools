@@ -6,6 +6,8 @@
 # Import Python libs
 from __future__ import absolute_import, print_function, unicode_literals
 
+from salt import exceptions
+
 # Import Salt Testing Libs
 from tests.support.mixins import LoaderModuleMockMixin
 from tests.support.unit import TestCase, skipIf
@@ -63,6 +65,32 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
                'synchronisation: ': 'syncbar'}
         mock = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate/partner syncbar None 50 50')
+        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+            self.assertDictEqual(drbd.overview(), ret)
+
+        ret = {'connection state': 'True',
+               'device': 'Stack',
+               'local disk state': 'UpToDate',
+               'local role': 'master',
+               'minor number': 'Salt',
+               'partner disk state': 'partner',
+               'partner role': 'master',
+               'synched': '6050',
+               'synchronisation: ': 'syncbar'}
+        mock = MagicMock(return_value='Salt:Stack True master(2*) \
+        UpToDate/partner syncbar None 60 50')
+        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+            self.assertDictEqual(drbd.overview(), ret)
+
+        ret = {'connection state': 'True',
+               'device': 'Stack',
+               'local disk state': 'UpToDate',
+               'local role': 'master',
+               'minor number': 'Salt',
+               'partner disk state': 'UpToDate',
+               'partner role': 'minion'}
+        mock = MagicMock(return_value='Salt:Stack True master/minion \
+        UpToDate(2*)')
         with patch.dict(drbd.__salt__, {'cmd.run': mock}):
             self.assertDictEqual(drbd.overview(), ret)
 
@@ -164,6 +192,19 @@ test role:Primary
             except AttributeError:  # python3
                 self.assertCountEqual(drbd.status(), ret)
 
+        ret = {'Unknown parser': ' single role:Primary'}
+        fake = {}
+        fake['stdout'] = '''
+ single role:Primary
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            self.assertDictEqual(drbd.status(), ret)
+
     def test_createmd(self):
         '''
         Test if createmd function work well
@@ -237,6 +278,7 @@ test role:Primary
         Test if setup_show function work well
         Test data is get from drbd-9.0.16/drbd-utils-9.6.0
         '''
+        # Test 1: Return code is 0
         ret = [{'_this_host': {'node-id': 1,
                                'volumes': [{'device_minor': 5,
                                             'disk': {'on-io-error': 'pass_on'},
@@ -305,11 +347,40 @@ test role:Primary
                 self.assertCountEqual(drbd.setup_show(), ret)
             mock.assert_called_once_with(['drbdsetup', 'show', 'all', '--json'])
 
+        # Test 2: Return code is not 0
+        ret = {'name': 'all',
+               'result': False,
+               'comment': 'Error(10) happend when show resource via drbdsetup.'}
+
+        fake = {'retcode': 10}
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            try:  # python2
+                self.assertItemsEqual(drbd.setup_show(), ret)
+            except AttributeError:  # python3
+                self.assertCountEqual(drbd.setup_show(), ret)
+            mock.assert_called_once_with(['drbdsetup', 'show', 'all', '--json'])
+
+        # Test 3: Raise json ValueError
+        fake = {}
+        # Wrong Json format to raise ValueError
+        fake['stdout'] = '''[{'1': '2': '3'}]'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            self.assertRaises(exceptions.CommandExecutionError, drbd.setup_show)
+
     def test_setup_status(self):
         '''
         Test if setup_status function work well
         Test data is get from drbd-9.0.16/drbd-utils-9.6.0
         '''
+        # Test 1: Return code is 0
         ret = [{'connections': [{'ap-in-flight': 0,
                                  'congested': False,
                                  'connection-state': 'Connected',
@@ -414,6 +485,34 @@ test role:Primary
                 self.assertCountEqual(drbd.setup_status(), ret)
             mock.assert_called_once_with(['drbdsetup', 'status', 'all', '--json'])
 
+        # Test 2: Return code is not 0
+        ret = {'name': 'all',
+               'result': False,
+               'comment': 'Error(10) happend when show resource via drbdsetup.'}
+
+        fake = {'retcode': 10}
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            try:  # python2
+                self.assertItemsEqual(drbd.setup_status(), ret)
+            except AttributeError:  # python3
+                self.assertCountEqual(drbd.setup_status(), ret)
+            mock.assert_called_once_with(['drbdsetup', 'status', 'all', '--json'])
+
+        # Test 3: Raise json ValueError
+        fake = {}
+        # Wrong Json format to raise ValueError
+        fake['stdout'] = '''[{'1': '2': '3'}]'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            self.assertRaises(exceptions.CommandExecutionError, drbd.setup_status)
+
     def test_check_sync_status(self):
         '''
         Test if check_sync_status function work well
@@ -466,7 +565,7 @@ beijing role:Primary
             self.assertEqual(drbd.check_sync_status('beijing'), False)
             mock.assert_called_with(['drbdadm', 'status', 'beijing'])
 
-        # Test 3: Test peer is not UpToDate
+        # Test 3.1: Test peer is not UpToDate
         fake = {}
         fake['stdout'] = '''
 beijing role:Primary
@@ -488,3 +587,62 @@ beijing role:Primary
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
             self.assertEqual(drbd.check_sync_status('beijing'), False)
             mock.assert_called_with(['drbdadm', 'status', 'beijing'])
+
+        # Test 3.2: Test status with specific peernode
+        fake = {}
+        fake['stdout'] = '''
+beijing role:Primary
+  volume:0 disk:UpToDate
+  volume:1 disk:UpToDate
+  node2 role:Secondary
+    volume:0 peer-disk:Inconsistent
+    volume:1 peer-disk:UpToDate
+  node3 role:Secondary
+    volume:0 peer-disk:UpToDate
+    volume:1 peer-disk:UpToDate
+
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            self.assertEqual(drbd.check_sync_status('beijing', peernode='node3'), True)
+
+        # Test 4.1: Test status return Error
+        fake = {}
+        fake['stdout'] = ""
+        fake['stderr'] = ""
+        fake['retcode'] = 1
+
+        mock = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            self.assertEqual(drbd.check_sync_status('beijing'), False)
+
+        # Test 4.2: Test status return Error
+        fake = {}
+        fake['stdout'] = '''
+beijing role:Primary
+  volume:0 disk:UpToDate
+  volume:1 disk:UpToDate
+  node2 role:Secondary
+    volume:0 peer-disk:UpToDate
+    volume:1 peer-disk:UpToDate
+  node3 role:Secondary
+    volume:0 peer-disk:UpToDate
+    volume:1 peer-disk:UpToDate
+
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        fake1 = {}
+        fake1['stdout'] = ""
+        fake1['stderr'] = ""
+        fake1['retcode'] = 1
+        mock = MagicMock(side_effect=[fake, fake1])
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+            self.assertEqual(drbd.check_sync_status('beijing'), False)
