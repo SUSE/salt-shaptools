@@ -126,6 +126,67 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
                 self.assertDictEqual(drbd.initialized(RES_NAME, force=True), ret)
                 mock_createmd.assert_called_once_with(force=True, name=RES_NAME)
 
+    def test_status(self):
+        '''
+        Test drbd status(_get_res_status) return none.
+        '''
+        # Test 1: drbd status raise Exception
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {},
+            'comment': 'Resource {} has already stopped.'.format(RES_NAME),
+        }
+
+        mock = MagicMock(return_value=0)
+        mock_status = MagicMock(side_effect=Exception)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+            with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
+                self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+
+        # Test 2: drbd status return empty []
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {},
+            'comment': 'Resource {} has already stopped.'.format(RES_NAME),
+        }
+
+        mock = MagicMock(return_value=0)
+        mock_status = MagicMock(return_value=[{'resource name': 'not_the_same'}])
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+            with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
+                self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+
+    def test_get_resource_list(self):
+        '''
+        Test drbd status(_get_res_status) return none.
+        '''
+        ret = ['beijing', 'tianjin', 'shanghai']
+
+        dump_info = '''
+common {
+}
+
+resource beijing {
+}
+
+resource tianjin {
+}
+
+resource shanghai {
+}
+'''
+        mock = MagicMock(return_value=dump_info)
+
+        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+            try:  # python2
+                self.assertItemsEqual(drbd._get_resource_list(), ret)
+            except AttributeError:  # python3
+                self.assertCountEqual(drbd._get_resource_list(), ret)
+
     def test_started(self):
         '''
         Test to check drbd resource is started.
