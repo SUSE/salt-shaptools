@@ -10,11 +10,26 @@ from salt.exceptions import CommandExecutionError
 from salt.ext import six
 
 import salt.utils.json
+import salt.utils.path
 
 LOG = logging.getLogger(__name__)
 
 # Define the module's virtual name
 __virtualname__ = 'drbd'
+
+DRBD_COMMAND = 'drbdadm'
+
+
+def __virtual__():
+    '''
+    Only load this module if drbdadm(drbd-utils) is installed
+    '''
+    if bool(salt.utils.path.which(DRBD_COMMAND)):
+        return __virtualname__
+    return (
+        False,
+        'The drbd execution module failed to load: the drbdadm'
+        ' binary is not available.')
 
 
 def _analyse_overview_field(content):

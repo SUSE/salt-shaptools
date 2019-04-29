@@ -39,6 +39,13 @@ LOG = logging.getLogger(__name__)
 __virtualname__ = 'drbd'
 
 
+def __virtual__():
+    '''
+    Only load if the drbd module is in __salt__
+    '''
+    return 'drbd.status' in __salt__
+
+
 def _resource_not_exist(name):
     cmd = 'drbdadm dump {}'.format(name)
     result = __salt__['cmd.retcode'](cmd)
