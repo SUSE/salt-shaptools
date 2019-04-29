@@ -1,29 +1,28 @@
-[![Build Status](https://travis-ci.org/SUSE/salt-saphana.svg?branch=master)](https://travis-ci.org/SUSE/salt-saphana)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/93d708a68b4295163e68/test_coverage)](https://codeclimate.com/github/SUSE/salt-saphana/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/93d708a68b4295163e68/maintainability)](https://codeclimate.com/github/SUSE/salt-saphana/maintainability)
+[![Build Status](https://travis-ci.org/SUSE/salt-shaptools.svg?branch=master)](https://travis-ci.org/SUSE/salt-shaptools)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/770395dbb4bb868502b3/test_coverage)](https://codeclimate.com/github/SUSE/salt-shaptools/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/770395dbb4bb868502b3/maintainability)](https://codeclimate.com/github/SUSE/salt-shaptools/maintainability)
 
-# SAP HANA salt module
+# SAP Applications and SUSE Linux Enterprise High Availability salt modules and States
 
-This module has been created to provision SAP HANA platform using salt. For that,
+This project has been created to provide salt modules and states for SAP HANA and other SAP applications and the SLE-HA clustering tools. For that,
 it wraps the [shaptools](https://github.com/SUSE/shaptools) project code. The
-main idea is to use this module in salt formulas to deploye the HANA platform
-easily.
+main idea is to use this module in salt formulas to deploy these applications easily.
 
 ## Installation and usage
-**INFO:** Currently this project has been created as an independted project, but
+**INFO:** Currently this project has been created as an independent project, but
 the idea is to merge to the [salt](https://github.com/saltstack/salt) project
 to extend it with these new functionalities.
 
 ### Run locally
 To run the module functionalities locally run:
 ```bash
-cd salt_hana
+cd salt-shaptools
 sudo salt-call --local -m modules hana.is_installed
 ```
 
 To run the state modules (there is a demo example in the demo folder) run:
 ```bash
-cd salt_hana
+cd salt-shaptools
 sudo salt-call --local --retcode-passthrough -l debug -m . state.template demo/primary.sls
 ```
 
@@ -67,7 +66,7 @@ pip install -e shaptools #put the correct path
 
 3. Run the tests. For that:
 ```bash
-cd salt_hana
+cd salt-shaptools
 sudo chmod 755 tests/run.sh
 ./tests/run.sh
 ```

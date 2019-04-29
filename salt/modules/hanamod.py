@@ -352,7 +352,7 @@ def get_sr_state(
         HANA instance password
 
     Returns:
-        SrStates: System replication state
+        str: String between PRIMARY, SECONDARY and DISABLED
 
     CLI Example:
 
