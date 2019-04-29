@@ -212,7 +212,7 @@ def _set_corosync_value(path, value):
     '''
     cmd = '{crm_command} corosync set {path} {value}'.format(
         crm_command=CRM_COMMAND, path=path, value=value)
-    __salt__['cmd.run'](cmd)
+    __salt__['cmd.run'](cmd, raise_err=True)
 
 
 def _add_node_corosync(addr, name):
@@ -225,7 +225,7 @@ def _add_node_corosync(addr, name):
 
     cmd = '{crm_command} corosync add-node {addr} {name}'.format(
         crm_command=CRM_COMMAND, addr=addr, name=name or '')
-    __salt__['cmd.run'](cmd)
+    __salt__['cmd.run'](cmd, raise_err=True)
 
 
 def _create_corosync_authkey():
@@ -233,7 +233,7 @@ def _create_corosync_authkey():
     Create corosync authkey
     '''
     cmd = 'corosync-keygen'
-    __salt__['cmd.run'](cmd)
+    __salt__['cmd.run'](cmd, raise_err=True)
 
 
 def _set_corosync_unicast(addr, name=None):
@@ -246,7 +246,7 @@ def _set_corosync_unicast(addr, name=None):
         salt.exceptions.CommandExecutionError: If any salt cmd.run fails
     '''
     cmd = '{crm_command} cluster stop'.format(crm_command=CRM_COMMAND)
-    __salt__['cmd.run'](cmd)
+    __salt__['cmd.run'](cmd, raise_err=True)
 
     __salt__['file.line'](
         path=COROSYNC_CONF, match='.*mcastaddr:.*', mode='delete')
@@ -255,7 +255,7 @@ def _set_corosync_unicast(addr, name=None):
     _create_corosync_authkey()
 
     cmd = '{crm_command} cluster start'.format(crm_command=CRM_COMMAND)
-    __salt__['cmd.run'](cmd)
+    __salt__['cmd.run'](cmd, raise_err=True)
 
 
 def _join_corosync_unicast(host, interface=None):
@@ -265,11 +265,11 @@ def _join_corosync_unicast(host, interface=None):
 
     Warning: SSH connection must be available
     '''
-    unicast = __salt__['cmd.run'](
+    unicast = __salt__['cmd.retcode'](
         'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
         'root@{host} "grep \'transport: udpu\' {conf}"'.format(
             host=host, conf=COROSYNC_CONF))
-    if not unicast:
+    if unicast:
         LOGGER.info('cluster not set as unicast')
         return
 
@@ -279,7 +279,7 @@ def _join_corosync_unicast(host, interface=None):
     cmd = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '\
         'root@{host} "sudo {crm_command} corosync add-node {addr} {name}"'.format(
             host=host, crm_command=CRM_COMMAND, addr=addr, name=name)
-    __salt__['cmd.run'](cmd)
+    __salt__['cmd.run'](cmd, raise_err=True)
 
 
 def _crm_init(
