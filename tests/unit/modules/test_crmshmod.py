@@ -250,7 +250,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             mock_cmd_run.assert_called_once_with(
                 '{crm_command} corosync add-node {addr} {name}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
-                    addr='1.0.1.0', name='node'))
+                    addr='1.0.1.0', name='node'), raise_err=True)
 
     def test_set_corosync_value(self):
         '''
@@ -263,7 +263,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             mock_cmd_run.assert_called_once_with(
                 '{crm_command} corosync set {path} {value}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
-                    path='path', value='value'))
+                    path='path', value='value'), raise_err=True)
 
     def test_create_corosync_authkey(self):
         '''
@@ -273,7 +273,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
             crmshmod._create_corosync_authkey()
-            mock_cmd_run.assert_called_once_with('corosync-keygen')
+            mock_cmd_run.assert_called_once_with('corosync-keygen', raise_err=True)
 
     @mock.patch('salt.modules.crmshmod._set_corosync_value')
     @mock.patch('salt.modules.crmshmod._add_node_corosync')
@@ -295,9 +295,9 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 mode='delete')
             mock_cmd_run.assert_has_calls([
                 mock.call('{crm_command} cluster stop'.format(
-                    crm_command=crmshmod.CRM_COMMAND)),
+                    crm_command=crmshmod.CRM_COMMAND), raise_err=True),
                 mock.call('{crm_command} cluster start'.format(
-                    crm_command=crmshmod.CRM_COMMAND))
+                    crm_command=crmshmod.CRM_COMMAND), raise_err=True)
             ])
             mock_set.assert_called_once_with('totem.transport', 'udpu')
             mock_add.assert_called_once_with('1.0.1.0', 'node')
@@ -307,38 +307,40 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test _join_corosync_unicast
         '''
-        mock_cmd_run = MagicMock(side_effect=['udpu', ''])
+        mock_cmd_retcode = MagicMock(return_value=0)
+        mock_cmd_run = MagicMock()
         mock_get_hostname = MagicMock(return_value='node')
         mock_interface_ip = MagicMock(return_value='1.0.1.0')
 
         with patch.dict(crmshmod.__salt__, {
+                'cmd.retcode': mock_cmd_retcode,
                 'cmd.run': mock_cmd_run,
                 'network.get_hostname': mock_get_hostname,
                 'network.interface_ip': mock_interface_ip}):
             crmshmod._join_corosync_unicast('main_node', 'eth1')
-            mock_cmd_run.assert_has_calls([
-                mock.call(
-                    'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
-                    'root@{host} "grep \'transport: udpu\' {conf}"'.format(
-                        host='main_node', conf='/etc/corosync/corosync.conf')),
-                mock.call(
-                    'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
-                    'root@{host} "sudo {crm_command} corosync add-node {addr} {name}"'.format(
-                        host='main_node', crm_command=crmshmod.CRM_COMMAND,
-                        addr='1.0.1.0', name='node'))
-            ])
+            mock_cmd_retcode.assert_called_once_with(
+                'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
+                'root@{host} "grep \'transport: udpu\' {conf}"'.format(
+                    host='main_node', conf='/etc/corosync/corosync.conf')
+            )
             mock_interface_ip.assert_called_once_with('eth1')
+            mock_cmd_run.assert_called_once_with(
+                'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
+                'root@{host} "sudo {crm_command} corosync add-node {addr} {name}"'.format(
+                    host='main_node', crm_command=crmshmod.CRM_COMMAND,
+                    addr='1.0.1.0', name='node'), raise_err=True
+            )
 
     @mock.patch('logging.Logger.info')
     def test_join_corosync_not_unicast(self, logger):
         '''
         Test _join_corosync_unicast
         '''
-        mock_cmd_run = MagicMock(side_effect=[''])
+        mock_cmd_retcode = MagicMock(return_value=1)
 
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_retcode}):
             crmshmod._join_corosync_unicast('main_node', 'eth1')
-            mock_cmd_run.assert_called_once_with((
+            mock_cmd_retcode.assert_called_once_with((
                     'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t '
                     'root@{host} "grep \'transport: udpu\' {conf}"'.format(
                         host='main_node', conf='/etc/corosync/corosync.conf')))
