@@ -52,7 +52,7 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
         mock = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate/UpToDate True None 50 50 666 888')
         with patch.dict(drbd.__salt__, {'cmd.run': mock}):
-            self.assertDictEqual(drbd.overview(), ret)
+            assert drbd.overview() == ret
 
         ret = {'connection state': 'True',
                'device': 'Stack',
@@ -66,7 +66,7 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
         mock = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate/partner syncbar None 50 50')
         with patch.dict(drbd.__salt__, {'cmd.run': mock}):
-            self.assertDictEqual(drbd.overview(), ret)
+            assert drbd.overview() == ret
 
         ret = {'connection state': 'True',
                'device': 'Stack',
@@ -80,7 +80,7 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
         mock = MagicMock(return_value='Salt:Stack True master(2*) \
         UpToDate/partner syncbar None 60 50')
         with patch.dict(drbd.__salt__, {'cmd.run': mock}):
-            self.assertDictEqual(drbd.overview(), ret)
+            assert drbd.overview() == ret
 
         ret = {'connection state': 'True',
                'device': 'Stack',
@@ -92,7 +92,7 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
         mock = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate(2*)')
         with patch.dict(drbd.__salt__, {'cmd.run': mock}):
-            self.assertDictEqual(drbd.overview(), ret)
+            assert drbd.overview() == ret
 
     def test_status(self):
         '''
@@ -203,7 +203,7 @@ test role:Primary
         mock = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertDictEqual(drbd.status(), ret)
+            assert drbd.status() == ret
 
     def test_createmd(self):
         '''
@@ -212,7 +212,7 @@ test role:Primary
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.createmd(), True)
+            assert drbd.createmd()
             mock.assert_called_once_with('drbdadm create-md all --force')
 
     def test_up(self):
@@ -222,7 +222,7 @@ test role:Primary
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.up(), True)
+            assert drbd.up()
             mock.assert_called_once_with('drbdadm up all')
 
     def test_down(self):
@@ -232,7 +232,7 @@ test role:Primary
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.down(), True)
+            assert drbd.down()
             mock.assert_called_once_with('drbdadm down all')
 
     def test_primary(self):
@@ -243,14 +243,14 @@ test role:Primary
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.primary(), True)
+            assert drbd.primary()
             mock.assert_called_once_with('drbdadm primary all')
 
         # SubTest2:
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.primary(force=True), True)
+            assert drbd.primary(force=True)
             mock.assert_called_once_with('drbdadm primary all --force')
 
     def test_secondary(self):
@@ -260,7 +260,7 @@ test role:Primary
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.secondary(), True)
+            assert drbd.secondary()
             mock.assert_called_once_with('drbdadm secondary all')
 
     def test_adjust(self):
@@ -270,7 +270,7 @@ test role:Primary
         mock = MagicMock(return_value=True)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertEqual(drbd.adjust(), True)
+            assert drbd.adjust()
             mock.assert_called_once_with('drbdadm adjust all')
 
     def test_setup_show(self):
@@ -539,7 +539,7 @@ beijing role:Primary
         mock = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertEqual(drbd.check_sync_status('beijing'), True)
+            assert drbd.check_sync_status('beijing')
             mock.assert_called_with('drbdadm status beijing')
 
         # Test 2: Test local is not UpToDate
@@ -562,7 +562,7 @@ beijing role:Primary
         mock = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertEqual(drbd.check_sync_status('beijing'), False)
+            assert not drbd.check_sync_status('beijing')
             mock.assert_called_with('drbdadm status beijing')
 
         # Test 3.1: Test peer is not UpToDate
@@ -585,7 +585,7 @@ beijing role:Primary
         mock = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertEqual(drbd.check_sync_status('beijing'), False)
+            assert not drbd.check_sync_status('beijing')
             mock.assert_called_with('drbdadm status beijing')
 
         # Test 3.2: Test status with specific peernode
@@ -608,7 +608,7 @@ beijing role:Primary
         mock = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertEqual(drbd.check_sync_status('beijing', peernode='node3'), True)
+            assert drbd.check_sync_status('beijing', peernode='node3')
 
         # Test 4.1: Test status return Error
         fake = {}
@@ -619,7 +619,7 @@ beijing role:Primary
         mock = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertEqual(drbd.check_sync_status('beijing'), False)
+            assert not drbd.check_sync_status('beijing')
 
         # Test 4.2: Test status return Error
         fake = {}
@@ -645,4 +645,4 @@ beijing role:Primary
         mock = MagicMock(side_effect=[fake, fake1])
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
-            self.assertEqual(drbd.check_sync_status('beijing'), False)
+            assert not drbd.check_sync_status('beijing')

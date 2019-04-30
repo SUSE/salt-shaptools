@@ -47,7 +47,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
         mock = MagicMock(return_value=1)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.initialized(RES_NAME), ret)
+            assert drbd.initialized(RES_NAME) == ret
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
         # SubTest 2: Resource have already initialized
@@ -61,7 +61,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
         mock = MagicMock(side_effect=[0, 0])
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.initialized(RES_NAME), ret)
+            assert drbd.initialized(RES_NAME) == ret
 
         # SubTest 3: The test option
         ret = {
@@ -75,7 +75,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-                self.assertDictEqual(drbd.initialized(RES_NAME), ret)
+                assert drbd.initialized(RES_NAME) == ret
 
         # SubTest 4: Error in initialize
         ret = {
@@ -90,7 +90,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.createmd': mock_createmd}):
-                self.assertDictEqual(drbd.initialized(RES_NAME, force=True), ret)
+                assert drbd.initialized(RES_NAME, force=True) == ret
                 mock_createmd.assert_called_once_with(force=True, name=RES_NAME)
 
         # SubTest 5: Succeed in initialize
@@ -106,7 +106,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.createmd': mock_createmd}):
-                self.assertDictEqual(drbd.initialized(RES_NAME, force=True), ret)
+                assert drbd.initialized(RES_NAME, force=True) == ret
                 mock_createmd.assert_called_once_with(force=True, name=RES_NAME)
 
         # SubTest 6: Command error
@@ -123,7 +123,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.createmd': mock_createmd}):
-                self.assertDictEqual(drbd.initialized(RES_NAME, force=True), ret)
+                assert drbd.initialized(RES_NAME, force=True) == ret
                 mock_createmd.assert_called_once_with(force=True, name=RES_NAME)
 
     def test_status(self):
@@ -139,11 +139,11 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
         }
 
         mock = MagicMock(return_value=0)
-        mock_status = MagicMock(side_effect=Exception)
+        mock_status = MagicMock(side_effect=exceptions.CommandExecutionError)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                assert drbd.stopped(RES_NAME) == ret
 
         # Test 2: drbd status return empty []
         ret = {
@@ -158,7 +158,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                assert drbd.stopped(RES_NAME) == ret
 
     def test_get_resource_list(self):
         '''
@@ -202,7 +202,7 @@ resource shanghai {
         mock = MagicMock(return_value=1)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.started(RES_NAME), ret)
+            assert drbd.started(RES_NAME) == ret
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
         # SubTest 2: Resource is already started
@@ -231,7 +231,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.started(RES_NAME), ret)
+                assert drbd.started(RES_NAME) == ret
 
         # SubTest 3: The test option
         ret = {
@@ -249,7 +249,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
                 with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                    self.assertDictEqual(drbd.started(RES_NAME), ret)
+                    assert drbd.started(RES_NAME) == ret
 
         # SubTest 4: Error in start
         ret = {
@@ -268,7 +268,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.up': mock_up}):
-                    self.assertDictEqual(drbd.started(RES_NAME), ret)
+                    assert drbd.started(RES_NAME) == ret
                     mock_up.assert_called_once_with(name=RES_NAME)
 
         # SubTest 5: Succeed in start
@@ -288,7 +288,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.up': mock_up}):
-                    self.assertDictEqual(drbd.started(RES_NAME), ret)
+                    assert drbd.started(RES_NAME) == ret
                     mock_up.assert_called_once_with(name=RES_NAME)
 
         # SubTest 6: Command error
@@ -309,7 +309,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.up': mock_up}):
-                    self.assertDictEqual(drbd.started(RES_NAME), ret)
+                    assert drbd.started(RES_NAME) == ret
                     mock_up.assert_called_once_with(name=RES_NAME)
 
     def test_stopped(self):
@@ -327,7 +327,7 @@ resource shanghai {
         mock = MagicMock(return_value=1)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+            assert drbd.stopped(RES_NAME) == ret
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
         # SubTest 2: Resource is already stopped
@@ -356,7 +356,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                assert drbd.stopped(RES_NAME) == ret
 
         # SubTest 3: The test option
         ret = {
@@ -374,7 +374,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
                 with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                    self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                    assert drbd.stopped(RES_NAME) == ret
 
         # SubTest 4: Error in stop
         ret = {
@@ -393,7 +393,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.down': mock_down}):
-                    self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                    assert drbd.stopped(RES_NAME) == ret
                     mock_down.assert_called_once_with(name=RES_NAME)
 
         # SubTest 5: Succeed in stop
@@ -413,7 +413,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.down': mock_down}):
-                    self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                    assert drbd.stopped(RES_NAME) == ret
                     mock_down.assert_called_once_with(name=RES_NAME)
 
         # SubTest 6: Command error
@@ -434,7 +434,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.down': mock_down}):
-                    self.assertDictEqual(drbd.stopped(RES_NAME), ret)
+                    assert drbd.stopped(RES_NAME) == ret
                     mock_down.assert_called_once_with(name=RES_NAME)
 
     def test_promoted(self):
@@ -452,7 +452,7 @@ resource shanghai {
         mock = MagicMock(return_value=1)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+            assert drbd.promoted(RES_NAME) == ret
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
         # SubTest 2.1: Resource have already promoted
@@ -481,7 +481,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+                assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
         ret = {
@@ -509,7 +509,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+                assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 3: The test option
         ret = {
@@ -527,7 +527,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
                 with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                    self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+                    assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 4: Error in promotion
         ret = {
@@ -546,7 +546,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.primary': mock_primary}):
-                    self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+                    assert drbd.promoted(RES_NAME) == ret
                     mock_primary.assert_called_once_with(force=False, name=RES_NAME)
 
         # SubTest 5: Succeed in promotion
@@ -566,7 +566,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.primary': mock_primary}):
-                    self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+                    assert drbd.promoted(RES_NAME) == ret
                     mock_primary.assert_called_once_with(force=False, name=RES_NAME)
 
         # SubTest 6: Command error
@@ -587,7 +587,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.primary': mock_primary}):
-                    self.assertDictEqual(drbd.promoted(RES_NAME), ret)
+                    assert drbd.promoted(RES_NAME) == ret
                     mock_primary.assert_called_once_with(force=False, name=RES_NAME)
 
     def test_demoted(self):
@@ -605,7 +605,7 @@ resource shanghai {
         mock = MagicMock(return_value=1)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+            assert drbd.demoted(RES_NAME) == ret
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
         # SubTest 2.1: Resource have already demoted
@@ -634,7 +634,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+                assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
         ret = {
@@ -662,7 +662,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+                assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 3: The test option
         ret = {
@@ -680,7 +680,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
                 with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                    self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+                    assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 4: Error in demotion
         ret = {
@@ -699,7 +699,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.secondary': mock_secondary}):
-                    self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+                    assert drbd.demoted(RES_NAME) == ret
                     mock_secondary.assert_called_once_with(name=RES_NAME)
 
         # SubTest 5: Succeed in demotion
@@ -719,7 +719,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.secondary': mock_secondary}):
-                    self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+                    assert drbd.demoted(RES_NAME) == ret
                     mock_secondary.assert_called_once_with(name=RES_NAME)
 
         # SubTest 6: Command error
@@ -740,7 +740,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.secondary': mock_secondary}):
-                    self.assertDictEqual(drbd.demoted(RES_NAME), ret)
+                    assert drbd.demoted(RES_NAME) == ret
                     mock_secondary.assert_called_once_with(name=RES_NAME)
 
     def test_wait_for_successful_synced(self):
@@ -758,7 +758,7 @@ resource shanghai {
         mock = MagicMock(return_value=1)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
-            self.assertDictEqual(drbd.wait_for_successful_synced(RES_NAME), ret)
+            assert drbd.wait_for_successful_synced(RES_NAME) == ret
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
         # SubTest 2.1: Resource have already been synced
@@ -789,7 +789,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.check_sync_status': mock_sync_status}):
-                    self.assertDictEqual(drbd.wait_for_successful_synced(RES_NAME), ret)
+                    assert drbd.wait_for_successful_synced(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
         ret = {
@@ -817,7 +817,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
-                self.assertDictEqual(drbd.wait_for_successful_synced(RES_NAME), ret)
+                assert drbd.wait_for_successful_synced(RES_NAME) == ret
 
         # SubTest 3: The test option
         ret = {
@@ -838,7 +838,7 @@ resource shanghai {
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
                 with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                     with patch.dict(drbd.__salt__, {'drbd.check_sync_status': mock_sync_status}):
-                        self.assertDictEqual(drbd.wait_for_successful_synced(RES_NAME), ret)
+                        assert drbd.wait_for_successful_synced(RES_NAME) == ret
                         mock_sync_status.assert_called_once_with(name=RES_NAME)
 
         # SubTest 4: Not finish sync in time
@@ -858,8 +858,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.check_sync_status': mock_sync_status}):
-                    self.assertDictEqual(drbd.wait_for_successful_synced(
-                                         RES_NAME, interval=0.3, timeout=1), ret)
+                    assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
                     # Should call 5 times, when timeout is 1, interval is 0.3
                     mock_sync_status.assert_called_with(name=RES_NAME)
 
@@ -880,8 +879,7 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.check_sync_status': mock_sync_status}):
-                    self.assertDictEqual(drbd.wait_for_successful_synced(
-                                         RES_NAME, interval=0.3, timeout=1), ret)
+                    assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
                     mock_sync_status.assert_called_with(name=RES_NAME)
 
         # SubTest 6: Command error
@@ -903,5 +901,5 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
             with patch.dict(drbd.__salt__, {'drbd.status': mock_status}):
                 with patch.dict(drbd.__salt__, {'drbd.check_sync_status': mock_sync_status}):
-                    self.assertDictEqual(drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1), ret)
+                    assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
                     mock_sync_status.assert_called_with(name=RES_NAME)

@@ -65,8 +65,8 @@ def _resource_not_exist(name):
 def _get_res_status(name):
     try:
         result = __salt__['drbd.status'](name=name)
-    except Exception:
-        # Resource not start will raise error.
+    except CommandExecutionError as err:
+        LOGGER.error(six.text_type(err))
         return None
 
     if not result:
