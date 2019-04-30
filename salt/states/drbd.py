@@ -22,10 +22,19 @@
 # under the License.
 
 '''
+State module to provide DRBD functionality to Salt
+
+.. versionadded:: pending
+
 :maintainer:    Nick Wang <nwang@suse.com>
 :maturity:      alpha
 :depends:       None
 :platform:      Linux
+
+:configuration: This module requires drbd kernel module and drbd utils tool
+
+.. code-block:: yaml
+
 '''
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
@@ -34,12 +43,12 @@ from salt.exceptions import CommandExecutionError
 from salt.ext import six
 import time
 
-LOG = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 __virtualname__ = 'drbd'
 
 
-def __virtual__():
+def __virtual__():  # pragma: no cover
     '''
     Only load if the drbd module is in __salt__
     '''
@@ -50,10 +59,7 @@ def _resource_not_exist(name):
     cmd = 'drbdadm dump {}'.format(name)
     result = __salt__['cmd.retcode'](cmd)
 
-    if result != 0:
-        return True
-
-    return False
+    return bool(result)
 
 
 def _get_res_status(name):
@@ -68,7 +74,7 @@ def _get_res_status(name):
 
     for res in result:
         if res['resource name'] == name:
-            LOG.debug(res)
+            LOGGER.debug(res)
             return res
 
     return None
@@ -173,7 +179,7 @@ def started(name):
     res = _get_res_status(name)
     if res:
         ret['result'] = True
-        ret['comment'] = 'Resource {} has already started.'.format(name)
+        ret['comment'] = 'Resource {} is already started.'.format(name)
         return ret
 
     # Do nothing for test=True
@@ -226,7 +232,7 @@ def stopped(name):
     res = _get_res_status(name)
     if not res:
         ret['result'] = True
-        ret['comment'] = 'Resource {} has already stopped.'.format(name)
+        ret['comment'] = 'Resource {} is already stopped.'.format(name)
         return ret
 
     # Do nothing for test=True
@@ -433,8 +439,8 @@ def wait_for_successful_synced(name, interval=30, timeout=600, **kwargs):
         while True:
 
             if time.time() > starttime + timeout:
-                LOG.error('Syncing of {} is not synced within {}s.'.format(
-                    name, timeout))
+                LOGGER.error('Syncing of %s is not synced within (%s)s.',
+                    name, timeout)
                 break
 
             time.sleep(interval)

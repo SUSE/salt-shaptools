@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
 '''
-DRBD administration module
+Module to provide DRBD functionality to Salt
+
+.. versionadded:: pending
+
+:maintainer:    Nick Wang <nwang@suse.com>
+:maturity:      alpha
+:depends:       ``drbdadm`` drbd utils
+:platform:      all
+
+:configuration: This module requires drbd kernel module and drbd utils tool
+
+.. code-block:: yaml
+
 '''
 from __future__ import absolute_import, print_function, unicode_literals
 
@@ -12,7 +24,7 @@ from salt.ext import six
 import salt.utils.json
 import salt.utils.path
 
-LOG = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # Define the module's virtual name
 __virtualname__ = 'drbd'
@@ -20,7 +32,7 @@ __virtualname__ = 'drbd'
 DRBD_COMMAND = 'drbdadm'
 
 
-def __virtual__():
+def __virtual__():  # pragma: no cover
     '''
     Only load this module if drbdadm(drbd-utils) is installed
     '''
@@ -180,16 +192,15 @@ def _is_local_all_uptodated(name):
     ret = False
 
     res = status(name)
-    if not res or len(res) == 0:
-        return ret
+    if not res:
+        return False
 
     # Since name is not all, res only have one element
     for vol in res[0]['local volumes']:
         if vol['disk'] != 'UpToDate':
-            return ret
+            return False
 
-    ret = True
-    return ret
+    return True
 
 
 def _is_peers_uptodated(name, peernode='all'):
@@ -203,7 +214,7 @@ def _is_peers_uptodated(name, peernode='all'):
     ret = None
 
     res = status(name)
-    if not res or len(res) == 0:
+    if not res:
         return ret
 
     # Since name is not all, res only have one element
@@ -213,8 +224,7 @@ def _is_peers_uptodated(name, peernode='all'):
 
         for vol in node['peer volumes']:
             if vol['peer-disk'] != 'UpToDate':
-                ret = False
-                return ret
+                return False
             else:
                 # At lease one volume is 'UpToDate'
                 ret = True
@@ -329,8 +339,7 @@ def status(name='all'):
     ret = []
     resource = {}
 
-    cmd = ['drbdadm', 'status']
-    cmd.append(name)
+    cmd = 'drbdadm status {}'.format(name)
 
     #One possible output: (number of resource/node/vol are flexible)
     #resource role:Secondary
@@ -345,7 +354,7 @@ def status(name='all'):
 
     result = __salt__['cmd.run_all'](cmd)
     if result['retcode'] != 0:
-        LOG.info('No status due to {} ({}).'.format(result['stderr'], result['retcode']))
+        LOGGER.info('No status due to %s (%s).', result['stderr'], result['retcode'])
         return None
 
     for line in result['stdout'].splitlines():
@@ -380,11 +389,10 @@ def createmd(name='all', force=True):
         salt '*' drbd.create name=<resource name>
     '''
 
-    cmd = ['drbdadm', 'create-md']
-    cmd.append(name)
+    cmd = 'drbdadm create-md {}'.format(name)
 
     if force:
-        cmd.append('--force')
+        cmd += ' --force'
 
     return __salt__['cmd.retcode'](cmd)
 
@@ -408,8 +416,7 @@ def up(name='all'):
         salt '*' drbd.up name=<resource name>
     '''
 
-    cmd = ['drbdadm', 'up']
-    cmd.append(name)
+    cmd = 'drbdadm up {}'.format(name)
 
     return __salt__['cmd.retcode'](cmd)
 
@@ -433,8 +440,7 @@ def down(name='all'):
         salt '*' drbd.down name=<resource name>
     '''
 
-    cmd = ['drbdadm', 'down']
-    cmd.append(name)
+    cmd = 'drbdadm down {}'.format(name)
 
     return __salt__['cmd.retcode'](cmd)
 
@@ -463,11 +469,10 @@ def primary(name='all', force=False):
         salt '*' drbd.primary name=<resource name>
     '''
 
-    cmd = ['drbdadm', 'primary']
-    cmd.append(name)
+    cmd = 'drbdadm primary {}'.format(name)
 
     if force:
-        cmd.append('--force')
+        cmd += ' --force'
 
     return __salt__['cmd.retcode'](cmd)
 
@@ -491,8 +496,7 @@ def secondary(name='all'):
         salt '*' drbd.secondary name=<resource name>
     '''
 
-    cmd = ['drbdadm', 'secondary']
-    cmd.append(name)
+    cmd = 'drbdadm secondary {}'.format(name)
 
     return __salt__['cmd.retcode'](cmd)
 
@@ -516,10 +520,7 @@ def adjust(name='all'):
         salt '*' drbd.adjust name=<resource name>
     '''
 
-    ret = []
-
-    cmd = ['drbdadm', 'adjust']
-    cmd.append(name)
+    cmd = 'drbdadm adjust {}'.format(name)
 
     return __salt__['cmd.retcode'](cmd)
 
@@ -552,11 +553,10 @@ def setup_show(name='all', json=True):
            'result': False,
            'comment': ''}
 
-    cmd = ['drbdsetup', 'show']
-    cmd.append(name)
+    cmd = 'drbdsetup show {}'.format(name)
 
     if json:
-        cmd.append('--json')
+        cmd += ' --json'
 
         results = __salt__['cmd.run_all'](cmd)
 
@@ -602,11 +602,10 @@ def setup_status(name='all', json=True):
            'result': False,
            'comment': ''}
 
-    cmd = ['drbdsetup', 'status']
-    cmd.append(name)
+    cmd = 'drbdsetup status {}'.format(name)
 
     if json:
-        cmd.append('--json')
+        cmd += ' --json'
 
         results = __salt__['cmd.run_all'](cmd)
 

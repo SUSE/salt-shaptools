@@ -135,7 +135,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
             'name': RES_NAME,
             'result': True,
             'changes': {},
-            'comment': 'Resource {} has already stopped.'.format(RES_NAME),
+            'comment': 'Resource {} is already stopped.'.format(RES_NAME),
         }
 
         mock = MagicMock(return_value=0)
@@ -150,7 +150,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
             'name': RES_NAME,
             'result': True,
             'changes': {},
-            'comment': 'Resource {} has already stopped.'.format(RES_NAME),
+            'comment': 'Resource {} is already stopped.'.format(RES_NAME),
         }
 
         mock = MagicMock(return_value=0)
@@ -205,12 +205,12 @@ resource shanghai {
             self.assertDictEqual(drbd.started(RES_NAME), ret)
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
-        # SubTest 2: Resource have already started
+        # SubTest 2: Resource is already started
         ret = {
             'name': RES_NAME,
             'result': True,
             'changes': {},
-            'comment': 'Resource {} has already started.'.format(RES_NAME),
+            'comment': 'Resource {} is already started.'.format(RES_NAME),
         }
 
         # A full resource example
@@ -330,12 +330,12 @@ resource shanghai {
             self.assertDictEqual(drbd.stopped(RES_NAME), ret)
             mock.assert_called_once_with('drbdadm dump {}'.format(RES_NAME))
 
-        # SubTest 2: Resource have already stopped
+        # SubTest 2: Resource is already stopped
         ret = {
             'name': RES_NAME,
             'result': True,
             'changes': {},
-            'comment': 'Resource {} has already stopped.'.format(RES_NAME),
+            'comment': 'Resource {} is already stopped.'.format(RES_NAME),
         }
 
         # A full resource example
