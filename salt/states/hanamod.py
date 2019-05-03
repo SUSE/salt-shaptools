@@ -616,7 +616,7 @@ def memory_resources_updated(
         return ret
 
     if __opts__['test']:
-        ret['result'] = Nones
+        ret['result'] = None
         ret['comment'] = 'Memory resources would be updated on {}-{}'.format(name, sid)
         ret['changes']['sid'] = sid
         ret['changes']['global_allocation_limit'] = global_allocation_limit
