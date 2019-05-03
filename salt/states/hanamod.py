@@ -67,6 +67,12 @@ from salt.ext import six
 __virtualname__ = 'hana'
 
 TMP_CONFIG_FILE = '/tmp/hana.conf'
+GLOBAL_INI_FILE = 'global.ini'
+HANA_SYSTEM_LAYER = 'SYSTEM'
+HANA_LAYER_NAME= None
+HANA_RECONFIG_TRUE= True
+INI_PARAM_PRELOAD_CS = ['system_replication','preload_column_tables']
+INI_PARAM_GAL = ['memorymanager','global_allocation_limit']
 
 
 def __virtual__():  # pragma: no cover
@@ -587,7 +593,10 @@ def memory_resources_updated(
     password
         Password of the installed hana platform user
     '''
-    
+    INI_PARAM_PRELOAD_CS.append(preload_column_tables)
+    INI_PARAM_GAL.append(global_allocation_limit)
+    ini_parameter_values = [INI_PARAM_PRELOAD_CS, INI_PARAM_GAL]
+
     ret = {'name': sid,
            'changes': {},
            'result': False,
@@ -601,7 +610,7 @@ def memory_resources_updated(
         return ret
 
     if __opts__['test']:
-        ret['result'] = None
+        ret['result'] = Nones
         ret['comment'] = 'Memory resources would be updated on {}-{}'.format(name, sid)
         ret['changes']['sid'] = sid
         ret['changes']['global_allocation_limit'] = global_allocation_limit
@@ -614,14 +623,7 @@ def memory_resources_updated(
         password=password)
     #TODO: check existing memory settings
     
-    ini_parameter_values = [['system_replication','preload_column_tables',preload_column_tables],
-                            ['memorymanager','global_allocation_limit',global_allocation_limit]]
-    file_name = 'global.ini'
-    layer = 'SYSTEM'
-    layer_name= None
-    reconfig= True
     userkey_data = {'database':'SYSTEMDB', 'user_name': 'system', 'user_password':'YourPassword1234'}
-    #TODO: update logic to avoid hardcoded params for SQL to update memory
     try:
         if userkey_data:
             #ensure HANA is running for SQL to execute
@@ -634,10 +636,10 @@ def memory_resources_updated(
             __salt__['hana.set_ini_parameter'](
                 ini_parameter_values=ini_parameter_values,
                 database=userkey_data.get('database'),
-                file_name=file_name,
-                layer=layer,
-                layer_name=layer_name,
-                reconfig=reconfig,
+                file_name=GLOBAL_INI_FILE,
+                layer=HANA_SYSTEM_LAYER,
+                layer_name=HANA_LAYER_NAME,
+                reconfig=HANA_RECONFIG_TRUE,
                 key_name=userkey_data.get('key_name', None),
                 user_name=userkey_data.get('user_name', None),
                 user_password=userkey_data.get('user_password', None),
