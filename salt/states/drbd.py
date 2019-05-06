@@ -439,7 +439,7 @@ def wait_for_successful_synced(name, interval=30, timeout=600, **kwargs):
         while True:
 
             if time.time() > starttime + timeout:
-                LOGGER.error('Syncing of %s is not synced within (%s)s.',
+                ret['comment'] = 'Resource {} is not synced within {}s.'.format(
                     name, timeout)
                 break
 
@@ -455,7 +455,6 @@ def wait_for_successful_synced(name, interval=30, timeout=600, **kwargs):
                 ret['result'] = True
                 return ret
 
-        ret['comment'] = 'Resource {} is not synced within {}s.'.format(name, timeout)
         return ret
 
     except CommandExecutionError as err:

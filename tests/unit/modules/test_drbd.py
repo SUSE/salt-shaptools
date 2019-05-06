@@ -49,9 +49,9 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
                'remains': '666',
                'total size': '50',
                'used': '50'}
-        mock = MagicMock(return_value='Salt:Stack True master/minion \
+        mock_cmd = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate/UpToDate True None 50 50 666 888')
-        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run': mock_cmd}):
             assert drbd.overview() == ret
 
         ret = {'connection state': 'True',
@@ -63,9 +63,9 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
                'partner role': 'minion',
                'synched': '5050',
                'synchronisation: ': 'syncbar'}
-        mock = MagicMock(return_value='Salt:Stack True master/minion \
+        mock_cmd = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate/partner syncbar None 50 50')
-        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run': mock_cmd}):
             assert drbd.overview() == ret
 
         ret = {'connection state': 'True',
@@ -77,9 +77,9 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
                'partner role': 'master',
                'synched': '6050',
                'synchronisation: ': 'syncbar'}
-        mock = MagicMock(return_value='Salt:Stack True master(2*) \
+        mock_cmd = MagicMock(return_value='Salt:Stack True master(2*) \
         UpToDate/partner syncbar None 60 50')
-        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run': mock_cmd}):
             assert drbd.overview() == ret
 
         ret = {'connection state': 'True',
@@ -89,9 +89,9 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
                'minor number': 'Salt',
                'partner disk state': 'UpToDate',
                'partner role': 'minion'}
-        mock = MagicMock(return_value='Salt:Stack True master/minion \
+        mock_cmd = MagicMock(return_value='Salt:Stack True master/minion \
         UpToDate(2*)')
-        with patch.dict(drbd.__salt__, {'cmd.run': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run': mock_cmd}):
             assert drbd.overview() == ret
 
     def test_status(self):
@@ -116,9 +116,9 @@ single role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             try:  # python2
                 self.assertItemsEqual(drbd.status(), ret)
             except AttributeError:  # python3
@@ -184,9 +184,9 @@ test role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             try:  # python2
                 self.assertItemsEqual(drbd.status(), ret)
             except AttributeError:  # python3
@@ -200,78 +200,78 @@ test role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.status() == ret
 
     def test_createmd(self):
         '''
         Test if createmd function work well
         '''
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.createmd()
-            mock.assert_called_once_with('drbdadm create-md all --force')
+            mock_cmd.assert_called_once_with('drbdadm create-md all --force')
 
     def test_up(self):
         '''
         Test if up function work well
         '''
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.up()
-            mock.assert_called_once_with('drbdadm up all')
+            mock_cmd.assert_called_once_with('drbdadm up all')
 
     def test_down(self):
         '''
         Test if down function work well
         '''
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.down()
-            mock.assert_called_once_with('drbdadm down all')
+            mock_cmd.assert_called_once_with('drbdadm down all')
 
     def test_primary(self):
         '''
         Test if primary function work well
         '''
         # SubTest1:
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.primary()
-            mock.assert_called_once_with('drbdadm primary all')
+            mock_cmd.assert_called_once_with('drbdadm primary all')
 
         # SubTest2:
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.primary(force=True)
-            mock.assert_called_once_with('drbdadm primary all --force')
+            mock_cmd.assert_called_once_with('drbdadm primary all --force')
 
     def test_secondary(self):
         '''
         Test if secondary function work well
         '''
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.secondary()
-            mock.assert_called_once_with('drbdadm secondary all')
+            mock_cmd.assert_called_once_with('drbdadm secondary all')
 
     def test_adjust(self):
         '''
         Test if adjust function work well
         '''
-        mock = MagicMock(return_value=True)
+        mock_cmd = MagicMock(return_value=True)
 
-        with patch.dict(drbd.__salt__, {'cmd.retcode': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd}):
             assert drbd.adjust()
-            mock.assert_called_once_with('drbdadm adjust all')
+            mock_cmd.assert_called_once_with('drbdadm adjust all')
 
     def test_setup_show(self):
         '''
@@ -338,14 +338,14 @@ test role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             try:  # python2
                 self.assertItemsEqual(drbd.setup_show(), ret)
             except AttributeError:  # python3
                 self.assertCountEqual(drbd.setup_show(), ret)
-            mock.assert_called_once_with('drbdsetup show all --json')
+            mock_cmd.assert_called_once_with('drbdsetup show all --json')
 
         # Test 2: Return code is not 0
         ret = {'name': 'all',
@@ -354,14 +354,14 @@ test role:Primary
 
         fake = {'retcode': 10}
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             try:  # python2
                 self.assertItemsEqual(drbd.setup_show(), ret)
             except AttributeError:  # python3
                 self.assertCountEqual(drbd.setup_show(), ret)
-            mock.assert_called_once_with('drbdsetup show all --json')
+            mock_cmd.assert_called_once_with('drbdsetup show all --json')
 
         # Test 3: Raise json ValueError
         fake = {}
@@ -370,9 +370,9 @@ test role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             self.assertRaises(exceptions.CommandExecutionError, drbd.setup_show)
 
     def test_setup_status(self):
@@ -476,14 +476,14 @@ test role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             try:  # python2
                 self.assertItemsEqual(drbd.setup_status(), ret)
             except AttributeError:  # python3
                 self.assertCountEqual(drbd.setup_status(), ret)
-            mock.assert_called_once_with('drbdsetup status all --json')
+            mock_cmd.assert_called_once_with('drbdsetup status all --json')
 
         # Test 2: Return code is not 0
         ret = {'name': 'all',
@@ -492,14 +492,14 @@ test role:Primary
 
         fake = {'retcode': 10}
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             try:  # python2
                 self.assertItemsEqual(drbd.setup_status(), ret)
             except AttributeError:  # python3
                 self.assertCountEqual(drbd.setup_status(), ret)
-            mock.assert_called_once_with('drbdsetup status all --json')
+            mock_cmd.assert_called_once_with('drbdsetup status all --json')
 
         # Test 3: Raise json ValueError
         fake = {}
@@ -508,9 +508,9 @@ test role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             self.assertRaises(exceptions.CommandExecutionError, drbd.setup_status)
 
     def test_check_sync_status(self):
@@ -536,11 +536,11 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.check_sync_status('beijing')
-            mock.assert_called_with('drbdadm status beijing')
+            mock_cmd.assert_called_with('drbdadm status beijing')
 
         # Test 2: Test local is not UpToDate
         fake = {}
@@ -559,11 +559,11 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert not drbd.check_sync_status('beijing')
-            mock.assert_called_with('drbdadm status beijing')
+            mock_cmd.assert_called_with('drbdadm status beijing')
 
         # Test 3.1: Test peer is not UpToDate
         fake = {}
@@ -582,11 +582,11 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert not drbd.check_sync_status('beijing')
-            mock.assert_called_with('drbdadm status beijing')
+            mock_cmd.assert_called_with('drbdadm status beijing')
 
         # Test 3.2: Test status with specific peernode
         fake = {}
@@ -605,9 +605,9 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.check_sync_status('beijing', peernode='node3')
 
         # Test 4.1: Test status return Error
@@ -616,9 +616,9 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 1
 
-        mock = MagicMock(return_value=fake)
+        mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert not drbd.check_sync_status('beijing')
 
         # Test 4.2: Test status return Error
@@ -642,7 +642,7 @@ beijing role:Primary
         fake1['stdout'] = ""
         fake1['stderr'] = ""
         fake1['retcode'] = 1
-        mock = MagicMock(side_effect=[fake, fake1])
+        mock_cmd = MagicMock(side_effect=[fake, fake1])
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock}):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert not drbd.check_sync_status('beijing')
