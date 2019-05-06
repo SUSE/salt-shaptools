@@ -184,10 +184,7 @@ resource shanghai {
         mock_cmd = MagicMock(return_value=dump_info)
 
         with patch.dict(drbd.__salt__, {'cmd.run': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd._get_resource_list(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd._get_resource_list(), ret)
+            assert drbd._get_resource_list() == ret
 
     def test_started(self):
         '''

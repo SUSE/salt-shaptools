@@ -119,10 +119,7 @@ single role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd.status(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd.status(), ret)
+            assert drbd.status() == ret
 
         ret = [{'local role': 'Primary',
                 'local volumes': [{'disk': 'UpToDate', 'volume': '0'},
@@ -160,7 +157,7 @@ single role:Primary
 
         fake = {}
         fake['stdout'] = '''
-res role:Primary
+test role:Primary
   volume:0 disk:UpToDate
   volume:1 disk:UpToDate
   node2 role:Secondary
@@ -170,7 +167,7 @@ res role:Primary
     volume:0 peer-disk:UpToDate
     volume:1 peer-disk:UpToDate
 
-test role:Primary
+res role:Primary
   volume:0 disk:UpToDate
   volume:1 disk:UpToDate
   node2 role:Secondary
@@ -187,10 +184,7 @@ test role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd.status(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd.status(), ret)
+            assert drbd.status() == ret
 
         ret = {'Unknown parser': ' single role:Primary'}
         fake = {}
@@ -341,10 +335,7 @@ test role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd.setup_show(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd.setup_show(), ret)
+            assert drbd.setup_show() == ret
             mock_cmd.assert_called_once_with('drbdsetup show all --json')
 
         # Test 2: Return code is not 0
@@ -357,10 +348,7 @@ test role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd.setup_show(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd.setup_show(), ret)
+            assert drbd.setup_show() == ret
             mock_cmd.assert_called_once_with('drbdsetup show all --json')
 
         # Test 3: Raise json ValueError
@@ -479,10 +467,7 @@ test role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd.setup_status(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd.setup_status(), ret)
+            assert drbd.setup_status() == ret
             mock_cmd.assert_called_once_with('drbdsetup status all --json')
 
         # Test 2: Return code is not 0
@@ -495,10 +480,7 @@ test role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            try:  # python2
-                self.assertItemsEqual(drbd.setup_status(), ret)
-            except AttributeError:  # python3
-                self.assertCountEqual(drbd.setup_status(), ret)
+            assert drbd.setup_status() == ret
             mock_cmd.assert_called_once_with('drbdsetup status all --json')
 
         # Test 3: Raise json ValueError
