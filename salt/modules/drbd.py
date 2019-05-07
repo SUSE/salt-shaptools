@@ -103,17 +103,19 @@ def _add_res(line):
     '''
     Analyse the line of local resource of ``drbdadm status``
     '''
-    global resource
     fields = line.strip().split()
 
-    if resource:
-        __context__['drbd.statusret'].append(resource)
-        resource = {}
+    if __context__['drbd.resource']:
+        __context__['drbd.statusret'].append(__context__['drbd.resource'])
+        __context__['drbd.resource'] = {}
 
+    resource = {}
     resource["resource name"] = fields[0]
     resource["local role"] = fields[1].split(":")[1]
     resource["local volumes"] = []
     resource["peer nodes"] = []
+
+    __context__['drbd.resource'] = resource
 
 
 def _add_volume(line):
@@ -128,7 +130,12 @@ def _add_volume(line):
         volume[field.split(':')[0]] = field.split(':')[1]
 
     if section == 'LOCALDISK':
-        resource['local volumes'].append(volume)
+        if 'drbd.resource' not in __context__:  # pragma: no cover
+            # Should always be called after _add_res
+            __context__['drbd.resource'] = {}
+            __context__['drbd.resource']['local volumes'] = []
+
+        __context__['drbd.resource']['local volumes'].append(volume)
     else:
         # 'PEERDISK'
         if 'drbd.lastpnodevolumes' not in __context__:  # pragma: no cover
@@ -151,7 +158,14 @@ def _add_peernode(line):
     #Could be role or connection:
     peernode[fields[1].split(":")[0]] = fields[1].split(":")[1]
     peernode["peer volumes"] = []
-    resource["peer nodes"].append(peernode)
+
+    if 'drbd.resource' not in __context__:  # pragma: no cover
+        # Should always be called after _add_res
+        __context__['drbd.resource'] = {}
+        __context__['drbd.resource']['peer nodes'] = []
+
+    __context__['drbd.resource']["peer nodes"].append(peernode)
+
     __context__['drbd.lastpnodevolumes'] = peernode["peer volumes"]
 
 
@@ -172,6 +186,7 @@ def _line_parser(line):
     '''
     Call action for different lines
     '''
+    # Should always be called via status()
     section = _analyse_status_type(line)
 
     switch = {
@@ -307,10 +322,6 @@ def overview():
     return ret
 
 
-# Global para for func status
-resource = {}
-
-
 def status(name='all'):
     '''
     Using drbdadm to show status of the DRBD devices,
@@ -333,10 +344,8 @@ def status(name='all'):
     '''
 
     # Initialize for multiple times test cases
-    global resource
-    resource = {}
-
     __context__['drbd.statusret'] = []
+    __context__['drbd.resource'] = {}
 
     cmd = 'drbdadm status {}'.format(name)
 
@@ -359,8 +368,8 @@ def status(name='all'):
     for line in result['stdout'].splitlines():
         _line_parser(line)
 
-    if resource:
-        __context__['drbd.statusret'].append(resource)
+    if __context__['drbd.resource']:
+        __context__['drbd.statusret'].append(__context__['drbd.resource'])
 
     return __context__['drbd.statusret']
 
