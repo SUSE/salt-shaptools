@@ -49,6 +49,7 @@ cp -R salt/modules/drbd.py %{buildroot}/srv/salt/_modules
 cp -R salt/states/drbd.py %{buildroot}/srv/salt/_states
 
 
+
 %files
 %defattr(-,root,root,-)
 # %license macro is not available on older releases
