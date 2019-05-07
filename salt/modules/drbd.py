@@ -533,7 +533,7 @@ def adjust(name='all'):
     return __salt__['cmd.retcode'](cmd)
 
 
-def setup_show(name='all', json=True):
+def setup_show(name='all'):
     '''
     Show the DRBD resource via drbdsetup directly.
     Only support the json format so far.
@@ -541,10 +541,6 @@ def setup_show(name='all', json=True):
     :type name: str
     :param name:
         Resource name.
-
-    :type json: bool
-    :param json:
-        Use the json format.
 
     :return: The resource configuration.
     :rtype: dict
@@ -561,28 +557,26 @@ def setup_show(name='all', json=True):
            'result': False,
            'comment': ''}
 
-    cmd = 'drbdsetup show {}'.format(name)
+    # Only support json format
+    cmd = 'drbdsetup show --json {}'.format(name)
 
-    if json:
-        cmd += ' --json'
+    results = __salt__['cmd.run_all'](cmd)
 
-        results = __salt__['cmd.run_all'](cmd)
+    if 'retcode' not in results or results['retcode'] != 0:
+        ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
+            results['retcode'])
+        return ret
 
-        if 'retcode' not in results or results['retcode'] != 0:
-            ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
-                results['retcode'])
-            return ret
-
-        try:
-            ret = salt.utils.json.loads(results['stdout'], strict=False)
-        except ValueError:
-            raise CommandExecutionError('Error happens when try to load the json output.',
-                                        info=results)
+    try:
+        ret = salt.utils.json.loads(results['stdout'], strict=False)
+    except ValueError:
+        raise CommandExecutionError('Error happens when try to load the json output.',
+                                    info=results)
 
     return ret
 
 
-def setup_status(name='all', json=True):
+def setup_status(name='all'):
     '''
     Show the DRBD running status.
     Only support enable the json format so far.
@@ -590,10 +584,6 @@ def setup_status(name='all', json=True):
     :type name: str
     :param name:
         Resource name.
-
-    :type json: bool
-    :param json:
-        Use the json format.
 
     :return: The resource configuration.
     :rtype: dict
@@ -610,23 +600,20 @@ def setup_status(name='all', json=True):
            'result': False,
            'comment': ''}
 
-    cmd = 'drbdsetup status {}'.format(name)
+    cmd = 'drbdsetup status --json {}'.format(name)
 
-    if json:
-        cmd += ' --json'
+    results = __salt__['cmd.run_all'](cmd)
 
-        results = __salt__['cmd.run_all'](cmd)
+    if 'retcode' not in results or results['retcode'] != 0:
+        ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
+            results['retcode'])
+        return ret
 
-        if 'retcode' not in results or results['retcode'] != 0:
-            ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
-                results['retcode'])
-            return ret
-
-        try:
-            ret = salt.utils.json.loads(results['stdout'], strict=False)
-        except ValueError:
-            raise CommandExecutionError('Error happens when try to load the json output.',
-                                        info=results)
+    try:
+        ret = salt.utils.json.loads(results['stdout'], strict=False)
+    except ValueError:
+        raise CommandExecutionError('Error happens when try to load the json output.',
+                                    info=results)
 
     return ret
 

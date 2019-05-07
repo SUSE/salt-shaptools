@@ -336,7 +336,7 @@ res role:Primary
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.setup_show() == ret
-            mock_cmd.assert_called_once_with('drbdsetup show all --json')
+            mock_cmd.assert_called_once_with('drbdsetup show --json all')
 
         # Test 2: Return code is not 0
         ret = {'name': 'all',
@@ -349,7 +349,7 @@ res role:Primary
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.setup_show() == ret
-            mock_cmd.assert_called_once_with('drbdsetup show all --json')
+            mock_cmd.assert_called_once_with('drbdsetup show --json all')
 
         # Test 3: Raise json ValueError
         fake = {}
@@ -468,7 +468,7 @@ res role:Primary
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.setup_status() == ret
-            mock_cmd.assert_called_once_with('drbdsetup status all --json')
+            mock_cmd.assert_called_once_with('drbdsetup status --json all')
 
         # Test 2: Return code is not 0
         ret = {'name': 'all',
@@ -481,7 +481,7 @@ res role:Primary
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.setup_status() == ret
-            mock_cmd.assert_called_once_with('drbdsetup status all --json')
+            mock_cmd.assert_called_once_with('drbdsetup status --json all')
 
         # Test 3: Raise json ValueError
         fake = {}
