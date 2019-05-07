@@ -21,7 +21,6 @@ from tests.support.mock import (
 # Import Salt Libs
 import salt.states.drbd as drbd
 import time
-import copy
 
 RES_NAME = 'dummy'
 
@@ -840,14 +839,11 @@ resource shanghai {
                 assert drbd.wait_for_successful_synced(RES_NAME) == ret
                 mock_sync_status.assert_called_once_with(name=RES_NAME)
 
-        #mock the time, being used in SubTest 4,5,6
+        # mock the time, being used in SubTest 4,5,6
+        # fail to use deepcopy of MagicMock() in python2
+        #   TypeError: can't pickle listiterator objects
+        # Create multiple instances instance
         mock_time_sleep = MagicMock()
-        mock_time_time_bak = MagicMock(side_effect=[1557121667.98029,
-                                                1557121667.99029,
-                                                1557121668.29029,
-                                                1557121668.59029,
-                                                1557121668.89029,
-                                                1557121669.19029])
 
         # SubTest 4: Not finish sync in time
         ret = {
@@ -863,7 +859,16 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
         mock_sync_status = MagicMock(return_value=0)
 
-        mock_time_time = copy.deepcopy(mock_time_time_bak)
+        # mock the time, being used in SubTest 4,5,6
+        # fail to use deepcopy of MagicMock() in python2
+        #   TypeError: can't pickle listiterator objects
+        # Create multiple instances instance
+        mock_time_time = MagicMock(side_effect=[1557121667.98029,
+                                                1557121667.99029,
+                                                1557121668.29029,
+                                                1557121668.59029,
+                                                1557121668.89029,
+                                                1557121669.19029])
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
@@ -888,7 +893,12 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
         mock_sync_status = MagicMock(side_effect=[0, 0, 0, 1])
 
-        mock_time_time = copy.deepcopy(mock_time_time_bak)
+        mock_time_time = MagicMock(side_effect=[1557121667.98029,
+                                                1557121667.99029,
+                                                1557121668.29029,
+                                                1557121668.59029,
+                                                1557121668.89029,
+                                                1557121669.19029])
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
@@ -914,7 +924,12 @@ resource shanghai {
         mock_sync_status = MagicMock(side_effect=[0, 0, 0, exceptions.CommandExecutionError(
             'drbd.check_sync_status: (drdbadm status {}) error.'.format(RES_NAME))])
 
-        mock_time_time = copy.deepcopy(mock_time_time_bak)
+        mock_time_time = MagicMock(side_effect=[1557121667.98029,
+                                                1557121667.99029,
+                                                1557121668.29029,
+                                                1557121668.59029,
+                                                1557121668.89029,
+                                                1557121669.19029])
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
