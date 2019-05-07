@@ -107,7 +107,7 @@ def _add_res(line):
     fields = line.strip().split()
 
     if resource:
-        ret.append(resource)
+        __context__['drbd.statusret'].append(resource)
         resource = {}
 
     resource["resource name"] = fields[0]
@@ -131,15 +131,19 @@ def _add_volume(line):
         resource['local volumes'].append(volume)
     else:
         # 'PEERDISK'
-        lastpnodevolumes.append(volume)
+        if 'drbd.lastpnodevolumes' not in __context__:  # pragma: no cover
+            # Insurance refer to:
+            # https://docs.saltstack.com/en/latest/topics/development/modules/developing.html#context
+            # Should always be called after _add_peernode
+            __context__['drbd.lastpnodevolumes'] = []
+
+        __context__['drbd.lastpnodevolumes'].append(volume)
 
 
 def _add_peernode(line):
     '''
     Analyse the line of peer nodes of ``drbdadm status``
     '''
-    global lastpnodevolumes
-
     fields = line.strip().split()
 
     peernode = {}
@@ -148,7 +152,7 @@ def _add_peernode(line):
     peernode[fields[1].split(":")[0]] = fields[1].split(":")[1]
     peernode["peer volumes"] = []
     resource["peer nodes"].append(peernode)
-    lastpnodevolumes = peernode["peer volumes"]
+    __context__['drbd.lastpnodevolumes'] = peernode["peer volumes"]
 
 
 def _empty(dummy):
@@ -161,8 +165,7 @@ def _unknown_parser(line):
     '''
     Action of unsupported line of ``drbdadm status``
     '''
-    global ret
-    ret = {"Unknown parser": line}
+    __context__['drbd.statusret'] = {"Unknown parser": line}
 
 
 def _line_parser(line):
@@ -188,8 +191,6 @@ def _is_local_all_uptodated(name):
     '''
     Check whether all local volumes are UpToDate.
     '''
-
-    ret = False
 
     res = status(name)
     if not res:
@@ -307,9 +308,7 @@ def overview():
 
 
 # Global para for func status
-ret = []
 resource = {}
-lastpnodevolumes = None
 
 
 def status(name='all'):
@@ -334,10 +333,10 @@ def status(name='all'):
     '''
 
     # Initialize for multiple times test cases
-    global ret
     global resource
-    ret = []
     resource = {}
+
+    __context__['drbd.statusret'] = []
 
     cmd = 'drbdadm status {}'.format(name)
 
@@ -361,9 +360,9 @@ def status(name='all'):
         _line_parser(line)
 
     if resource:
-        ret.append(resource)
+        __context__['drbd.statusret'].append(resource)
 
-    return ret
+    return __context__['drbd.statusret']
 
 
 def createmd(name='all', force=True):
