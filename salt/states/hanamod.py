@@ -647,15 +647,14 @@ def memory_resources_updated(
         ret['changes']['global_allocation_limit'] = global_allocation_limit
         ret['changes']['preload_column_tables'] = preload_column_tables
         #restart HANA for memory changes to take effect
-        if running:
-            __salt__['hana.stop'](
-                sid=sid,
-                inst=inst,
-                password=password)
-            __salt__['hana.start'](
-                sid=sid,
-                inst=inst,
-                password=password)
+        __salt__['hana.stop'](
+            sid=sid,
+            inst=inst,
+            password=password)
+        __salt__['hana.start'](
+            sid=sid,
+            inst=inst,
+            password=password)
         ret['changes']['sid'] = sid
         ret['comment'] = 'Memory resources updated on {}-{}'.format(name, sid)
         ret['result'] = True
