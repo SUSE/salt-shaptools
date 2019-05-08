@@ -67,6 +67,8 @@ from salt.ext import six
 __virtualname__ = 'hana'
 
 TMP_CONFIG_FILE = '/tmp/hana.conf'
+INI_PARAM_PRELOAD_CS = {'section_name':'system_replication', 'parameter_name':'preload_column_tables'}
+INI_PARAM_GAL = {'section_name':'memorymanager', 'parameter_name':'global_allocation_limit'}
 
 
 def __virtual__():  # pragma: no cover
@@ -556,6 +558,106 @@ def sr_clean(
             password=password)
         ret['changes']['disabled'] = name
         ret['comment'] = 'HANA node set as {}'.format(new_state)
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+
+
+def memory_resources_updated(
+        name,
+        global_allocation_limit,
+        preload_column_tables,
+        user_name,
+        user_password,
+        sid,
+        inst,
+        password):
+    '''
+    Update memory resources of a running HANA system by changing column preload behavior
+    and changing the memory allocation size of HANA instance
+    name:
+        Host name of system installed hana platform
+    global_allocation_limit:
+        Max memory allocation limit for hana instance
+    preload_column_tables:
+        If preload HANA column tables on startup
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connect to sap hana db
+    sid
+        System id of the installed hana platform
+    inst
+        Instance number of the installed hana platform
+    password
+        Password of the installed hana platform user
+    '''
+    INI_PARAM_PRELOAD_CS['parameter_value'] = preload_column_tables
+    INI_PARAM_GAL['parameter_value'] = global_allocation_limit
+    ini_parameter_values = [INI_PARAM_PRELOAD_CS, INI_PARAM_GAL]
+
+    ret = {'name': sid,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if not __salt__['hana.is_installed'](
+            sid=sid,
+            inst=inst,
+            password=password):
+        ret['comment'] = 'HANA is not installed properly with the provided data'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Memory resources would be updated on {}-{}'.format(name, sid)
+        ret['changes']['sid'] = sid
+        ret['changes']['global_allocation_limit'] = global_allocation_limit
+        ret['changes']['preload_column_tables'] = preload_column_tables
+        return ret
+
+    running = __salt__['hana.is_running'](
+        sid=sid,
+        inst=inst,
+        password=password)
+    #TODO: check existing memory settings
+    
+    try:
+        #ensure HANA is running for SQL to execute
+        if not running:
+            __salt__['hana.start'](
+                sid=sid,
+                inst=inst,
+                password=password)
+        
+        __salt__['hana.set_ini_parameter'](
+            ini_parameter_values=ini_parameter_values,
+            database='SYSTEMDB',
+            file_name='global.ini',
+            layer='SYSTEM',
+            layer_name=None,
+            reconfig=True,
+            user_name=user_name,
+            user_password=user_password,
+            sid=sid,
+            inst=inst,
+            password=password)
+        ret['changes']['global_allocation_limit'] = global_allocation_limit
+        ret['changes']['preload_column_tables'] = preload_column_tables
+        #restart HANA for memory changes to take effect
+        __salt__['hana.stop'](
+            sid=sid,
+            inst=inst,
+            password=password)
+        __salt__['hana.start'](
+            sid=sid,
+            inst=inst,
+            password=password)
+        ret['changes']['sid'] = sid
+        ret['comment'] = 'Memory resources updated on {}-{}'.format(name, sid)
         ret['result'] = True
         return ret
 
