@@ -67,13 +67,8 @@ from salt.ext import six
 __virtualname__ = 'hana'
 
 TMP_CONFIG_FILE = '/tmp/hana.conf'
-GLOBAL_INI_FILE = 'global.ini'
-HANA_SYSTEMDB = 'SYSTEMDB'
-HANA_SYSTEM_LAYER = 'SYSTEM'
-HANA_LAYER_NAME= None
-HANA_RECONFIG_TRUE= True
-INI_PARAM_PRELOAD_CS = ['system_replication','preload_column_tables']
-INI_PARAM_GAL = ['memorymanager','global_allocation_limit']
+INI_PARAM_PRELOAD_CS = {'section_name':'system_replication', 'parameter_name':'preload_column_tables'}
+INI_PARAM_GAL = {'section_name':'memorymanager', 'parameter_name':'global_allocation_limit'}
 
 
 def __virtual__():  # pragma: no cover
@@ -599,8 +594,8 @@ def memory_resources_updated(
     password
         Password of the installed hana platform user
     '''
-    INI_PARAM_PRELOAD_CS.append(preload_column_tables)
-    INI_PARAM_GAL.append(global_allocation_limit)
+    INI_PARAM_PRELOAD_CS['parameter_value'] = preload_column_tables
+    INI_PARAM_GAL['parameter_value'] = global_allocation_limit
     ini_parameter_values = [INI_PARAM_PRELOAD_CS, INI_PARAM_GAL]
 
     ret = {'name': sid,
@@ -639,11 +634,11 @@ def memory_resources_updated(
         
         __salt__['hana.set_ini_parameter'](
             ini_parameter_values=ini_parameter_values,
-            database=HANA_SYSTEMDB,
-            file_name=GLOBAL_INI_FILE,
-            layer=HANA_SYSTEM_LAYER,
-            layer_name=HANA_LAYER_NAME,
-            reconfig=HANA_RECONFIG_TRUE,
+            database='SYSTEMDB',
+            file_name='global.ini',
+            layer='SYSTEM',
+            layer_name=None,
+            reconfig=True,
             user_name=user_name,
             user_password=user_password,
             sid=sid,
