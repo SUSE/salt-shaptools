@@ -736,10 +736,10 @@ def set_ini_parameter(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.set_ini_parameter(
-            ini_parameter_values, database,
-            file_name, layer,
-            layer_name,reconfig,
-            key_name, user_name, user_password)
+            ini_parameter_values=ini_parameter_values,database=database,
+            file_name=file_name, layer=layer,
+            layer_name=layer_name, reconfig=reconfig,
+            key_name=key_name, user_name=user_name, user_password=user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
@@ -800,9 +800,9 @@ def unset_ini_parameter(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.unset_ini_parameter(
-            ini_parameter_names, database,
-            file_name, layer,
-            layer_name, reconfig,
-            key_name, user_name, user_password)
+            ini_parameter_names=ini_parameter_names, database=database,
+            file_name=file_name, layer=layer,
+            layer_name=layer_name, reconfig=reconfig,
+            key_name=key_name, user_name=user_name, user_password=user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
