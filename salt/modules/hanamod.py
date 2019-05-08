@@ -678,3 +678,131 @@ def sr_cleanup(
         hana_inst.sr_cleanup(force)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
+
+
+def set_ini_parameter(
+        ini_parameter_values,
+        database,
+        file_name,
+        layer,
+        layer_name=None,
+        reconfig=False,
+        key_name=None,
+        user_name=None,
+        user_password=None,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Update HANA ini configuration parameter
+
+    key_name or user_name/user_password combination,
+    one of them must be provided
+
+    ini_parameter_values
+        List containing HANA parameter details where each entry looks like:
+        {'section_name':'name', 'parameter_name':'param_name', 'parameter_value':'value'}
+    database
+        Database name
+    file_name
+        INI configuration file name
+    layer
+        Target layer for the configuration change
+    layer_name
+        Target either a tenant name or a host name(optional)
+    reconfig
+        If apply changes to running HANA instance(optional)
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.set_ini_parameter '[{"section_name":"memorymanager",
+        "parameter_name":"global_allocation_limit", "parameter_value":"26000"}]'
+        SYSTEMDB global.ini HOST node01 key prd '"00"' pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.set_ini_parameter(
+            ini_parameter_values=ini_parameter_values,database=database,
+            file_name=file_name, layer=layer,
+            layer_name=layer_name, reconfig=reconfig,
+            key_name=key_name, user_name=user_name, user_password=user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
+
+
+def unset_ini_parameter(
+        ini_parameter_names,
+        database,
+        file_name,
+        layer,
+        layer_name=None,
+        reconfig=False,
+        key_name=None,
+        user_name=None,
+        user_password=None,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Update HANA ini configuration parameter
+
+    key_name or user_name/user_password combination,
+    one of them must be provided
+
+    ini_parameter_names: 
+        List of HANA parameter names where each entry looks like
+        {'section_name':'name', 'parameter_name':'param_name'}
+    database
+        Database name
+    file_name
+        INI configuration file name
+    layer
+        Target layer for the configuration change
+    layer_name
+        Target either a tenant name or a host name(optional)
+    reconfig
+        If apply changes to running HANA instance(optional)
+    key_name
+        Keystore to connect to sap hana db
+    user_name
+        User to connect to sap hana db
+    user_password
+        Password to connecto to sap hana db
+    sid
+        HANA system id (PRD for example)
+    inst
+        HANA instance number (00 for example)
+    password
+        HANA instance password
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.unset_ini_parameter '[{"section_name":"memorymanager",
+        "parameter_name":"global_allocation_limit"}]'
+        SYSTEMDB global.ini SYSTEM key prd '"00"' pass
+    '''
+    hana_inst = _init(sid, inst, password)
+    try:
+        hana_inst.unset_ini_parameter(
+            ini_parameter_names=ini_parameter_names, database=database,
+            file_name=file_name, layer=layer,
+            layer_name=layer_name, reconfig=reconfig,
+            key_name=key_name, user_name=user_name, user_password=user_password)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
