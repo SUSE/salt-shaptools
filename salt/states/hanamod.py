@@ -401,7 +401,10 @@ def sr_secondary_registered(
         operation_mode,
         sid,
         inst,
-        password):
+        password,
+        primary_pass=None,
+        timeout=None,
+        interval=None):
     '''
     Register a secondary node to an already enabled primary node
 
@@ -421,6 +424,12 @@ def sr_secondary_registered(
         Instance number of the installed hana platform
     password
         Password of the installed hana platform user
+    primary_pass
+        Password of the xxxadm sap user where the node will be registered
+    timeout
+        Timeout in seconds to wait until the primary node system replication is available
+    interval
+        Interval in seconds to retry the secondary registration process if it fails until
     '''
 
     ret = {'name': name,
@@ -468,6 +477,9 @@ def sr_secondary_registered(
             remote_instance=remote_instance,
             replication_mode=replication_mode,
             operation_mode=operation_mode,
+            primary_pass=primary_pass,
+            timeout=timeout,
+            interval=interval,
             sid=sid,
             inst=inst,
             password=password)
@@ -623,16 +635,16 @@ def memory_resources_updated(
         sid=sid,
         inst=inst,
         password=password)
-    #TODO: check existing memory settings
-    
+    # TODO: check existing memory settings
+
     try:
-        #ensure HANA is running for SQL to execute
+        # ensure HANA is running for SQL to execute
         if not running:
             __salt__['hana.start'](
                 sid=sid,
                 inst=inst,
                 password=password)
-        
+
         __salt__['hana.set_ini_parameter'](
             ini_parameter_values=ini_parameter_values,
             database='SYSTEMDB',
@@ -647,7 +659,7 @@ def memory_resources_updated(
             password=password)
         ret['changes']['global_allocation_limit'] = global_allocation_limit
         ret['changes']['preload_column_tables'] = preload_column_tables
-        #restart HANA for memory changes to take effect
+        # restart HANA for memory changes to take effect
         __salt__['hana.stop'](
             sid=sid,
             inst=inst,

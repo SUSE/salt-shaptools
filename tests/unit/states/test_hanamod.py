@@ -608,7 +608,8 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.sr_register_secondary': mock_register}):
             assert hanamod.sr_secondary_registered(
                 name, 'hana01', '00', 'sync',
-                'logreplay', 'pdr', '00', 'pass') == ret
+                'logreplay', 'pdr', '00', 'pass',
+                primary_pass='pass', timeout=10, interval=15) == ret
             mock_stop.assert_called_once_with(
                 sid='pdr',
                 inst='00',
@@ -623,6 +624,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 remote_instance='00',
                 replication_mode='sync',
                 operation_mode='logreplay',
+                primary_pass='pass',
+                timeout=10,
+                interval=15,
                 sid='pdr',
                 inst='00',
                 password='pass')
@@ -657,6 +661,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 remote_instance='00',
                 replication_mode='sync',
                 operation_mode='logreplay',
+                primary_pass=None,
+                timeout=None,
+                interval=None,
                 sid='pdr',
                 inst='00',
                 password='pass')
@@ -810,7 +817,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 name=name, sid='prd', inst='00', password='pass',
                 global_allocation_limit='25000', preload_column_tables=False,
                 user_name='key_user', user_password='key_password') == ret
-    
+
     def test_memory_resources_updated_test(self):
         '''
         Test to check memory_resources_updated in test mode
@@ -820,8 +827,8 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': name,
                'changes': {
                    'sid': 'prd',
-                   'global_allocation_limit' : '25000',
-                   'preload_column_tables' : False
+                   'global_allocation_limit': '25000',
+                   'preload_column_tables': False
                },
                'result': None,
                'comment': 'Memory resources would be updated on {}-{}'.format(

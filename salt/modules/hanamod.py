@@ -432,7 +432,10 @@ def sr_register_secondary(
         operation_mode,
         sid=None,
         inst=None,
-        password=None):
+        password=None,
+        primary_pass=None,
+        timeout=None,
+        interval=None):
     '''
     Register SAP HANA system replication as secondary node
 
@@ -452,6 +455,12 @@ def sr_register_secondary(
         HANA instance number (00 for example)
     password
         HANA instance password
+    primary_pass
+        Password of the xxxadm sap user where the node will be registered
+    timeout
+        Timeout in seconds to wait until the primary node system replication is available
+    interval
+        Interval in seconds to retry the secondary registration process if it fails until
 
     CLI Example:
 
@@ -461,9 +470,17 @@ def sr_register_secondary(
     '''
     hana_inst = _init(sid, inst, password)
     try:
+        kwargs = {}
+        if primary_pass:
+            kwargs['primary_pass'] = primary_pass
+        if timeout:
+            kwargs['timeout'] = timeout
+        if interval:
+            kwargs['interval'] = interval
         hana_inst.sr_register_secondary(
             name, remote_host, remote_instance,
-            replication_mode, operation_mode)
+            replication_mode, operation_mode,
+            **kwargs)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
@@ -736,7 +753,7 @@ def set_ini_parameter(
     hana_inst = _init(sid, inst, password)
     try:
         hana_inst.set_ini_parameter(
-            ini_parameter_values=ini_parameter_values,database=database,
+            ini_parameter_values=ini_parameter_values, database=database,
             file_name=file_name, layer=layer,
             layer_name=layer_name, reconfig=reconfig,
             key_name=key_name, user_name=user_name, user_password=user_password)
@@ -763,7 +780,7 @@ def unset_ini_parameter(
     key_name or user_name/user_password combination,
     one of them must be provided
 
-    ini_parameter_names: 
+    ini_parameter_names:
         List of HANA parameter names where each entry looks like
         {'section_name':'name', 'parameter_name':'param_name'}
     database
