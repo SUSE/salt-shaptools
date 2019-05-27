@@ -417,10 +417,12 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.object(hanamod, '_init', mock_hana):
             hanamod.sr_register_secondary(
                 'PRAGUE', 'hana01', '00', 'sync',
-                'logreplay', 'prd', '00', 'pass')
+                'logreplay', 'prd', '00', 'pass',
+                primary_pass='pass', timeout=10, interval=10)
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_register_secondary.assert_called_once_with(
-                'PRAGUE', 'hana01', '00', 'sync', 'logreplay')
+                'PRAGUE', 'hana01', '00', 'sync', 'logreplay',
+                primary_pass='pass', timeout=10, interval=10)
 
     def test_sr_register_secondary_raise(self):
         '''
