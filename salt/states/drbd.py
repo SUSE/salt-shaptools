@@ -38,10 +38,10 @@ State module to provide DRBD functionality to Salt
 '''
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
+import time
 
 from salt.exceptions import CommandExecutionError
 from salt.ext import six
-import time
 
 LOGGER = logging.getLogger(__name__)
 

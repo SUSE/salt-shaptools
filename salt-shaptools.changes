@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Jun  4 07:29:24 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
+
+- Create package version 0.2.0 after adding drbd module 
+
+-------------------------------------------------------------------
 Thu May 16 09:03:43 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
 
 - Update secondary registration methods to use the new parameters 
