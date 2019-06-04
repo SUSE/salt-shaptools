@@ -19,8 +19,8 @@
 # See also http://en.opensuse.org/openSUSE:Specfile_guidelines
 
 Name:           salt-shaptools
-Version:        0.1.0
-Release:        1
+Version:        0.2.0
+Release:        0
 Summary:        Salt modules and states for SAP Applications and SLE-HA components management
 
 License:        Apache-2.0
@@ -51,12 +51,7 @@ cp -R salt/states/drbd.py %{buildroot}/srv/salt/_states
 
 %files
 %defattr(-,root,root,-)
-# %license macro is not available on older releases
-%if 0%{?sle_version} <= 120300
-%doc LICENSE
-%else
 %license LICENSE
-%endif
 %doc README.md
 /srv/salt/_modules
 /srv/salt/_states
