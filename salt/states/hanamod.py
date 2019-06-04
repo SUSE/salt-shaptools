@@ -67,8 +67,8 @@ from salt.ext import six
 __virtualname__ = 'hana'
 
 TMP_CONFIG_FILE = '/tmp/hana.conf'
-INI_PARAM_PRELOAD_CS = {'section_name':'system_replication', 'parameter_name':'preload_column_tables'}
-INI_PARAM_GAL = {'section_name':'memorymanager', 'parameter_name':'global_allocation_limit'}
+INI_PARAM_PRELOAD_CS = {'section_name': 'system_replication', 'parameter_name': 'preload_column_tables'}
+INI_PARAM_GAL = {'section_name': 'memorymanager', 'parameter_name': 'global_allocation_limit'}
 
 
 def __virtual__():  # pragma: no cover

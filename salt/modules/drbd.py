@@ -155,7 +155,7 @@ def _add_peernode(line):
 
     peernode = {}
     peernode["peernode name"] = fields[0]
-    #Could be role or connection:
+    # Could be role or connection:
     peernode[fields[1].split(":")[0]] = fields[1].split(":")[1]
     peernode["peer volumes"] = []
 
@@ -349,16 +349,16 @@ def status(name='all'):
 
     cmd = 'drbdadm status {}'.format(name)
 
-    #One possible output: (number of resource/node/vol are flexible)
-    #resource role:Secondary
-    #  volume:0 disk:Inconsistent
-    #  volume:1 disk:Inconsistent
-    #  drbd-node1 role:Primary
-    #    volume:0 replication:SyncTarget peer-disk:UpToDate done:10.17
-    #    volume:1 replication:SyncTarget peer-disk:UpToDate done:74.08
-    #  drbd-node2 role:Secondary
-    #    volume:0 peer-disk:Inconsistent resync-suspended:peer
-    #    volume:1 peer-disk:Inconsistent resync-suspended:peer
+    # One possible output: (number of resource/node/vol are flexible)
+    # resource role:Secondary
+    #   volume:0 disk:Inconsistent
+    #   volume:1 disk:Inconsistent
+    #   drbd-node1 role:Primary
+    #     volume:0 replication:SyncTarget peer-disk:UpToDate done:10.17
+    #     volume:1 replication:SyncTarget peer-disk:UpToDate done:74.08
+    #   drbd-node2 role:Secondary
+    #     volume:0 peer-disk:Inconsistent resync-suspended:peer
+    #     volume:1 peer-disk:Inconsistent resync-suspended:peer
 
     result = __salt__['cmd.run_all'](cmd)
     if result['retcode'] != 0:
