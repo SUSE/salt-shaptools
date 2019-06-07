@@ -51,8 +51,12 @@ cp -R salt/states/drbd.py %{buildroot}/srv/salt/_states
 
 %files
 %defattr(-,root,root,-)
-%license LICENSE
+%if 0%{?sle_version:1} && 0%{?sle_version} < 120300
+%doc README.md LICENSE
+%else
 %doc README.md
+%license LICENSE
+%endif
 /srv/salt/_modules
 /srv/salt/_states
 
