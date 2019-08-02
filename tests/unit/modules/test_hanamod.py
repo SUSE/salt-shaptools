@@ -78,7 +78,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         with pytest.raises(exceptions.SaltInvocationError) as err:
             hanamod._init('prd', '00', 'pass')
         mock_hana.assert_called_once_with('prd', '00', 'pass')
-        assert 'error' in str(err)
+        assert 'error' in str(err.value)
 
     def test_is_installed_return_true(self):
         '''
@@ -128,7 +128,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             hanamod.create_conf_file('software_path', 'hana.conf', 'root', 'root')
         mock_hana.create_conf_file.assert_called_once_with(
             'software_path', 'hana.conf', 'root', 'root')
-        assert 'hana error' in str(err)
+        assert 'hana error' in str(err.value)
 
     @patch('salt.modules.hanamod.hana.HanaInstance')
     def test_update_conf_file_return(self, mock_hana):
@@ -152,7 +152,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             hanamod.update_conf_file('hana.conf', sid='sid', number='00')
         mock_hana.update_conf_file.assert_called_once_with(
             'hana.conf', sid='sid', number='00')
-        assert 'hana error' in str(err)
+        assert 'hana error' in str(err.value)
 
     @patch('salt.modules.hanamod.hana.HanaInstance')
     def test_install_return(self, mock_hana):
@@ -177,7 +177,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             hanamod.install('software_path', 'hana.conf', 'root', 'root')
         mock_hana.install.assert_called_once_with(
             'software_path', 'hana.conf', 'root', 'root')
-        assert 'hana error' in str(err)
+        assert 'hana error' in str(err.value)
 
     def test_uninstall_return(self):
         '''
@@ -218,7 +218,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.uninstall('root', 'pass', None, 'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.uninstall.assert_called_once_with('root', 'pass')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_is_running_return_true(self):
         '''
@@ -270,7 +270,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.get_version('prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.get_version.assert_called_once_with()
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_start_return(self):
         '''
@@ -297,7 +297,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.start('prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.start.assert_called_once_with()
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_stop_return(self):
         '''
@@ -324,7 +324,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.stop('prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.stop.assert_called_once_with()
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_get_sr_state_return(self):
         '''
@@ -352,7 +352,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.get_sr_state('prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.get_sr_state.assert_called_once_with()
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_sr_enable_primary_return(self):
         '''
@@ -379,7 +379,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.sr_enable_primary('NUE', 'prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_enable_primary.assert_called_once_with('NUE')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_sr_disable_primary_return(self):
         '''
@@ -406,7 +406,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.sr_disable_primary('prd', '00', 'pass')
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_disable_primary.assert_called_once_with()
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_sr_register_secondary_return(self):
         '''
@@ -441,7 +441,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_register_secondary.assert_called_once_with(
                 'PRAGUE', 'hana01', '00', 'sync', 'logreplay')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_sr_changemode_secondary_return(self):
         '''
@@ -469,7 +469,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_changemode_secondary.assert_called_once_with(
                 'sync')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_sr_unregister_secondary_return(self):
         '''
@@ -498,7 +498,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_unregister_secondary.assert_called_once_with(
                 'NUE')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_check_user_key_return(self):
         '''
@@ -527,7 +527,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.check_user_key.assert_called_once_with(
                 'key')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_create_user_key_return(self):
         '''
@@ -558,7 +558,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.create_user_key.assert_called_once_with(
                 'key', 'env', 'user', 'pass', 'db')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_create_backup_return(self):
         '''
@@ -591,7 +591,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.create_backup.assert_called_once_with(
                 'db', 'backup', 'key', 'key_user', 'key_password')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_sr_cleanup_return(self):
         '''
@@ -618,7 +618,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 hanamod.sr_cleanup('prd', '00', 'pass', False)
             mock_hana.assert_called_once_with('prd', '00', 'pass')
             mock_hana_inst.sr_cleanup.assert_called_once_with(False)
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_set_ini_parameter_return(self):
         '''
@@ -674,7 +674,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 database='db', file_name='global.ini',
                 layer='SYSTEM', layer_name=None, reconfig=True,
                 key_name='key', user_name='key_user', user_password='key_password')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
 
     def test_unset_ini_parameter_return(self):
         '''
@@ -724,4 +724,4 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 database='db', file_name='global.ini',
                 layer_name=None, layer='SYSTEM', reconfig=True,
                 key_name='key', user_name='key_user', user_password='key_password')
-            assert 'hana error' in str(err)
+            assert 'hana error' in str(err.value)
