@@ -77,7 +77,7 @@ def is_installed(
         sid=None,
         inst=None,
         password=None,
-        sap_intance=None):
+        sap_instance=None):
     '''
     Check if SAP Netweaver platform is installed
 
@@ -87,7 +87,7 @@ def is_installed(
         Netweaver instance number (00 for example)
     password
         Netweaver instance password
-    sap_intance
+    sap_instance
         Check for specific SAP instances. Available options: ascs, ers. If None it will checked
         if any instance is installed
 
@@ -101,7 +101,7 @@ def is_installed(
         salt '*' netweaver.is_installed prd '"00"' pass
     '''
     netweaver_inst = _init(sid, inst, password)
-    return netweaver_inst.is_installed(sap_intance)
+    return netweaver_inst.is_installed(sap_instance)
 
 
 def install(

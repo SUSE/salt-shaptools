@@ -128,7 +128,7 @@ def installed(
             root_user=root_user,
             root_password=root_password)
 
-        ret['result'] = __salt__['hana.is_installed'](
+        ret['result'] = __salt__['netweaver.is_installed'](
             sid=sid,
             inst=inst,
             password=password,
