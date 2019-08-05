@@ -56,7 +56,7 @@ def _get_sap_instance_type(product_id):
     '''
     Get SAP instance type from the product id string
     '''
-    return product_id.split(':')[0].split('-')[-1].lower()
+    return product_id.split(':')[0].split('_')[-1].lower()
 
 
 def installed(
