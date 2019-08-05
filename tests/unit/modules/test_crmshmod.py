@@ -213,7 +213,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             with pytest.raises(exceptions.SaltInvocationError) as err:
                 crmshmod.wait_for_startup(5.0)
-            assert 'timeout must be integer type' in str(err)
+            assert 'timeout must be integer type' in str(err.value)
 
     def test_add_watchdog_sbd(self):
         '''
