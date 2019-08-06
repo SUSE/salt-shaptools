@@ -68,6 +68,7 @@ def installed(
         root_password,
         config_file,
         virtual_host,
+        virtual_host_interface,
         product_id):
     """
     Install SAP Netweaver if the instance is not installed yet.
@@ -89,6 +90,8 @@ def installed(
         inifile.params type configuration file. It must match with the used product id
     virtual_host
         Virtual host associated to the SAP instance
+    virtual_host_interface:
+        Network interface to attach the virtual host ip address
     product_id
         Id of the product to be installed. Example: NW_ABAP_ASCS:NW750.HDB.ABAPHA
 
@@ -120,6 +123,10 @@ def installed(
 
     try:
         #  Here starts the actual process
+        __salt__['netweaver.attach_virtual_host'](
+            virtual_host=virtual_host,
+            virtual_host_interface=virtual_host_interface)
+
         __salt__['netweaver.install'](
             software_path=software_path,
             virtual_host=virtual_host,

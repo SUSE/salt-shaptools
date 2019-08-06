@@ -104,6 +104,40 @@ def is_installed(
     return netweaver_inst.is_installed(sap_instance)
 
 
+def attach_virtual_host(
+        virtual_host,
+        virtual_host_interface='eth0'):
+    '''
+    Attach virtual host ip address to network interface
+
+    virtual_host
+        Virtual host name
+    virtual_host_interface:
+        Network interface to attach the virtual host ip address
+
+    Returns:
+        str: Attached ip address
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' netweaver.attach_virtual_host my_host eth1
+    '''
+    ip_address = __salt__['hosts.get_ip'](virtual_host)
+    if not ip_address:
+        raise exceptions.CommandExecutionError('virtual host {} not available'.format(virtual_host))
+    result = __salt__['cmd.retcode']('ip a | grep {}/24'.format(ip_address), python_shell=True)
+    if result == 1:
+        result = __salt__['cmd.run']('ip address add {}/24 dev {}'.format(
+            ip_address, virtual_host_interface))
+    # Non zero return code in any of the cmd commands
+    if result:
+        raise exceptions.CommandExecutionError('error running "ip address" command')
+
+    return ip_address
+
+
 def install(
         software_path,
         virtual_host,
@@ -131,7 +165,7 @@ def install(
 
     .. code-block:: bash
 
-        salt '*' netweaver.install /installation_path /home/myuser/netweaver.conf root root
+        salt '*' netweaver.install installation_path my_host product_id netweaver.conf root root
     '''
     try:
         netweaver.NetweaverInstance.install(
