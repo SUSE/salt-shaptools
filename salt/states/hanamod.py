@@ -6,10 +6,10 @@ State module to provide SAP HANA functionality to Salt
 
 :maintainer:    Xabier Arbulu Insausti <xarbulu@suse.com>
 :maturity:      alpha
-:depends:       shaptools
+:depends:       python-shaptools
 :platform:      all
 
-:configuration: This module requires the shaptools python module and uses the
+:configuration: This module requires the python-shaptools module and uses the
     following defaults which may be overridden in the minion configuration:
 
 .. code-block:: yaml
