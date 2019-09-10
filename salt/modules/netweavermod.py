@@ -146,7 +146,7 @@ def install(
         root_user,
         root_password):
     '''
-    Install SAP Netweaver with configuration file
+    Install SAP Netweaver instance with configuration file
 
     software_path
         Path where SAP Netweaver software is downloaded

@@ -74,7 +74,7 @@ def installed(
         timeout=0,
         interval=5):
     """
-    Install SAP Netweaver if the instance is not installed yet.
+    Install SAP Netweaver instance if the instance is not installed yet.
 
     name
         System id of the installed netweaver platform
