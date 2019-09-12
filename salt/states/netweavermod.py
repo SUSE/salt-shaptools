@@ -69,9 +69,12 @@ def installed(
         config_file,
         virtual_host,
         virtual_host_interface,
-        product_id):
+        product_id,
+        ascs_password=None,
+        timeout=0,
+        interval=5):
     """
-    Install SAP Netweaver if the instance is not installed yet.
+    Install SAP Netweaver instance if the instance is not installed yet.
 
     name
         System id of the installed netweaver platform
@@ -94,7 +97,13 @@ def installed(
         Network interface to attach the virtual host ip address
     product_id
         Id of the product to be installed. Example: NW_ABAP_ASCS:NW750.HDB.ABAPHA
-
+    ascs_password (Only used when the Product is ERS.)
+        Password of the SAP user in the machine hosting the ASCS instance.
+        If it's not set the same password used to install ERS will be used
+    timeout (Only used when the Product is ERS.)
+        Timeout of the installation process. If 0 it will try to install the instance only once
+    interval (Only used when the Product is ERS.)
+        Retry interval in seconds
     """
     sid = name
     sap_instance = _get_sap_instance_type(product_id)
@@ -127,13 +136,26 @@ def installed(
             virtual_host=virtual_host,
             virtual_host_interface=virtual_host_interface)
 
-        __salt__['netweaver.install'](
-            software_path=software_path,
-            virtual_host=virtual_host,
-            product_id=product_id,
-            conf_file=config_file,
-            root_user=root_user,
-            root_password=root_password)
+        if sap_instance == 'ers':
+            __salt__['netweaver.install_ers'](
+                software_path=software_path,
+                virtual_host=virtual_host,
+                product_id=product_id,
+                conf_file=config_file,
+                root_user=root_user,
+                root_password=root_password,
+                ascs_password=ascs_password,
+                timeout=timeout,
+                interval=interval)
+
+        else:
+            __salt__['netweaver.install'](
+                software_path=software_path,
+                virtual_host=virtual_host,
+                product_id=product_id,
+                conf_file=config_file,
+                root_user=root_user,
+                root_password=root_password)
 
         ret['result'] = __salt__['netweaver.is_installed'](
             sid=sid,

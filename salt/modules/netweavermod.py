@@ -146,7 +146,7 @@ def install(
         root_user,
         root_password):
     '''
-    Install SAP Netweaver with configuration file
+    Install SAP Netweaver instance with configuration file
 
     software_path
         Path where SAP Netweaver software is downloaded
@@ -170,5 +170,52 @@ def install(
     try:
         netweaver.NetweaverInstance.install(
             software_path, virtual_host, product_id, conf_file, root_user, root_password)
+    except netweaver.NetweaverError as err:
+        raise exceptions.CommandExecutionError(err)
+
+
+def install_ers(
+        software_path,
+        virtual_host,
+        product_id,
+        conf_file,
+        root_user,
+        root_password,
+        ascs_password=None,
+        timeout=0,
+        interval=5):
+    '''
+    Install SAP Netweaver ERS instance with configuration file
+
+    software_path
+        Path where SAP Netweaver software is downloaded
+    virtual_host
+        Virtual host associated to the SAP instance
+    product_id
+        Id of the product to be installed. Example: NW_ABAP_ASCS:NW750.HDB.ABAPHA
+    conf_file
+        Path to the configuration file used to install Netweaver
+    root_user
+        Root user name
+    root_password
+        Root user password
+    ascs_password
+        Password of the SAP user in the machine hosting the ASCS instance.
+        If it's not set the same password used to install ERS will be used
+    timeout
+        Timeout of the installation process. If 0 it will try to install the instance only once
+    interval
+        Retry interval in seconds
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' netweaver.install installation_path my_host product_id netweaver.conf root root
+    '''
+    try:
+        netweaver.NetweaverInstance.install_ers(
+            software_path, virtual_host, product_id, conf_file, root_user, root_password,
+            ascs_password=ascs_password, timeout=timeout, interval=interval)
     except netweaver.NetweaverError as err:
         raise exceptions.CommandExecutionError(err)
