@@ -244,14 +244,16 @@ def setup_cwd(
     '''
 
     # Create folder. Remove if already exists first
-    __salt__['file.directory'](cwd, user='sapinst', dir_mode=755, clean=True)
+    __salt__['file.remove'](cwd)
+    __salt__['file.mkdir'](cwd, user='root', group='sapinst', mode=755)
     # Create start_dir.cd file
     start_dir = '{}/start_dir.cd'.format(cwd)
-    __salt__['file.managed'](start_dir, user='sapinst', dir_mode=755)
+    __salt__['file.touch'](start_dir)
+    __salt__['file.chown'](start_dir, 'root', 'sapinst')
+    __salt__['file.set_mode'](start_dir, 755)
     # Add sapints_folder
-    __salt__['file.append'](start_dir, text=software_path)
+    __salt__['file.append'](start_dir, args=software_path)
     # Add additional dvds. Add just /swpm at the beginning
-    for dvd in additional_dvds:
-        __salt__['file.append'](start_dir, text='/swpm/{}'.format(dvd))
+    __salt__['file.append'](start_dir, args=['/swpm/{}'.format(dvd) for dvd in additional_dvds])
 
     return cwd
