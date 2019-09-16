@@ -122,13 +122,15 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
         mock_installed = MagicMock(side_effect=[False, True])
         mock_get.return_value = 'ascs'
         mock_attach = MagicMock(return_value='192.168.15.1')
+        mock_setup_cwd = MagicMock(return_value='/tmp_nw')
         mock_install = MagicMock()
         with patch.dict(netweavermod.__salt__, {'netweaver.is_installed': mock_installed,
                                                 'netweaver.attach_virtual_host': mock_attach,
+                                                'netweaver.setup_cwd': mock_setup_cwd,
                                                 'netweaver.install': mock_install}):
             assert netweavermod.installed(
                 'prd', '00', 'pass', '/software', 'root', 'pass',
-                'config_file', 'vhost', 'eth1', 'productID') == ret
+                'config_file', 'vhost', 'eth1', 'productID', cwd='/tmp') == ret
             mock_installed.assert_has_calls([
                 mock.call(sid='prd', inst='00', password='pass', sap_instance='ascs'),
                 mock.call(sid='prd', inst='00', password='pass', sap_instance='ascs'),
@@ -137,10 +139,12 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
+            mock_setup_cwd.assert_called_once_with(
+                software_path='/software', cwd='/tmp', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
-                root_user='root', root_password='pass')
+                root_user='root', root_password='pass', cwd='/tmp_nw')
 
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_ers_correct(self, mock_get):
@@ -156,9 +160,11 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
         mock_installed = MagicMock(side_effect=[False, True])
         mock_get.return_value = 'ers'
         mock_attach = MagicMock(return_value='192.168.15.1')
+        mock_setup_cwd = MagicMock(return_value='/tmp_nw')
         mock_install = MagicMock()
         with patch.dict(netweavermod.__salt__, {'netweaver.is_installed': mock_installed,
                                                 'netweaver.attach_virtual_host': mock_attach,
+                                                'netweaver.setup_cwd': mock_setup_cwd,
                                                 'netweaver.install_ers': mock_install}):
             assert netweavermod.installed(
                 'prd', '00', 'pass', '/software', 'root', 'pass',
@@ -171,10 +177,13 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
+            mock_setup_cwd.assert_called_once_with(
+                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
-                root_user='root', root_password='pass', ascs_password='ascs_pass', timeout=0, interval=5)
+                root_user='root', root_password='pass',
+                cwd='/tmp_nw', ascs_password='ascs_pass', timeout=0, interval=5)
 
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_not_installed(self, mock_get):
@@ -190,9 +199,11 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
         mock_installed = MagicMock(side_effect=[False, False])
         mock_get.return_value = ''
         mock_attach = MagicMock(return_value='192.168.15.1')
+        mock_setup_cwd = MagicMock(return_value='/tmp_nw')
         mock_install = MagicMock()
         with patch.dict(netweavermod.__salt__, {'netweaver.is_installed': mock_installed,
                                                 'netweaver.attach_virtual_host': mock_attach,
+                                                'netweaver.setup_cwd': mock_setup_cwd,
                                                 'netweaver.install': mock_install}):
             assert netweavermod.installed(
                 'prd', '00', 'pass', '/software', 'root', 'pass',
@@ -205,7 +216,9 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
+            mock_setup_cwd.assert_called_once_with(
+                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
-                root_user='root', root_password='pass')
+                root_user='root', root_password='pass', cwd='/tmp_nw')

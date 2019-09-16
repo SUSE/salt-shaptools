@@ -180,9 +180,9 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         Test install method - return
         '''
         netweavermod.install(
-            'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root')
+            'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root', cwd='/tmp')
         mock_netweaver.install.assert_called_once_with(
-            'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root')
+            'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root', cwd='/tmp')
 
     @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
     def test_install_raise(self, mock_netweaver):
@@ -195,7 +195,7 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         with pytest.raises(exceptions.CommandExecutionError) as err:
             netweavermod.install('software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root')
         mock_netweaver.install.assert_called_once_with(
-            'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root')
+            'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root', cwd=None)
         assert 'netweaver error' in str(err.value)
 
     @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
@@ -205,10 +205,10 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         netweavermod.install_ers(
             'software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root',
-            ascs_password='ascs', timeout=15, interval=2)
+            cwd='/tmp', ascs_password='ascs', timeout=15, interval=2)
         mock_netweaver.install_ers.assert_called_once_with(
             'software_path', 'vhost', 'productID', 'netweaver.conf',
-            'root', 'root', ascs_password='ascs', timeout=15, interval=2)
+            'root', 'root', cwd='/tmp', ascs_password='ascs', timeout=15, interval=2)
 
     @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
     def test_install_ers_raise(self, mock_netweaver):
@@ -222,5 +222,5 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
             netweavermod.install_ers('software_path', 'vhost', 'productID', 'netweaver.conf', 'root', 'root')
         mock_netweaver.install_ers.assert_called_once_with(
             'software_path', 'vhost', 'productID', 'netweaver.conf',
-            'root', 'root', ascs_password=None, timeout=0, interval=5)
+            'root', 'root', ascs_password=None, timeout=0, interval=5, cwd=None)
         assert 'netweaver error' in str(err.value)
