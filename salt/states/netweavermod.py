@@ -29,9 +29,10 @@ State module to provide SAP Netweaver functionality to Salt
       - software_path: /swpm
       - root_user: root
       - root_password: linux
+      - config_file: /inifile.params
       - virtual_host: ha1virthost
+      - virtual_host_interface: eth1
       - product_id: NW_ABAP_ASCS:NW750.HDB.ABAPHA
-      - sap_instance=ascs
 '''
 
 # Import python libs
@@ -70,6 +71,8 @@ def installed(
         virtual_host,
         virtual_host_interface,
         product_id,
+        cwd='/tmp/unattended',
+        additional_dvds=None,
         ascs_password=None,
         timeout=0,
         interval=5):
@@ -97,6 +100,10 @@ def installed(
         Network interface to attach the virtual host ip address
     product_id
         Id of the product to be installed. Example: NW_ABAP_ASCS:NW750.HDB.ABAPHA
+    cwd
+        New value for SAPINST_CWD parameter
+    additional_dvds
+        Additional folder where to retrieve required software for the installation
     ascs_password (Only used when the Product is ERS.)
         Password of the SAP user in the machine hosting the ASCS instance.
         If it's not set the same password used to install ERS will be used
@@ -136,12 +143,19 @@ def installed(
             virtual_host=virtual_host,
             virtual_host_interface=virtual_host_interface)
 
+        if cwd:
+            cwd = __salt__['netweaver.setup_cwd'](
+                software_path=software_path,
+                cwd=cwd,
+                additional_dvds=additional_dvds)
+
         if sap_instance == 'ers':
             __salt__['netweaver.install_ers'](
                 software_path=software_path,
                 virtual_host=virtual_host,
                 product_id=product_id,
                 conf_file=config_file,
+                cwd=cwd,
                 root_user=root_user,
                 root_password=root_password,
                 ascs_password=ascs_password,
@@ -154,6 +168,7 @@ def installed(
                 virtual_host=virtual_host,
                 product_id=product_id,
                 conf_file=config_file,
+                cwd=cwd,
                 root_user=root_user,
                 root_password=root_password)
 

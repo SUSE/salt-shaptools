@@ -88,8 +88,8 @@ def is_installed(
     password
         Netweaver instance password
     sap_instance
-        Check for specific SAP instances. Available options: ascs, ers. If None it will checked
-        if any instance is installed
+        Check for specific SAP instances. Available options: ascs, ers, pas, aas.
+        If None it will checked if any instance is installed
 
     Returns:
         bool: True if installed, False otherwise
@@ -144,7 +144,8 @@ def install(
         product_id,
         conf_file,
         root_user,
-        root_password):
+        root_password,
+        cwd=None):
     '''
     Install SAP Netweaver instance with configuration file
 
@@ -160,6 +161,8 @@ def install(
         Root user name
     root_password
         Root user password
+    cwd
+        New value for SAPINST_CWD parameter
 
     CLI Example:
 
@@ -169,7 +172,7 @@ def install(
     '''
     try:
         netweaver.NetweaverInstance.install(
-            software_path, virtual_host, product_id, conf_file, root_user, root_password)
+            software_path, virtual_host, product_id, conf_file, root_user, root_password, cwd=cwd)
     except netweaver.NetweaverError as err:
         raise exceptions.CommandExecutionError(err)
 
@@ -181,6 +184,7 @@ def install_ers(
         conf_file,
         root_user,
         root_password,
+        cwd=None,
         ascs_password=None,
         timeout=0,
         interval=5):
@@ -199,6 +203,8 @@ def install_ers(
         Root user name
     root_password
         Root user password
+    cwd
+        New value for SAPINST_CWD parameter
     ascs_password
         Password of the SAP user in the machine hosting the ASCS instance.
         If it's not set the same password used to install ERS will be used
@@ -216,6 +222,36 @@ def install_ers(
     try:
         netweaver.NetweaverInstance.install_ers(
             software_path, virtual_host, product_id, conf_file, root_user, root_password,
-            ascs_password=ascs_password, timeout=timeout, interval=interval)
+            cwd=cwd, ascs_password=ascs_password, timeout=timeout, interval=interval)
     except netweaver.NetweaverError as err:
         raise exceptions.CommandExecutionError(err)
+
+
+def setup_cwd(
+        software_path,
+        cwd='/tmp/unattended',
+        additional_dvds=None):
+    '''
+    Setup folder to run the sapinst tool in other directory (modified SAPINST_CWD)
+
+    software_path
+        Path where SAP Netweaver software is downloaded
+    cwd
+        Path used to run the installation. All the files created during the installation will
+        be stored there.
+    additional_dvds
+        Path to additional folders used during the installation
+    '''
+
+    # Create folder. Remove if already exists first
+    __salt__['file.directory'](cwd, user='sapinst', dir_mode=755, clean=True)
+    # Create start_dir.cd file
+    start_dir = '{}/start_dir.cd'.format(cwd)
+    __salt__['file.managed'](start_dir, user='sapinst', dir_mode=755)
+    # Add sapints_folder
+    __salt__['file.append'](start_dir, text=software_path)
+    # Add additional dvds. Add just /swpm at the beginning
+    for dvd in additional_dvds:
+        __salt__['file.append'](start_dir, text='/swpm/{}'.format(dvd))
+
+    return cwd
