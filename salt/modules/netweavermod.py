@@ -104,6 +104,49 @@ def is_installed(
     return netweaver_inst.is_installed(sap_instance)
 
 
+def is_db_installed(
+        host,
+        port,
+        schema_name,
+        schema_password):
+    '''
+    Check if SAP Netweaver DB instance is installed
+
+    host:
+        Host where HANA is running
+    port:
+        HANA database port
+    schema_name:
+        Schema installed in the dabase
+    schema_password:
+        Password of the user for the schema
+
+    Returns:
+        bool: True if installed, False otherwise
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' netweaver.is_db_installed 192.168.10.15 30013 SAPABAP1 password
+    '''
+    if 'hana.wait_for_connection' not in __salt__:
+        raise exceptions.CommandExecutionError(
+            'hana.wait_for_connection not available. hanamod must be installed')
+
+    try:
+        __salt__['hana.wait_for_connection'](
+            host=host,
+            port=port,
+            user=schema_name,
+            password=schema_password,
+            timeout=0,
+            interval=0)
+        return True
+    except exceptions.CommandExecutionError:
+        return False
+
+
 def attach_virtual_host(
         virtual_host,
         virtual_host_interface='eth0'):
@@ -245,12 +288,12 @@ def setup_cwd(
 
     # Create folder. Remove if already exists first
     __salt__['file.remove'](cwd)
-    __salt__['file.mkdir'](cwd, user='root', group='sapinst', mode=755)
+    __salt__['file.mkdir'](cwd, user='root', group='sapinst', mode=775)
     # Create start_dir.cd file
     start_dir = '{}/start_dir.cd'.format(cwd)
     __salt__['file.touch'](start_dir)
     __salt__['file.chown'](start_dir, 'root', 'sapinst')
-    __salt__['file.set_mode'](start_dir, 755)
+    __salt__['file.set_mode'](start_dir, 775)
     # Add sapints_folder
     __salt__['file.append'](start_dir, args=software_path)
     # Add additional dvds. Add just /swpm at the beginning

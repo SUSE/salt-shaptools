@@ -190,3 +190,109 @@ def installed(
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
+
+
+def db_installed(
+        name,
+        port,
+        schema_name,
+        schema_password,
+        software_path,
+        root_user,
+        root_password,
+        config_file,
+        virtual_host,
+        virtual_host_interface,
+        product_id,
+        cwd='/tmp/unattended',
+        additional_dvds=None):
+    """
+    Install SAP Netweaver DB instance if the instance is not installed yet.
+
+    name
+        Host where HANA is running
+    port
+        HANA database port
+    schema_name:
+        Schema installed in the dabase
+    schema_password:
+        Password of the user for the schema
+    software_path:
+        Path where the SAP NETWEAVER software is downloaded, it must be located in
+        the minion itself
+    root_user
+        Root user name
+    root_password
+        Root user password
+    config_file
+        inifile.params type configuration file. It must match with the used product id
+    virtual_host
+        Virtual host associated to the SAP instance
+    virtual_host_interface:
+        Network interface to attach the virtual host ip address
+    product_id
+        Id of the product to be installed. Example: NW_ABAP_ASCS:NW750.HDB.ABAPHA
+    cwd
+        New value for SAPINST_CWD parameter
+    additional_dvds
+        Additional folder where to retrieve required software for the installation
+    """
+    host = name
+
+    ret = {'name': '{}:{}'.format(host, port),
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if __salt__['netweaver.is_db_installed'](
+            host=host,
+            port=port,
+            schema_name=schema_name,
+            schema_password=schema_password):
+        ret['result'] = True
+        ret['comment'] = 'Netweaver DB instance is already installed'
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Netweaver DB insatnce would be installed'
+        ret['changes']['host'] = '{}:{}'.format(host, port)
+        return ret
+
+    try:
+        #  Here starts the actual process
+        __salt__['netweaver.attach_virtual_host'](
+            virtual_host=virtual_host,
+            virtual_host_interface=virtual_host_interface)
+
+        if cwd:
+            cwd = __salt__['netweaver.setup_cwd'](
+                software_path=software_path,
+                cwd=cwd,
+                additional_dvds=additional_dvds)
+
+        __salt__['netweaver.install'](
+            software_path=software_path,
+            virtual_host=virtual_host,
+            product_id=product_id,
+            conf_file=config_file,
+            cwd=cwd,
+            root_user=root_user,
+            root_password=root_password)
+
+        ret['result'] = __salt__['netweaver.is_db_installed'](
+            host=host,
+            port=port,
+            schema_name=schema_name,
+            schema_password=schema_password)
+
+        if ret['result']:
+            ret['changes']['host'] = '{}:{}'.format(host, port)
+            ret['comment'] = 'Netweaver DB instance installed'
+        else:
+            ret['comment'] = 'Netweaver DB instance was not installed'
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret

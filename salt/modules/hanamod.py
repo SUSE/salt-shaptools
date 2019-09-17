@@ -856,10 +856,10 @@ def wait_for_connection(
 
     .. code-block:: bash
 
-        salt '*' hana.wait_for_hana 192.168.10.15 30013 SYSTEM pass
+        salt '*' hana.wait_for_hana 192.168.10.15 30015 SYSTEM pass
     '''
     connector = hdb_connector.HdbConnector()
-    current_time = time.clock()
+    current_time = time.time()
     current_timeout = current_time + timeout
     while current_time <= current_timeout:
         try:
@@ -868,10 +868,8 @@ def wait_for_connection(
             break
 
         except base_connector.ConnectionError:
-            continue
-
-        time.sleep(interval)
-        current_time = time.clock()
+            time.sleep(interval)
+            current_time = time.time()
     else:
         raise exceptions.CommandExecutionError(
             'HANA database not available after {} seconds in {}:{}'.format(
