@@ -19,14 +19,18 @@ Module to provide SAP HANA functionality to Salt
     hana.password: 'Qwerty1234'
 '''
 
+
 # Import Python libs
 from __future__ import absolute_import, unicode_literals, print_function
+import time
 
 from salt import exceptions
 
 # Import third party libs
 try:
     from shaptools import hana
+    from shaptools import hdb_connector
+    from shaptools.hdb_connector.connectors import base_connector
     HAS_HANA = True
 except ImportError:  # pragma: no cover
     HAS_HANA = False
@@ -823,3 +827,53 @@ def unset_ini_parameter(
             key_name=key_name, user_name=user_name, user_password=user_password)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
+
+
+def wait_for_connection(
+        host,
+        port,
+        user,
+        password,
+        timeout=60,
+        interval=5):
+    '''
+    Wait until HANA is ready trying to connect to the database
+
+    host:
+        Host where HANA is running
+    port:
+        HANA database port
+    user:
+        User to connect to the databse
+    password:
+        Password to connect to the database
+    timeout:
+        Timeout to try to connect to the database
+    interval:
+        Interval to try the connection
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.wait_for_hana 192.168.10.15 30013 SYSTEM pass
+    '''
+    connector = hdb_connector.HdbConnector()
+    current_time = time.clock()
+    current_timeout = current_time + timeout
+    while current_time <= current_timeout:
+        try:
+            connector.connect(host, port, user=user, password=password)
+            connector.disconnect()
+            break
+
+        except base_connector.ConnectionError:
+            continue
+
+        time.sleep(interval)
+        current_time = time.clock()
+    else:
+        raise exceptions.CommandExecutionError(
+            'HANA database not available after {} seconds in {}:{}'.format(
+                timeout, host, port
+            ))
