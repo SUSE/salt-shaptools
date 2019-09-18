@@ -149,6 +149,12 @@ def installed(
                 cwd=cwd,
                 additional_dvds=additional_dvds)
 
+        # This state is applied due an error raised during AAS installation saying the permissions
+        # to create files inside this folder are not valid
+        if sap_instance == 'di':
+            __salt__['file.chown'](
+                '/usr/sap/{}'.format(sid.upper()), '{}adm'.format(sid.lower()), 'sapsys')
+
         if sap_instance == 'ers':
             __salt__['netweaver.install_ers'](
                 software_path=software_path,
