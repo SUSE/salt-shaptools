@@ -261,7 +261,7 @@ def db_installed(
 
     if __opts__['test']:
         ret['result'] = None
-        ret['comment'] = 'Netweaver DB insatnce would be installed'
+        ret['comment'] = 'Netweaver DB instance would be installed'
         ret['changes']['host'] = '{}:{}'.format(host, port)
         return ret
 

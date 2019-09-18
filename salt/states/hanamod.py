@@ -119,6 +119,11 @@ def available(
            'result': False,
            'comment': ''}
 
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'hana connection would be checked'
+        return ret
+
     try:
         __salt__['hana.wait_for_connection'](
             host=host,

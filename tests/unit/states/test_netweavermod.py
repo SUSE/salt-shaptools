@@ -86,7 +86,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_command_error(self, mock_get):
         '''
-        Test to check installed in test mode
+        Test to check installed when it raises an error
         '''
 
         ret = {'name': 'prd',
@@ -111,29 +111,31 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_correct(self, mock_get):
         '''
-        Test to check installed in test mode
+        Test to check installed when it is installed correctly
         '''
 
         ret = {'name': 'prd',
                'changes': {'sid': 'prd'},
                'result': True,
-               'comment': 'Netweaver ascs installed'}
+               'comment': 'Netweaver di installed'}
 
         mock_installed = MagicMock(side_effect=[False, True])
-        mock_get.return_value = 'ascs'
+        mock_get.return_value = 'di'
         mock_attach = MagicMock(return_value='192.168.15.1')
         mock_setup_cwd = MagicMock(return_value='/tmp_nw')
         mock_install = MagicMock()
+        mock_chown = MagicMock()
         with patch.dict(netweavermod.__salt__, {'netweaver.is_installed': mock_installed,
                                                 'netweaver.attach_virtual_host': mock_attach,
                                                 'netweaver.setup_cwd': mock_setup_cwd,
-                                                'netweaver.install': mock_install}):
+                                                'netweaver.install': mock_install,
+                                                'file.chown': mock_chown}):
             assert netweavermod.installed(
                 'prd', '00', 'pass', '/software', 'root', 'pass',
                 'config_file', 'vhost', 'eth1', 'productID', cwd='/tmp') == ret
             mock_installed.assert_has_calls([
-                mock.call(sid='prd', inst='00', password='pass', sap_instance='ascs'),
-                mock.call(sid='prd', inst='00', password='pass', sap_instance='ascs'),
+                mock.call(sid='prd', inst='00', password='pass', sap_instance='di'),
+                mock.call(sid='prd', inst='00', password='pass', sap_instance='di'),
             ])
 
             mock_get.assert_called_once_with('productID')
@@ -149,7 +151,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_ers_correct(self, mock_get):
         '''
-        Test to check installed in test mode
+        Test to check installed when ers is installed correctly
         '''
 
         ret = {'name': 'prd',
@@ -162,10 +164,12 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
         mock_attach = MagicMock(return_value='192.168.15.1')
         mock_setup_cwd = MagicMock(return_value='/tmp_nw')
         mock_install = MagicMock()
+        mock_chown = MagicMock()
         with patch.dict(netweavermod.__salt__, {'netweaver.is_installed': mock_installed,
                                                 'netweaver.attach_virtual_host': mock_attach,
                                                 'netweaver.setup_cwd': mock_setup_cwd,
-                                                'netweaver.install_ers': mock_install}):
+                                                'netweaver.install_ers': mock_install,
+                                                'file.chown': mock_chown}):
             assert netweavermod.installed(
                 'prd', '00', 'pass', '/software', 'root', 'pass',
                 'config_file', 'vhost', 'eth1', 'productID', ascs_password='ascs_pass') == ret
@@ -174,6 +178,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
                 mock.call(sid='prd', inst='00', password='pass', sap_instance='ers'),
             ])
 
+            assert mock_chown.call_count == 0
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
@@ -188,7 +193,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_not_installed(self, mock_get):
         '''
-        Test to check installed in test mode
+        Test to check installed when the installation fails
         '''
 
         ret = {'name': 'prd',
@@ -214,6 +219,150 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             ])
 
             mock_get.assert_called_once_with('productID')
+            mock_attach.assert_called_once_with(
+                virtual_host='vhost', virtual_host_interface='eth1')
+            mock_setup_cwd.assert_called_once_with(
+                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
+            mock_install.assert_called_once_with(
+                software_path='/software', virtual_host='vhost',
+                product_id='productID', conf_file='config_file',
+                root_user='root', root_password='pass', cwd='/tmp_nw')
+
+    # 'db_installed' function tests
+
+    def test_db_installed_installed(self):
+        '''
+        Test to check db installed when netweaver is already installed
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {},
+               'result': True,
+               'comment': 'Netweaver DB instance is already installed'}
+
+        mock_db_installed = MagicMock(return_value=True)
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_db_installed': mock_db_installed}):
+            assert netweavermod.db_installed(
+                '192.168.10.15', 30015, 'SAPABAP1', 'schema_pass',
+                '/software', 'root', 'pass',
+                'config_file', 'vhost', 'eth1', 'productID') == ret
+            mock_db_installed.assert_called_once_with(
+                host='192.168.10.15', port=30015, schema_name='SAPABAP1', schema_password='schema_pass')
+
+    def test_db_installed_test(self):
+        '''
+        Test to check db_installed in test mode
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {'host': '192.168.10.15:30015'},
+               'result': None,
+               'comment': 'Netweaver DB instance would be installed'}
+
+        mock_db_installed = MagicMock(return_value=False)
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_db_installed': mock_db_installed}):
+            with patch.dict(netweavermod.__opts__, {'test': True}):
+                assert netweavermod.db_installed(
+                    '192.168.10.15', 30015, 'SAPABAP1', 'schema_pass',
+                    '/software', 'root', 'pass',
+                    'config_file', 'vhost', 'eth1', 'productID') == ret
+            mock_db_installed.assert_called_once_with(
+                host='192.168.10.15', port=30015, schema_name='SAPABAP1', schema_password='schema_pass')
+
+    def test_db_installed_command_error(self):
+        '''
+        Test to check db_installed when it raises an error
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {},
+               'result': False,
+               'comment': 'error'}
+
+        mock_db_installed = MagicMock(return_value=False)
+        mock_attach = MagicMock(side_effect=exceptions.CommandExecutionError('error'))
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_db_installed': mock_db_installed,
+                                                'netweaver.attach_virtual_host': mock_attach}):
+            assert netweavermod.db_installed(
+                '192.168.10.15', 30015, 'SAPABAP1', 'schema_pass',
+                '/software', 'root', 'pass',
+                'config_file', 'vhost', 'eth1', 'productID') == ret
+            mock_db_installed.assert_called_once_with(
+                host='192.168.10.15', port=30015, schema_name='SAPABAP1', schema_password='schema_pass')
+            mock_attach.assert_called_once_with(
+                virtual_host='vhost', virtual_host_interface='eth1')
+
+    def test_db_installed_correct(self):
+        '''
+        Test to check installed when it is installed correctly
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {'host': '192.168.10.15:30015'},
+               'result': True,
+               'comment': 'Netweaver DB instance installed'}
+
+        mock_db_installed = MagicMock(side_effect=[False, True])
+        mock_attach = MagicMock(return_value='192.168.15.1')
+        mock_setup_cwd = MagicMock(return_value='/tmp_nw')
+        mock_install = MagicMock()
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_db_installed': mock_db_installed,
+                                                'netweaver.attach_virtual_host': mock_attach,
+                                                'netweaver.setup_cwd': mock_setup_cwd,
+                                                'netweaver.install': mock_install}):
+            assert netweavermod.db_installed(
+                '192.168.10.15', 30015, 'SAPABAP1', 'schema_pass',
+                '/software', 'root', 'pass',
+                'config_file', 'vhost', 'eth1', 'productID') == ret
+            mock_db_installed.assert_has_calls([
+                mock.call(
+                    host='192.168.10.15', port=30015,
+                    schema_name='SAPABAP1', schema_password='schema_pass'),
+                mock.call(
+                    host='192.168.10.15', port=30015,
+                    schema_name='SAPABAP1', schema_password='schema_pass'),
+            ])
+
+            mock_attach.assert_called_once_with(
+                virtual_host='vhost', virtual_host_interface='eth1')
+            mock_setup_cwd.assert_called_once_with(
+                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
+            mock_install.assert_called_once_with(
+                software_path='/software', virtual_host='vhost',
+                product_id='productID', conf_file='config_file',
+                root_user='root', root_password='pass', cwd='/tmp_nw')
+
+    def test_db_installed_not_installed(self):
+        '''
+        Test to check installed when the installation fails
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {},
+               'result': False,
+               'comment': 'Netweaver DB instance was not installed'}
+
+        mock_db_installed = MagicMock(side_effect=[False, False])
+        mock_attach = MagicMock(return_value='192.168.15.1')
+        mock_setup_cwd = MagicMock(return_value='/tmp_nw')
+        mock_install = MagicMock()
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_db_installed': mock_db_installed,
+                                                'netweaver.attach_virtual_host': mock_attach,
+                                                'netweaver.setup_cwd': mock_setup_cwd,
+                                                'netweaver.install': mock_install}):
+            assert netweavermod.db_installed(
+                '192.168.10.15', 30015, 'SAPABAP1', 'schema_pass',
+                '/software', 'root', 'pass',
+                'config_file', 'vhost', 'eth1', 'productID') == ret
+            mock_db_installed.assert_has_calls([
+                mock.call(
+                    host='192.168.10.15', port=30015,
+                    schema_name='SAPABAP1', schema_password='schema_pass'),
+                mock.call(
+                    host='192.168.10.15', port=30015,
+                    schema_name='SAPABAP1', schema_password='schema_pass'),
+            ])
+
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
             mock_setup_cwd.assert_called_once_with(

@@ -31,6 +31,70 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
     def setup_loader_modules(self):
         return {hanamod: {'__opts__': {'test': False}}}
 
+    # 'available' function tests
+
+    def test_available_test(self):
+        '''
+        Test to check available in test mode
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {},
+               'result': None,
+               'comment': 'hana connection would be checked'}
+
+        with patch.dict(hanamod.__opts__, {'test': True}):
+            assert hanamod.available(
+                '192.168.10.15', 30015, 'SYSTEM', 'pass', 60, 5) == ret
+
+    def test_available_true(self):
+        '''
+        Test to check available when it returns True
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {},
+               'result': True,
+               'comment': 'HANA is available'}
+
+        mock_wait = mock.MagicMock()
+
+        with patch.dict(hanamod.__salt__, {'hana.wait_for_connection': mock_wait}):
+            assert hanamod.available(
+                '192.168.10.15', 30015, 'SYSTEM', 'pass', 60, 5) == ret
+        mock_wait.assert_called_once_with(
+            host='192.168.10.15',
+            port=30015,
+            user='SYSTEM',
+            password='pass',
+            timeout=60,
+            interval=5
+        )
+
+    def test_available_false(self):
+        '''
+        Test to check available when it returns False
+        '''
+
+        ret = {'name': '192.168.10.15:30015',
+               'changes': {},
+               'result': False,
+               'comment': 'error'}
+
+        mock_wait = mock.MagicMock(side_effect=exceptions.CommandExecutionError('error'))
+
+        with patch.dict(hanamod.__salt__, {'hana.wait_for_connection': mock_wait}):
+            assert hanamod.available(
+                '192.168.10.15', 30015, 'SYSTEM', 'pass', 60, 5) == ret
+        mock_wait.assert_called_once_with(
+            host='192.168.10.15',
+            port=30015,
+            user='SYSTEM',
+            password='pass',
+            timeout=60,
+            interval=5
+        )
+
     # 'installed' function tests
 
     def test_installed_installed(self):

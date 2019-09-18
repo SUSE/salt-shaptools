@@ -103,6 +103,46 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
             mock_netweaver.assert_called_once_with('prd', '00', 'pass')
             mock_netweaver_inst.is_installed.assert_called_once_with('ascs')
 
+    def test_is_db_installed_return_true(self):
+        '''
+        Test is_db_installed method
+        '''
+        mock_wait = MagicMock(return_value=True)
+        with patch.dict(netweavermod.__salt__, {'hana.wait_for_connection': mock_wait}):
+            assert netweavermod.is_db_installed('192.168.10.15', 30015, 'SYSTEM', 'pass')
+            mock_wait.assert_called_once_with(
+                host='192.168.10.15',
+                port=30015,
+                user='SYSTEM',
+                password='pass',
+                timeout=0,
+                interval=0
+            )
+
+    def test_is_db_installed_return_false(self):
+        '''
+        Test is_db_installed method
+        '''
+        mock_wait = MagicMock(side_effect=exceptions.CommandExecutionError)
+        with patch.dict(netweavermod.__salt__, {'hana.wait_for_connection': mock_wait}):
+            assert not netweavermod.is_db_installed('192.168.10.15', 30015, 'SYSTEM', 'pass')
+            mock_wait.assert_called_once_with(
+                host='192.168.10.15',
+                port=30015,
+                user='SYSTEM',
+                password='pass',
+                timeout=0,
+                interval=0
+            )
+
+    def test_is_db_installed_raise_error(self):
+        '''
+        Test is_db_installed method
+        '''
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            netweavermod.is_db_installed('192.168.10.15', 30015, 'SYSTEM', 'pass')
+        assert 'hana.wait_for_connection not available. hanamod must be installed' in str(err.value)
+
     def test_attach_virtual_host(self):
 
         mock_get_ip = MagicMock()
@@ -224,3 +264,30 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
             'software_path', 'vhost', 'productID', 'netweaver.conf',
             'root', 'root', ascs_password=None, timeout=0, interval=5, cwd=None)
         assert 'netweaver error' in str(err.value)
+
+    def test_setup_cwd(self):
+
+        mock_remove = mock.MagicMock()
+        mock_mkdir = mock.MagicMock()
+        mock_touch = mock.MagicMock()
+        mock_chown = mock.MagicMock()
+        mock_set_mode = mock.MagicMock()
+        mock_append = mock.MagicMock()
+
+        with patch.dict(netweavermod.__salt__, {'file.remove': mock_remove,
+                                                'file.mkdir': mock_mkdir,
+                                                'file.touch': mock_touch,
+                                                'file.chown': mock_chown,
+                                                'file.set_mode': mock_set_mode,
+                                                'file.append': mock_append}):
+            netweavermod.setup_cwd('/software', '/tmp', ['dvd1', 'dvd2'])
+
+            mock_remove.assert_called_once_with('/tmp')
+            mock_mkdir.assert_called_once_with('/tmp', user='root', group='sapinst', mode=775)
+            mock_touch.assert_called_once_with('/tmp/start_dir.cd')
+            mock_chown.assert_called_once_with('/tmp/start_dir.cd', 'root', 'sapinst')
+            mock_set_mode.assert_called_once_with('/tmp/start_dir.cd', 775)
+            mock_append.assert_has_calls([
+                mock.call('/tmp/start_dir.cd', args='/software'),
+                mock.call('/tmp/start_dir.cd', args=['/swpm/dvd1', '/swpm/dvd2'])
+            ])
