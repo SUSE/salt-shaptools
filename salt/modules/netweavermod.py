@@ -73,6 +73,30 @@ def _init(
         raise exceptions.SaltInvocationError(err)
 
 
+def execute_sapcontrol(
+        function,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Run a sapcontrol command
+
+    function:
+        sapcontrol function
+    sid
+        Netweaver system id (PRD for example)
+    inst
+        Netweaver instance number (00 for example)
+    password
+        Netweaver instance password
+    '''
+    try:
+        netweaver_inst = _init(sid, inst, password)
+        return netweaver_inst._execute_sapcontrol(function).output
+    except netweaver.NetweaverError as err:
+        raise exceptions.CommandExecutionError(err)
+
+
 def is_installed(
         sid=None,
         inst=None,
@@ -144,6 +168,62 @@ def is_db_installed(
             interval=0)
         return True
     except exceptions.CommandExecutionError:
+        return False
+
+
+def is_instance_installed(
+        sap_instance,
+        dispstatus=None,
+        virtual_host=None,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Check if a SAP Netweaver instance is installed among all the nodes
+
+    This is a possible output of the command:
+
+    hostname, instanceNr, httpPort, httpsPort, startPriority, features, dispstatus
+    sapha1as, 0, 50013, 50014, 1, MESSAGESERVER|ENQUE, GREEN
+    sapha1er, 10, 51013, 51014, 3, ENQREP, GREEN
+    sapha1aas, 2, 50213, 50214, 3, ABAP|GATEWAY|ICMAN|IGS, GREEN
+    sapha1pas, 1, 50113, 50114, 3, ABAP|GATEWAY|ICMAN|IGS, GREEN
+
+    sap_instance:
+        Check for specific SAP instances. Available options:
+        MESSAGESERVER,ENQREP,ENQUE,ABAP,GATEWAY,ICMAN,IGS
+    dispstatus:
+        Check for a particular dispstatus. Available options: GREEN, GRAY
+    virtual_host:
+        Check for a particular virtual host. If set to None the first match will be returned
+    sid
+        Netweaver system id (PRD for example)
+    inst
+        Netweaver instance number (00 for example)
+    password
+        Netweaver instance password
+    '''
+    try:
+        netweaver_inst = _init(sid, inst, password)
+        instances = netweaver_inst.get_system_instances().output
+        instance_pattern = '{virtual_host}.*{sap_instance}.*{dispstatus}.*'.format(
+            virtual_host=virtual_host if virtual_host else '',
+            sap_instance=sap_instance,
+            dispstatus=dispstatus if dispstatus else '')
+        found = netweaver.shell.find_pattern(instance_pattern, instances)
+        if found:
+            found = found.group(0).replace(' ', '').split(',')
+            return {
+                'hostname': found[0],
+                'instance': found[1],
+                'http_port': found[2],
+                'https_port': found[3],
+                'start_priority': found[4],
+                'features': found[5],
+                'dispstatus': found[6],
+            }
+        return False
+    except netweaver.NetweaverError:
         return False
 
 
