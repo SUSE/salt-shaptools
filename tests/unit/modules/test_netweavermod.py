@@ -79,6 +79,36 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         mock_netweaver.assert_called_once_with('prd', '00', 'pass')
         assert 'error' in str(err.value)
 
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_execute_sapcontrol(self, mock_netweaver):
+        '''
+        Test execute_sapcontrol method
+        '''
+        mock_netweaver_inst = MagicMock()
+        mock_netweaver.return_value = mock_netweaver_inst
+        return_data = MagicMock(output='output')
+        mock_netweaver_inst._execute_sapcontrol.return_value = return_data
+        output = netweavermod.execute_sapcontrol('function', 'prd', '00', 'pass')
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_inst._execute_sapcontrol.assert_called_once_with('function')
+        assert output == 'output'
+
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_execute_sapcontrol_raise(self, mock_netweaver):
+        '''
+        Test execute_sapcontrol method
+        '''
+        mock_netweaver_inst = MagicMock()
+        mock_netweaver.return_value = mock_netweaver_inst
+        mock_netweaver_inst._execute_sapcontrol.side_effect = \
+            netweavermod.netweaver.NetweaverError('error')
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            netweavermod.execute_sapcontrol('function', 'prd', '00', 'pass')
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_inst._execute_sapcontrol.assert_called_once_with('function')
+        assert 'error' in str(err.value)
+
+
     def test_is_installed_return_true(self):
         '''
         Test is_installed method
@@ -142,6 +172,73 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         with pytest.raises(exceptions.CommandExecutionError) as err:
             netweavermod.is_db_installed('192.168.10.15', 30015, 'SYSTEM', 'pass')
         assert 'hana.wait_for_connection not available. hanamod must be installed' in str(err.value)
+
+    @patch('salt.modules.netweavermod.netweaver.shell.find_pattern')
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_is_instance_installed(self, mock_netweaver, mock_find_pattern):
+        '''
+        Test is_instance_installed method
+        '''
+        mock_netweaver_inst = MagicMock()
+        mock_netweaver.return_value = mock_netweaver_inst
+        instances_data = MagicMock(output='output')
+        mock_netweaver_inst.get_system_instances.return_value = instances_data
+        found = MagicMock()
+        found.group.return_value = 'sapha1er, 10, 51013, 51014, 3, ENQREP, GREEN'
+        mock_find_pattern.return_value = found
+
+        data = netweavermod.is_instance_installed(
+            'MESSAGESERVER', 'GREEN', 'virtual', 'prd', '00', 'pass')
+
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_inst.get_system_instances.assert_called_once_with()
+        mock_find_pattern.assert_called_once_with('virtual.*MESSAGESERVER.*GREEN.*', 'output')
+        found.group.assert_called_once_with(0)
+        assert data['hostname'] == 'sapha1er'
+        assert data['instance'] == '10'
+        assert data['http_port'] == '51013'
+        assert data['https_port'] == '51014'
+        assert data['start_priority'] == '3'
+        assert data['features'] == 'ENQREP'
+        assert data['dispstatus'] == 'GREEN'
+
+    @patch('salt.modules.netweavermod.netweaver.shell.find_pattern')
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_is_instance_installed_not_found(self, mock_netweaver, mock_find_pattern):
+        '''
+        Test is_instance_installed method
+        '''
+        mock_netweaver_inst = MagicMock()
+        mock_netweaver.return_value = mock_netweaver_inst
+        instances_data = MagicMock(output='output')
+        mock_netweaver_inst.get_system_instances.return_value = instances_data
+        mock_find_pattern.return_value = None
+
+        data = netweavermod.is_instance_installed(
+            'MESSAGESERVER', sid='prd', inst='00', password='pass')
+
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_inst.get_system_instances.assert_called_once_with()
+        mock_find_pattern.assert_called_once_with('.*MESSAGESERVER.*.*', 'output')
+        assert data == False
+
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_is_instance_installed_error(self, mock_netweaver):
+        '''
+        Test is_instance_installed method
+        '''
+        mock_netweaver_inst = MagicMock()
+        mock_netweaver.return_value = mock_netweaver_inst
+        instances_data = MagicMock(output='output')
+        mock_netweaver_inst.get_system_instances.side_effect = \
+            netweavermod.netweaver.NetweaverError('errpr')
+
+        data = netweavermod.is_instance_installed(
+            'MESSAGESERVER', sid='prd', inst='00', password='pass')
+
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_inst.get_system_instances.assert_called_once_with()
+        assert data == False
 
     def test_attach_virtual_host(self):
 

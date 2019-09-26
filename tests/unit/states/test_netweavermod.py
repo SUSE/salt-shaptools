@@ -371,3 +371,254 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
                 root_user='root', root_password='pass', cwd='/tmp_nw')
+
+    def test_check_instance_present_test(self):
+        '''
+        Test check_instance_present in test mode
+        '''
+
+        ret = {'name': 'MESSAGESERVER',
+               'changes': {},
+               'result': None,
+               'comment': 'Netweaver instance MESSAGESERVER presence would be checked'}
+
+        mock_is_instance_installed = MagicMock(return_value=False)
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_instance_installed}):
+            with patch.dict(netweavermod.__opts__, {'test': True}):
+                assert netweavermod.check_instance_present(
+                    'MESSAGESERVER', 'GREEN', 'virtual',
+                    'prd', 00, 'pass') == ret
+
+    def test_check_instance_present_command_error(self):
+        '''
+        Test to check check_instance_present when it raises an error
+        '''
+
+        ret = {'name': 'MESSAGESERVER',
+               'changes': {},
+               'result': False,
+               'comment': 'error'}
+
+        mock_is_instance_installed = MagicMock(side_effect=exceptions.CommandExecutionError('error'))
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_instance_installed}):
+            assert netweavermod.check_instance_present(
+                'MESSAGESERVER', 'GREEN', 'virtual',
+                'prd', 00, 'pass') == ret
+
+        mock_is_instance_installed.assert_called_once_with(
+            sap_instance='MESSAGESERVER',
+            dispstatus='GREEN',
+            virtual_host='virtual',
+            sid='prd',
+            inst=00,
+            password='pass')
+
+    def test_check_instance_not_present(self):
+        '''
+        Test to check check_instance_present when the instance is not present
+        '''
+
+        ret = {'name': 'MESSAGESERVER',
+               'changes': {},
+               'result': False,
+               'comment': 'Netweaver instance MESSAGESERVER is not present'}
+
+        mock_is_instance_installed = MagicMock(return_value=False)
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_instance_installed}):
+            assert netweavermod.check_instance_present(
+                'MESSAGESERVER', 'GREEN', 'virtual',
+                'prd', 00, 'pass') == ret
+
+        mock_is_instance_installed.assert_called_once_with(
+            sap_instance='MESSAGESERVER',
+            dispstatus='GREEN',
+            virtual_host='virtual',
+            sid='prd',
+            inst=00,
+            password='pass')
+
+    def test_check_instance_present(self):
+        '''
+        Test to check check_instance_present when the instance is present
+        '''
+
+        ret = {'name': 'MESSAGESERVER',
+               'changes': {},
+               'result': True,
+               'comment': 'Netweaver instance MESSAGESERVER present in virtualhost'}
+
+        mock_is_instance_installed = MagicMock(return_value={'hostname': 'virtualhost'})
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_instance_installed}):
+            assert netweavermod.check_instance_present(
+                'MESSAGESERVER', 'GREEN', 'virtual',
+                'prd', 00, 'pass') == ret
+
+        mock_is_instance_installed.assert_called_once_with(
+            sap_instance='MESSAGESERVER',
+            dispstatus='GREEN',
+            virtual_host='virtual',
+            sid='prd',
+            inst=00,
+            password='pass')
+
+    def test_sapservices_updated_invalid_instance(self):
+        '''
+        Test sapservices_updated when the instance is invalid
+        '''
+
+        ret = {'name': 'other',
+               'changes': {},
+               'result': False,
+               'comment': 'invalid sap_instance. Only \'ascs\' and \'ers\' are valid options'}
+
+        assert netweavermod.sapservices_updated(
+            'other', 'prd', 00, 'pass') == ret
+
+    def test_sapservices_updated_already_update(self):
+        '''
+        Test sapservices_updated when the sapservice file is already updated
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {},
+               'result': True,
+               'comment': 'sapservices file is already updated for instance ascs'}
+
+        mock_retcode = MagicMock(return_value=0)
+        with patch.dict(netweavermod.__salt__, {'cmd.retcode': mock_retcode}):
+            assert netweavermod.sapservices_updated(
+                'ascs', 'prd', 00, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ERS.*\'', python_shell=True)
+
+        ret = {'name': 'ers',
+               'changes': {},
+               'result': True,
+               'comment': 'sapservices file is already updated for instance ers'}
+
+        mock_retcode = MagicMock(return_value=0)
+        with patch.dict(netweavermod.__salt__, {'cmd.retcode': mock_retcode}):
+            assert netweavermod.sapservices_updated(
+                'ers', 'prd', 00, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ASCS.*\'', python_shell=True)
+
+    def test_sapservices_updated_test(self):
+        '''
+        Test sapservices_updated using test mode
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {'sap_instance': 'ascs'},
+               'result': None,
+               'comment': 'sapservices of the instance ascs would be updated'}
+
+        mock_retcode = MagicMock(return_value=1)
+        with patch.dict(netweavermod.__salt__, {'cmd.retcode': mock_retcode}):
+            with patch.dict(netweavermod.__opts__, {'test': True}):
+                assert netweavermod.sapservices_updated(
+                    'ascs', 'prd', 00, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ERS.*\'', python_shell=True)
+
+    def test_sapservices_updated_correct(self):
+        '''
+        Test sapservices_updated when it is done correctly
+        '''
+
+        new_profile = 'LD_LIBRARY_PATH=/usr/sap/PRD/ERS10/exe:$LD_LIBRARY_PATH; '\
+        'export LD_LIBRARY_PATH; /usr/sap/PRD/ERS10/exe/sapstartsrv '\
+        'pf=/usr/sap/PRD/SYS/profile/PRD_ERS10_virtual '\
+        '-D -u prdadm'
+
+        ret = {'name': 'ascs',
+               'changes': {'sap_instance': 'ascs', 'profile': new_profile},
+               'result': True,
+               'comment': '/usr/sap/sapservices file updated properly'}
+
+        mock_retcode = MagicMock(return_value=1)
+        mock_is_installed = MagicMock(return_value={'hostname': 'virtual', 'instance': 10})
+        mock_append = MagicMock()
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_installed,
+                                                'cmd.retcode': mock_retcode}):
+            with patch.dict(netweavermod.__states__, {'file.append': mock_append}):
+                assert netweavermod.sapservices_updated(
+                    'ascs', 'prd', 00, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ERS.*\'', python_shell=True)
+        mock_is_installed.assert_called_once_with(
+            sap_instance='ENQREP', sid='prd', inst=00, password='pass')
+        mock_append.assert_called_once_with(name='/usr/sap/sapservices', text=new_profile)
+
+        new_profile = 'LD_LIBRARY_PATH=/usr/sap/PRD/ASCS00/exe:$LD_LIBRARY_PATH; '\
+        'export LD_LIBRARY_PATH; /usr/sap/PRD/ASCS00/exe/sapstartsrv '\
+        'pf=/usr/sap/PRD/SYS/profile/PRD_ASCS00_virtual '\
+        '-D -u prdadm'
+
+        ret = {'name': 'ers',
+               'changes': {'sap_instance': 'ers', 'profile': new_profile},
+               'result': True,
+               'comment': '/usr/sap/sapservices file updated properly'}
+
+        mock_retcode = MagicMock(return_value=1)
+        mock_is_installed = MagicMock(return_value={'hostname': 'virtual', 'instance': 00})
+        mock_append = MagicMock()
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_installed,
+                                                'cmd.retcode': mock_retcode}):
+            with patch.dict(netweavermod.__states__, {'file.append': mock_append}):
+                assert netweavermod.sapservices_updated(
+                    'ers', 'prd', 10, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ASCS.*\'', python_shell=True)
+        mock_is_installed.assert_called_once_with(
+            sap_instance='MESSAGESERVER', sid='prd', inst=10, password='pass')
+        mock_append.assert_called_once_with(name='/usr/sap/sapservices', text=new_profile)
+
+    def test_sapservices_updated_no_data(self):
+        '''
+        Test sapservices_updated when the instance is not found
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {},
+               'result': False,
+               'comment': 'the required sap instances to make these changes are not installed or running'}
+
+        mock_retcode = MagicMock(return_value=1)
+        mock_is_installed = MagicMock(return_value=False)
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_installed,
+                                                'cmd.retcode': mock_retcode}):
+            assert netweavermod.sapservices_updated(
+                'ascs', 'prd', 00, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ERS.*\'', python_shell=True)
+        mock_is_installed.assert_called_once_with(
+            sap_instance='ENQREP', sid='prd', inst=00, password='pass')
+
+    def test_sapservices_updated_error(self):
+        '''
+        Test sapservices_updated when the there is an execution error
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {},
+               'result': False,
+               'comment': 'error'}
+
+        mock_retcode = MagicMock(return_value=1)
+        mock_is_installed = MagicMock(side_effect=exceptions.CommandExecutionError('error'))
+        with patch.dict(netweavermod.__salt__, {'netweaver.is_instance_installed': mock_is_installed,
+                                                'cmd.retcode': mock_retcode}):
+            assert netweavermod.sapservices_updated(
+                'ascs', 'prd', 00, 'pass') == ret
+
+        mock_retcode.assert_called_once_with(
+            'cat /usr/sap/sapservices | grep \'.*ERS.*\'', python_shell=True)
+        mock_is_installed.assert_called_once_with(
+            sap_instance='ENQREP', sid='prd', inst=00, password='pass')

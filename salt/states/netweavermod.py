@@ -401,7 +401,7 @@ def sapservices_updated(
     if not __salt__['cmd.retcode']('cat {} | grep \'.*{}.*\''.format(
             sapservice_file, 'ASCS' if sap_instance == 'ers' else 'ERS'), python_shell=True):
         ret['result'] = True
-        ret['comment'] = 'sapservices file is already update for instance {}'.format(sap_instance)
+        ret['comment'] = 'sapservices file is already updated for instance {}'.format(sap_instance)
         return ret
 
     if __opts__['test']:
