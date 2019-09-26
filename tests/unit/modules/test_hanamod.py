@@ -725,3 +725,67 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
                 layer_name=None, layer='SYSTEM', reconfig=True,
                 key_name='key', user_name='key_user', user_password='key_password')
             assert 'hana error' in str(err.value)
+
+    @mock.patch('salt.modules.hanamod.hdb_connector.HdbConnector')
+    @mock.patch('time.time')
+    def test_wait_for_connection(self, mock_time, mock_hdb_connector):
+        mock_hdb_instance = mock.Mock()
+        mock_hdb_connector.return_value = mock_hdb_instance
+        mock_time.return_value = 0
+        hanamod.wait_for_connection('192.168.10.15', 30015, 'SYSTEM', 'pass')
+
+        mock_time.assert_called_once_with()
+        mock_hdb_instance.connect.assert_called_once_with(
+            '192.168.10.15', 30015, user='SYSTEM', password='pass')
+        mock_hdb_instance.disconnect.assert_called_once_with()
+
+    @mock.patch('salt.modules.hanamod.hdb_connector.HdbConnector')
+    @mock.patch('time.sleep')
+    @mock.patch('time.time')
+    def test_wait_for_connection_loop(self, mock_time, mock_sleep, mock_hdb_connector):
+        mock_hdb_instance = mock.Mock()
+        mock_hdb_connector.return_value = mock_hdb_instance
+        mock_hdb_instance.connect.side_effect = [
+            hanamod.base_connector.ConnectionError, hanamod.base_connector.ConnectionError, None]
+        mock_time.side_effect = [0, 1, 2, 3]
+        hanamod.wait_for_connection('192.168.10.15', 30015, 'SYSTEM', 'pass', timeout=2)
+
+        assert mock_time.call_count == 3
+        assert mock_sleep.call_count == 2
+        mock_sleep.assert_has_calls([
+            mock.call(5),
+            mock.call(5)
+        ])
+        mock_hdb_instance.connect.assert_has_calls([
+            mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass'),
+            mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass'),
+            mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass')
+        ])
+        mock_hdb_instance.disconnect.assert_called_once_with()
+
+    @mock.patch('salt.modules.hanamod.hdb_connector.HdbConnector')
+    @mock.patch('time.sleep')
+    @mock.patch('time.time')
+    def test_wait_for_connection_error(self, mock_time, mock_sleep, mock_hdb_connector):
+        mock_hdb_instance = mock.Mock()
+        mock_hdb_connector.return_value = mock_hdb_instance
+        mock_hdb_instance.connect.side_effect = [
+            hanamod.base_connector.ConnectionError, hanamod.base_connector.ConnectionError,
+            hanamod.base_connector.ConnectionError]
+        mock_time.side_effect = [0, 1, 2, 3]
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            hanamod.wait_for_connection('192.168.10.15', 30015, 'SYSTEM', 'pass', timeout=2)
+
+        assert mock_time.call_count == 4
+        assert mock_sleep.call_count == 3
+        mock_sleep.assert_has_calls([
+            mock.call(5),
+            mock.call(5),
+            mock.call(5)
+        ])
+        mock_hdb_instance.connect.assert_has_calls([
+            mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass'),
+            mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass'),
+            mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass')
+        ])
+        assert 'HANA database not available after 2 seconds in 192.168.10.15:30015' in str(err.value)

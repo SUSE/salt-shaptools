@@ -89,6 +89,59 @@ def _parse_dict(dict_params):
     return output
 
 
+def available(
+        name,
+        port,
+        user,
+        password,
+        timeout=60,
+        interval=5):
+    '''
+    Wait until HANA is ready trying to connect to the database
+
+    host:
+        Host where HANA is running
+    port:
+        HANA database port
+    user:
+        User to connect to the databse
+    password:
+        Password to connect to the database
+    timeout:
+        Timeout to try to connect to the database
+    interval:
+        Interval to try the connection
+    '''
+    host = name
+
+    ret = {'name': '{}:{}'.format(host, port),
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'hana connection would be checked'
+        return ret
+
+    try:
+        __salt__['hana.wait_for_connection'](
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            timeout=timeout,
+            interval=interval)
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+
+    ret['result'] = True
+    ret['comment'] = 'HANA is available'
+
+    return ret
+
+
 def installed(
         name,
         inst,
