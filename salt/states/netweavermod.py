@@ -71,7 +71,7 @@ def installed(
         virtual_host,
         virtual_host_interface,
         product_id,
-        cwd='/tmp/unattended',
+        cwd='/tmp/swpm_unattended',
         additional_dvds=None,
         ascs_password=None,
         timeout=0,
@@ -102,6 +102,8 @@ def installed(
         Id of the product to be installed. Example: NW_ABAP_ASCS:NW750.HDB.ABAPHA
     cwd
         New value for SAPINST_CWD parameter
+        CAUTION: All of the files stored in this path will be removed except the
+        start_dir.cd. This folder only will contain temporary files about the installation
     additional_dvds
         Additional folder where to retrieve required software for the installation
     ascs_password (Only used when the Product is ERS.)
@@ -210,7 +212,7 @@ def db_installed(
         virtual_host,
         virtual_host_interface,
         product_id,
-        cwd='/tmp/unattended',
+        cwd='/tmp/swpm_unattended',
         additional_dvds=None):
     """
     Install SAP Netweaver DB instance if the instance is not installed yet.

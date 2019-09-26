@@ -89,7 +89,7 @@ def is_installed(
         Netweaver instance password
     sap_instance
         Check for specific SAP instances. Available options: ascs, ers, pas, aas.
-        If None it will checked if any instance is installed
+        If None it will check if any instance is installed
 
     Returns:
         bool: True if installed, False otherwise
@@ -132,7 +132,7 @@ def is_db_installed(
     '''
     if 'hana.wait_for_connection' not in __salt__:
         raise exceptions.CommandExecutionError(
-            'hana.wait_for_connection not available. hanamod must be installed')
+            'hana.wait_for_connection not available. hanamod must be installed and loaded')
 
     try:
         __salt__['hana.wait_for_connection'](
@@ -206,6 +206,8 @@ def install(
         Root user password
     cwd
         New value for SAPINST_CWD parameter
+        CAUTION: All of the files stored in this path will be removed except the
+        start_dir.cd. This folder only will contain temporary files about the installation
 
     CLI Example:
 
@@ -248,6 +250,8 @@ def install_ers(
         Root user password
     cwd
         New value for SAPINST_CWD parameter
+        CAUTION: All of the files stored in this path will be removed except the
+        start_dir.cd. This folder only will contain temporary files about the installation
     ascs_password
         Password of the SAP user in the machine hosting the ASCS instance.
         If it's not set the same password used to install ERS will be used
@@ -272,7 +276,7 @@ def install_ers(
 
 def setup_cwd(
         software_path,
-        cwd='/tmp/unattended',
+        cwd='/tmp/swpm_unattended',
         additional_dvds=None):
     '''
     Setup folder to run the sapinst tool in other directory (modified SAPINST_CWD)
@@ -282,6 +286,8 @@ def setup_cwd(
     cwd
         Path used to run the installation. All the files created during the installation will
         be stored there.
+        CAUTION: All of the files stored in this path will be removed except the
+        start_dir.cd. This folder only will contain temporary files about the installation
     additional_dvds
         Path to additional folders used during the installation
     '''

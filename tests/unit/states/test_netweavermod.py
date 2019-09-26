@@ -183,7 +183,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
             mock_setup_cwd.assert_called_once_with(
-                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
+                software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
@@ -222,7 +222,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
             mock_setup_cwd.assert_called_once_with(
-                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
+                software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
@@ -326,7 +326,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
             mock_setup_cwd.assert_called_once_with(
-                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
+                software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
@@ -366,7 +366,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_attach.assert_called_once_with(
                 virtual_host='vhost', virtual_host_interface='eth1')
             mock_setup_cwd.assert_called_once_with(
-                software_path='/software', cwd='/tmp/unattended', additional_dvds=None)
+                software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
                 software_path='/software', virtual_host='vhost',
                 product_id='productID', conf_file='config_file',
