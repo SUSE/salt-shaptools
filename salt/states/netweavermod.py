@@ -304,3 +304,147 @@ def db_installed(
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
+
+
+def check_instance_present(
+            name,
+            dispstatus=None,
+            virtual_host=None,
+            sid=None,
+            inst=None,
+            password=None):
+        '''
+        Check if a SAP Netweaver instance is installed among all the nodes
+
+        name:
+            Check for specific SAP instances. Available options:
+            MESSAGESERVER,ENQREP,ENQUE,ABAP,GATEWAY,ICMAN,IGS
+        dispstatus:
+            Check for a particular dispstatus. Available options: GREEN, GRAY
+        virtual_host:
+            Check for a particular virtual host. If set to None the first match will be returned
+        sid
+            Netweaver system id (PRD for example)
+        inst
+            Netweaver instance number (00 for example)
+        password
+            Netweaver instance password
+        '''
+        sap_instance = name
+
+        ret = {'name': sap_instance,
+               'changes': {},
+               'result': False,
+               'comment': ''}
+
+        if __opts__['test']:
+            ret['result'] = None
+            ret['comment'] = 'Netweaver instance {} presence would be checked'.format(sap_instance)
+            return ret
+
+        try:
+            data = __salt__['netweaver.is_instance_installed'](
+                sap_instance=sap_instance,
+                dispstatus=dispstatus,
+                virtual_host=virtual_host,
+                sid=sid,
+                inst=inst,
+                password=password)
+
+            if not data:
+                ret['comment'] = 'Netweaver instance {} is not present'.format(sap_instance)
+                return ret
+
+            ret['comment'] = 'Netweaver instance {} present in {}'.format(
+                sap_instance, data['hostname'])
+            ret['result'] = True
+            return ret
+
+        except exceptions.CommandExecutionError as err:
+            ret['comment'] = six.text_type(err)
+            return ret
+
+
+def sapservices_updated(
+        name,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Update the file /usr/sap/sapservices to include the other sap instances data. This method
+    is used to enable HA in Netweaver.
+    Both ASCS and ERS must be running.
+
+    sap_instance
+        Current node sap instance. If the current node sap instance is 'ascs' it will include 'ers'
+        data, and if current node sap instance is 'ers' it will include 'ascs' data.
+    sid
+        Netweaver system id (PRD for example)
+    inst
+        Netweaver instance number (00 for example)
+    password
+        Netweaver instance password
+    '''
+    sap_instance = name
+
+    ret = {'name': sap_instance,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    sapservice_file = '/usr/sap/sapservices'
+
+    if sap_instance not in ['ascs', 'ers']:
+        ret['comment'] = 'invalid sap_instance. Only \'ascs\' and \'ers\' are valid options'
+        return ret
+
+    if not __salt__['cmd.retcode']('cat {} | grep \'.*{}.*\''.format(
+            sapservice_file, 'ASCS' if sap_instance == 'ers' else 'ERS'), python_shell=True):
+        ret['result'] = True
+        ret['comment'] = 'sapservices file is already updated for instance {}'.format(sap_instance)
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'sapservices of the instance {} would be updated'.format(sap_instance)
+        ret['changes']['sap_instance'] = sap_instance
+        return ret
+
+    try:
+        if sap_instance == 'ascs':
+            data = __salt__['netweaver.is_instance_installed'](
+                sap_instance='ENQREP', sid=sid, inst=inst, password=password)
+        else:
+            data = __salt__['netweaver.is_instance_installed'](
+                sap_instance='MESSAGESERVER', sid=sid, inst=inst, password=password)
+
+        if not data:
+            ret['comment'] = \
+                'the required sap instances to make these changes are not installed or running'
+            return ret
+
+        new_profile = \
+            'LD_LIBRARY_PATH=/usr/sap/{sid}/{sap_instance}{instance}/exe:$LD_LIBRARY_PATH; '\
+            'export LD_LIBRARY_PATH; /usr/sap/{sid}/{sap_instance}{instance}/exe/sapstartsrv '\
+            'pf=/usr/sap/{sid}/SYS/profile/{sid}_{sap_instance}{instance}_{virtual_host} '\
+            '-D -u {sid_lower}adm'.format(
+            sid=sid.upper(),
+            sap_instance='ASCS' if sap_instance == 'ers' else 'ERS',
+            instance='{:0>2}'.format(data['instance']),
+            virtual_host=data['hostname'],
+            sid_lower=sid)
+
+        __states__['file.append'](
+            name=sapservice_file,
+            text=new_profile
+        )
+
+        ret['comment'] = '{} file updated properly'.format(sapservice_file)
+        ret['changes']['sap_instance'] = sap_instance
+        ret['changes']['profile'] = new_profile
+        ret['result'] = True
+        return ret
+
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
