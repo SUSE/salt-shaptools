@@ -260,6 +260,30 @@ def attach_virtual_host(
 
     return ip_address
 
+def update_conf_file(
+        conf_file,
+        **extra_parameters):
+    '''
+    Update SAP Netweaver installation configuration file
+
+    conf_file
+        Path to the existing configuration file
+    extra_parameters (dict): Dictionary with the values to be updated. Use the exact
+        name of the SAP configuration file for the key
+    
+    Returns:
+        str: Configuration file path
+    
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' netweaver.update_conf_file /tmp/nw.inifile.params sid=HA1
+    '''
+    try:
+        return netweaver.NetweaverInstance.update_conf_file(conf_file, **extra_parameters)
+    except IOError as err:
+        raise exceptions.CommandExecutionError(err)
 
 def install(
         software_path,
