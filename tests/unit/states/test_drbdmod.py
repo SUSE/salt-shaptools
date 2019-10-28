@@ -19,7 +19,7 @@ from tests.support.mock import (
 )
 
 # Import Salt Libs
-import salt.states.drbd as drbd
+import salt.states.drbdmod as drbd
 import time
 
 RES_NAME = 'dummy'

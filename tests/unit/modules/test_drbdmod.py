@@ -20,7 +20,7 @@ from tests.support.mock import (
 )
 
 # Import Salt Libs
-import salt.modules.drbd as drbd
+import salt.modules.drbdmod as drbd
 
 
 @skipIf(NO_MOCK, NO_MOCK_REASON)
