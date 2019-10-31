@@ -313,56 +313,56 @@ def check_instance_present(
             sid=None,
             inst=None,
             password=None):
-        '''
-        Check if a SAP Netweaver instance is installed among all the nodes
+    '''
+    Check if a SAP Netweaver instance is installed among all the nodes
 
-        name:
-            Check for specific SAP instances. Available options:
-            MESSAGESERVER,ENQREP,ENQUE,ABAP,GATEWAY,ICMAN,IGS
-        dispstatus:
-            Check for a particular dispstatus. Available options: GREEN, GRAY
-        virtual_host:
-            Check for a particular virtual host. If set to None the first match will be returned
-        sid
-            Netweaver system id (PRD for example)
-        inst
-            Netweaver instance number (00 for example)
-        password
-            Netweaver instance password
-        '''
-        sap_instance = name
+    name:
+        Check for specific SAP instances. Available options:
+        MESSAGESERVER,ENQREP,ENQUE,ABAP,GATEWAY,ICMAN,IGS
+    dispstatus:
+        Check for a particular dispstatus. Available options: GREEN, GRAY
+    virtual_host:
+        Check for a particular virtual host. If set to None the first match will be returned
+    sid
+        Netweaver system id (PRD for example)
+    inst
+        Netweaver instance number (00 for example)
+    password
+        Netweaver instance password
+    '''
+    sap_instance = name
 
-        ret = {'name': sap_instance,
-               'changes': {},
-               'result': False,
-               'comment': ''}
+    ret = {'name': sap_instance,
+           'changes': {},
+           'result': False,
+           'comment': ''}
 
-        if __opts__['test']:
-            ret['result'] = None
-            ret['comment'] = 'Netweaver instance {} presence would be checked'.format(sap_instance)
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Netweaver instance {} presence would be checked'.format(sap_instance)
+        return ret
+
+    try:
+        data = __salt__['netweaver.is_instance_installed'](
+            sap_instance=sap_instance,
+            dispstatus=dispstatus,
+            virtual_host=virtual_host,
+            sid=sid,
+            inst=inst,
+            password=password)
+
+        if not data:
+            ret['comment'] = 'Netweaver instance {} is not present'.format(sap_instance)
             return ret
 
-        try:
-            data = __salt__['netweaver.is_instance_installed'](
-                sap_instance=sap_instance,
-                dispstatus=dispstatus,
-                virtual_host=virtual_host,
-                sid=sid,
-                inst=inst,
-                password=password)
+        ret['comment'] = 'Netweaver instance {} present in {}'.format(
+            sap_instance, data['hostname'])
+        ret['result'] = True
+        return ret
 
-            if not data:
-                ret['comment'] = 'Netweaver instance {} is not present'.format(sap_instance)
-                return ret
-
-            ret['comment'] = 'Netweaver instance {} present in {}'.format(
-                sap_instance, data['hostname'])
-            ret['result'] = True
-            return ret
-
-        except exceptions.CommandExecutionError as err:
-            ret['comment'] = six.text_type(err)
-            return ret
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
 
 
 def sapservices_updated(
@@ -428,11 +428,11 @@ def sapservices_updated(
             'export LD_LIBRARY_PATH; /usr/sap/{sid}/{sap_instance}{instance}/exe/sapstartsrv '\
             'pf=/usr/sap/{sid}/SYS/profile/{sid}_{sap_instance}{instance}_{virtual_host} '\
             '-D -u {sid_lower}adm'.format(
-            sid=sid.upper(),
-            sap_instance='ASCS' if sap_instance == 'ers' else 'ERS',
-            instance='{:0>2}'.format(data['instance']),
-            virtual_host=data['hostname'],
-            sid_lower=sid)
+                sid=sid.upper(),
+                sap_instance='ASCS' if sap_instance == 'ers' else 'ERS',
+                instance='{:0>2}'.format(data['instance']),
+                virtual_host=data['hostname'],
+                sid_lower=sid)
 
         __states__['file.append'](
             name=sapservice_file,
