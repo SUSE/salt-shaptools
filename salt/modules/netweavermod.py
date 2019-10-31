@@ -369,7 +369,7 @@ def setup_cwd(
         CAUTION: All of the files stored in this path will be removed except the
         start_dir.cd. This folder only will contain temporary files about the installation
     additional_dvds
-        Path to additional folders used during the installation
+        List with path to additional folders used during the installation
     '''
 
     # Create folder. Remove if already exists first
@@ -382,7 +382,8 @@ def setup_cwd(
     __salt__['file.set_mode'](start_dir, 775)
     # Add sapints_folder
     __salt__['file.append'](start_dir, args=software_path)
-    # Add additional dvds. Add just /swpm at the beginning
-    __salt__['file.append'](start_dir, args=['/swpm/{}'.format(dvd) for dvd in additional_dvds])
+    # Add additional dvds
+    if additional_dvds:
+        __salt__['file.append'](start_dir, args=additional_dvds)
 
     return cwd

@@ -377,7 +377,7 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
                                                 'file.chown': mock_chown,
                                                 'file.set_mode': mock_set_mode,
                                                 'file.append': mock_append}):
-            netweavermod.setup_cwd('/software', '/tmp', ['dvd1', 'dvd2'])
+            netweavermod.setup_cwd('/software', '/tmp', ['/path/dvd1', '/path/dvd2'])
 
             mock_remove.assert_called_once_with('/tmp')
             mock_mkdir.assert_called_once_with('/tmp', user='root', group='sapinst', mode=775)
@@ -386,5 +386,5 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
             mock_set_mode.assert_called_once_with('/tmp/start_dir.cd', 775)
             mock_append.assert_has_calls([
                 mock.call('/tmp/start_dir.cd', args='/software'),
-                mock.call('/tmp/start_dir.cd', args=['/swpm/dvd1', '/swpm/dvd2'])
+                mock.call('/tmp/start_dir.cd', args=['/path/dvd1', '/path/dvd2'])
             ])
