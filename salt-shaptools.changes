@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Nov 12 19:58:14 UTC 2019 - Simranpal Singh <simranpal.singh@suse.com>
+
+- Create package version 0.2.4. Add module fn to update nw installation
+  conf files
+
+-------------------------------------------------------------------
 Mon Nov  5 08:48:50 UTC 2019 - nick wang <nwang@suse.com>
 
 - Create package version 0.2.3 with drbd files renamed.
