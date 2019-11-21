@@ -186,7 +186,7 @@ res role:Primary
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.status() == ret
 
-        ret = {'Unknown parser': ' single role:Primary'}
+        # SubTest: Test the _unknown_parser
         fake = {}
         fake['stdout'] = '''
  single role:Primary
@@ -197,7 +197,23 @@ res role:Primary
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            assert drbd.status() == ret
+            self.assertRaises(exceptions.CommandExecutionError, drbd.status)
+
+        # SubTest: Test the right indent but no expected KEY
+        fake = {}
+        fake['stdout'] = '''
+single role:Primary
+  error-key:UpToDate
+  opensuse-node2 role:Secondary
+    replication:SyncSource peer-disk:Inconsistent done:96.47
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock_cmd = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
+            self.assertRaises(exceptions.CommandExecutionError, drbd.status)
 
     def test_createmd(self):
         '''
