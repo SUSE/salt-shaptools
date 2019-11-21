@@ -30,6 +30,8 @@ LOGGER = logging.getLogger(__name__)
 __virtualname__ = 'drbd'
 
 DRBD_COMMAND = 'drbdadm'
+ERR_STR = 'UNKNOWN'
+DUMMY_STR = 'IGNORED'
 
 
 def __virtual__():  # pragma: no cover
@@ -85,10 +87,12 @@ def _analyse_status_type(line):
     switch = {
         0: 'RESOURCE',
         2: {' disk:': 'LOCALDISK', ' role:': 'PEERNODE', ' connection:': 'PEERNODE'},
-        4: {' peer-disk:': 'PEERDISK'}
+        4: {' peer-disk:': 'PEERDISK'},
+        6: DUMMY_STR,
+        8: DUMMY_STR,
     }
 
-    ret = switch.get(spaces, 'UNKNOWN')
+    ret = switch.get(spaces, ERR_STR)
 
     # isinstance(ret, str) only works when run directly, calling need unicode(six)
     if isinstance(ret, six.text_type):
@@ -97,6 +101,9 @@ def _analyse_status_type(line):
     for x in ret:
         if x in line:
             return ret[x]
+
+    # Doesn't find expected KEY in support indent
+    return ERR_STR
 
 
 def _add_res(line):
@@ -171,7 +178,7 @@ def _add_peernode(line):
 
 def _empty(dummy):
     '''
-    Action of empty line of ``drbdadm status``
+    Action of empty line or extra verbose info of ``drbdadm status``
     '''
 
 
@@ -179,7 +186,7 @@ def _unknown_parser(line):
     '''
     Action of unsupported line of ``drbdadm status``
     '''
-    __context__['drbd.statusret'] = {"Unknown parser": line}
+    raise CommandExecutionError('The unknown line:\n' + line)
 
 
 def _line_parser(line):
@@ -195,6 +202,8 @@ def _line_parser(line):
         'PEERNODE': _add_peernode,
         'LOCALDISK': _add_volume,
         'PEERDISK': _add_volume,
+        DUMMY_STR: _empty,
+        ERR_STR: _unknown_parser,
     }
 
     func = switch.get(section, _unknown_parser)
@@ -365,8 +374,13 @@ def status(name='all'):
         LOGGER.info('No status due to %s (%s).', result['stderr'], result['retcode'])
         return None
 
-    for line in result['stdout'].splitlines():
-        _line_parser(line)
+    try:
+        for line in result['stdout'].splitlines():
+            _line_parser(line)
+    except CommandExecutionError as err:
+        raise CommandExecutionError('UNKNOWN status output format found',
+                                    info=(result['stdout'] + "\n\n" +
+                                    six.text_type(err)))
 
     if __context__['drbd.resource']:
         __context__['drbd.statusret'].append(__context__['drbd.resource'])
