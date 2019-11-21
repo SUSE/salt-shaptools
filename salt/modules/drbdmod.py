@@ -85,7 +85,9 @@ def _analyse_status_type(line):
     switch = {
         0: 'RESOURCE',
         2: {' disk:': 'LOCALDISK', ' role:': 'PEERNODE', ' connection:': 'PEERNODE'},
-        4: {' peer-disk:': 'PEERDISK'}
+        4: {' peer-disk:': 'PEERDISK'},
+        6: 'IGNORED',
+        8: 'IGNORED',
     }
 
     ret = switch.get(spaces, 'UNKNOWN')
@@ -97,6 +99,9 @@ def _analyse_status_type(line):
     for x in ret:
         if x in line:
             return ret[x]
+
+    # Doesn't find expected KEY in support indent
+    return 'UNKNOWN'
 
 
 def _add_res(line):
@@ -171,7 +176,7 @@ def _add_peernode(line):
 
 def _empty(dummy):
     '''
-    Action of empty line of ``drbdadm status``
+    Action of empty line or extra verbose info of ``drbdadm status``
     '''
 
 
@@ -191,6 +196,7 @@ def _line_parser(line):
 
     switch = {
         '': _empty,
+        'IGNORED': _empty,
         'RESOURCE': _add_res,
         'PEERNODE': _add_peernode,
         'LOCALDISK': _add_volume,
