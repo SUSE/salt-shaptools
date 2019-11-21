@@ -184,7 +184,7 @@ def _unknown_parser(line):
     '''
     Action of unsupported line of ``drbdadm status``
     '''
-    __context__['drbd.statusret'] = {"Unknown parser": line}
+    raise CommandExecutionError('The unknown line:\n' + line)
 
 
 def _line_parser(line):
@@ -201,6 +201,7 @@ def _line_parser(line):
         'PEERNODE': _add_peernode,
         'LOCALDISK': _add_volume,
         'PEERDISK': _add_volume,
+        'UNKNOWN': _unknown_parser,
     }
 
     func = switch.get(section, _unknown_parser)
@@ -371,8 +372,13 @@ def status(name='all'):
         LOGGER.info('No status due to %s (%s).', result['stderr'], result['retcode'])
         return None
 
-    for line in result['stdout'].splitlines():
-        _line_parser(line)
+    try:
+        for line in result['stdout'].splitlines():
+            _line_parser(line)
+    except CommandExecutionError as err:
+        raise CommandExecutionError('UNKNOWN status output format found',
+                                    info=(result['stdout'] + "\n\n" +
+                                    six.text_type(err)))
 
     if __context__['drbd.resource']:
         __context__['drbd.statusret'].append(__context__['drbd.resource'])
