@@ -30,6 +30,8 @@ LOGGER = logging.getLogger(__name__)
 __virtualname__ = 'drbd'
 
 DRBD_COMMAND = 'drbdadm'
+ERR_STR = 'UNKNOWN'
+DUMMY_STR = 'IGNORED'
 
 
 def __virtual__():  # pragma: no cover
@@ -86,11 +88,11 @@ def _analyse_status_type(line):
         0: 'RESOURCE',
         2: {' disk:': 'LOCALDISK', ' role:': 'PEERNODE', ' connection:': 'PEERNODE'},
         4: {' peer-disk:': 'PEERDISK'},
-        6: 'IGNORED',
-        8: 'IGNORED',
+        6: DUMMY_STR,
+        8: DUMMY_STR,
     }
 
-    ret = switch.get(spaces, 'UNKNOWN')
+    ret = switch.get(spaces, ERR_STR)
 
     # isinstance(ret, str) only works when run directly, calling need unicode(six)
     if isinstance(ret, six.text_type):
@@ -101,7 +103,7 @@ def _analyse_status_type(line):
             return ret[x]
 
     # Doesn't find expected KEY in support indent
-    return 'UNKNOWN'
+    return ERR_STR
 
 
 def _add_res(line):
@@ -196,12 +198,12 @@ def _line_parser(line):
 
     switch = {
         '': _empty,
-        'IGNORED': _empty,
         'RESOURCE': _add_res,
         'PEERNODE': _add_peernode,
         'LOCALDISK': _add_volume,
         'PEERDISK': _add_volume,
-        'UNKNOWN': _unknown_parser,
+        DUMMY_STR: _empty,
+        ERR_STR: _unknown_parser,
     }
 
     func = switch.get(section, _unknown_parser)
