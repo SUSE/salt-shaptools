@@ -63,6 +63,15 @@ def _resource_not_exist(name):
 
 
 def _get_res_status(name):
+    if __salt__['drbd.is_support_status_json']:
+        res = __get_res_drbdsetup_status(name)
+    else:
+        res = __get_res_drbdadm_status(name)
+
+    return res
+
+
+def __get_res_drbdadm_status(name):
     try:
         result = __salt__['drbd.status'](name=name)
     except CommandExecutionError as err:
@@ -74,6 +83,24 @@ def _get_res_status(name):
 
     for res in result:
         if res['resource name'] == name:
+            LOGGER.debug(res)
+            return res
+
+    return None
+
+
+def __get_res_drbdsetup_status(name):
+    try:
+        result = __salt__['drbd.setup_status'](name=name)
+    except CommandExecutionError as err:
+        LOGGER.error(six.text_type(err))
+        return None
+
+    if not result:
+        return None
+
+    for res in result:
+        if res['name'] == name:
             LOGGER.debug(res)
             return res
 
@@ -288,7 +315,8 @@ def promoted(name, force=False):
     # Check resource is running
     res = _get_res_status(name)
     if res:
-        if res['local role'] == 'Primary':
+        if (__salt__['drbd.is_support_status_json'] and res['role'] == 'Primary') or \
+            (not __salt__['drbd.is_support_status_json'] and res['local role'] == 'Primary'):
             ret['result'] = True
             ret['comment'] = 'Resource {} has already been promoted.'.format(name)
             return ret
@@ -348,7 +376,8 @@ def demoted(name):
     # Check resource is running
     res = _get_res_status(name)
     if res:
-        if res['local role'] == 'Secondary':
+        if (__salt__['drbd.is_support_status_json'] and res['role'] == 'Secondary') or \
+            (not __salt__['drbd.is_support_status_json'] and res['local role'] == 'Secondary'):
             ret['result'] = True
             ret['comment'] = 'Resource {} has already been demoted.'.format(name)
             return ret
@@ -382,6 +411,9 @@ def demoted(name):
         return ret
 
 
+# May replace by "drbdsetup wait-sync-resource" in drbd9 with modification.
+# Cause it only suspend when resoure is in syncing.
+# Behavior the same when a resource not and finished sync.
 def wait_for_successful_synced(name, interval=30, timeout=600, **kwargs):
     '''
     Query a drbd resource until fully synced for all volumes.
