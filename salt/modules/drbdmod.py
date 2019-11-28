@@ -32,6 +32,7 @@ __virtualname__ = 'drbd'
 DRBD_COMMAND = 'drbdadm'
 ERR_STR = 'UNKNOWN'
 DUMMY_STR = 'IGNORED'
+WITH_JSON = True
 
 
 def __virtual__():  # pragma: no cover
@@ -216,13 +217,21 @@ def _is_local_all_uptodated(name):
     Check whether all local volumes are UpToDate.
     '''
 
-    res = status(name)
+    if is_support_status_json():
+        volkey = 'devices'
+        statekey = 'disk-state'
+        res = setup_status(name)
+    else:
+        volkey = 'local volumes'
+        statekey = 'disk'
+        res = status(name)
+
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for vol in res[0]['local volumes']:
-        if vol['disk'] != 'UpToDate':
+    for vol in res[0][volkey]:
+        if vol[statekey] != 'UpToDate':
             return False
 
     return True
@@ -236,19 +245,29 @@ def _is_peers_uptodated(name, peernode='all'):
 
         If peernode is not match, will return None, same as False.
     '''
-    ret = None
+    if is_support_status_json():
+        conkey = 'connections'
+        pnamekey = 'name'
+        pvolkey = 'peer_devices'
+        pstatekey = 'peer-disk-state'
+        res = setup_status(name)
+    else:
+        conkey = 'peer nodes'
+        pnamekey = 'peernode name'
+        pvolkey = 'peer volumes'
+        pstatekey = 'peer-disk'
+        res = status(name)
 
-    res = status(name)
     if not res:
-        return ret
+        return False
 
     # Since name is not all, res only have one element
-    for node in res[0]['peer nodes']:
-        if peernode != 'all' and node['peernode name'] != peernode:
+    for node in res[0][conkey]:
+        if peernode != 'all' and node[pnamekey] != peernode:
             continue
 
-        for vol in node['peer volumes']:
-            if vol['peer-disk'] != 'UpToDate':
+        for vol in node[pvolkey]:
+            if vol[pstatekey] != 'UpToDate':
                 return False
             else:
                 # At lease one volume is 'UpToDate'
@@ -610,18 +629,13 @@ def setup_status(name='all'):
         salt '*' drbd.setup_status name=<resource name>
     '''
 
-    ret = {'name': name,
-           'result': False,
-           'comment': ''}
-
     cmd = 'drbdsetup status --json {}'.format(name)
 
     results = __salt__['cmd.run_all'](cmd)
 
     if 'retcode' not in results or results['retcode'] != 0:
-        ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
-            results['retcode'])
-        return ret
+        LOGGER.info('No drbdsetup status due to %s (%s).', results['stderr'], results['retcode'])
+        return None
 
     try:
         ret = salt.utils.json.loads(results['stdout'], strict=False)
@@ -653,5 +667,24 @@ def check_sync_status(name, peernode='all'):
     if _is_local_all_uptodated(name) and _is_peers_uptodated(
             name, peernode=peernode):
         return True
+
+    return False
+
+
+def is_support_status_json():
+    '''
+    Use drbdsetup status --json instead of drbdadm for status.
+    At least in drbd9 and drbd-utils >= 8.9.8
+    '''
+
+    if not WITH_JSON:
+        return False
+
+    cmd = 'drbdsetup status --help 2>/dev/null'
+    result = __salt__['cmd.run'](cmd).splitlines()
+
+    for line in result:
+        if "[--json]" in line:
+            return True
 
     return False
