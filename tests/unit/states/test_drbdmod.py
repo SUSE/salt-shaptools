@@ -31,7 +31,8 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
     Test cases for salt.states.drbd
     '''
     def setup_loader_modules(self):
-        return {drbd: {'__opts__': {'test': False}}}
+        return {drbd: {'__opts__': {'test': False},
+                       '__salt__': {'drbd.is_support_status_json': True}}}
 
     def test_initialized(self):
         '''
@@ -143,7 +144,8 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
         mock_status = MagicMock(side_effect=exceptions.CommandExecutionError)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.stopped(RES_NAME) == ret
 
         # Test 2: drbd status return empty []
@@ -158,7 +160,8 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
         mock_status = MagicMock(return_value=[{'resource name': 'not_the_same'}])
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.stopped(RES_NAME) == ret
 
     def test_get_resource_list(self):
@@ -228,7 +231,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.started(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -246,7 +250,8 @@ resource shanghai {
 
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                            'drbd.status': mock_status}):
+                                            'drbd.status': mock_status,
+                                            'drbd.is_support_status_json': False}):
                 assert drbd.started(RES_NAME) == ret
 
         # SubTest 4: Error in start
@@ -265,6 +270,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.up': mock_up}):
             assert drbd.started(RES_NAME) == ret
             mock_up.assert_called_once_with(name=RES_NAME)
@@ -285,6 +291,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.up': mock_up}):
             assert drbd.started(RES_NAME) == ret
             mock_up.assert_called_once_with(name=RES_NAME)
@@ -306,6 +313,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.up': mock_up}):
             assert drbd.started(RES_NAME) == ret
             mock_up.assert_called_once_with(name=RES_NAME)
@@ -353,7 +361,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.stopped(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -371,7 +380,8 @@ resource shanghai {
 
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                            'drbd.status': mock_status}):
+                                            'drbd.status': mock_status,
+                                            'drbd.is_support_status_json': False}):
                 assert drbd.stopped(RES_NAME) == ret
 
         # SubTest 4: Error in stop
@@ -390,6 +400,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.down': mock_down}):
             assert drbd.stopped(RES_NAME) == ret
             mock_down.assert_called_once_with(name=RES_NAME)
@@ -410,6 +421,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.down': mock_down}):
             assert drbd.stopped(RES_NAME) == ret
             mock_down.assert_called_once_with(name=RES_NAME)
@@ -431,6 +443,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.down': mock_down}):
             assert drbd.stopped(RES_NAME) == ret
             mock_down.assert_called_once_with(name=RES_NAME)
@@ -478,7 +491,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
@@ -506,7 +520,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -524,7 +539,8 @@ resource shanghai {
 
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                            'drbd.status': mock_status}):
+                                            'drbd.status': mock_status,
+                                            'drbd.is_support_status_json': False}):
                 assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 4: Error in promotion
@@ -543,6 +559,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -563,6 +580,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -584,6 +602,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -631,7 +650,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
@@ -659,7 +679,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -677,7 +698,8 @@ resource shanghai {
 
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                            'drbd.status': mock_status}):
+                                            'drbd.status': mock_status,
+                                            'drbd.is_support_status_json': False}):
                 assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 4: Error in demotion
@@ -696,6 +718,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -716,6 +739,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -737,6 +761,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -786,6 +811,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
             assert drbd.wait_for_successful_synced(RES_NAME) == ret
 
@@ -814,7 +840,8 @@ resource shanghai {
         mock_status = MagicMock(return_value=res_status)
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
-                                        'drbd.status': mock_status}):
+                                        'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False}):
             assert drbd.wait_for_successful_synced(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -835,6 +862,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                             'drbd.status': mock_status,
+                                            'drbd.is_support_status_json': False,
                                             'drbd.check_sync_status': mock_sync_status}):
                 assert drbd.wait_for_successful_synced(RES_NAME) == ret
                 mock_sync_status.assert_called_once_with(name=RES_NAME)
@@ -872,6 +900,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
             with patch.object(time, 'time', mock_time_time):
                 with patch.object(time, 'sleep', mock_time_sleep):
@@ -902,11 +931,12 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
-            with patch.object(time, 'time', mock_time_time):
-                with patch.object(time, 'sleep', mock_time_sleep):
-                    assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
-                    mock_sync_status.assert_called_with(name=RES_NAME)
+            with patch.object(time, 'time', mock_time_time), \
+                    patch.object(time, 'sleep', mock_time_sleep):
+                assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
+                mock_sync_status.assert_called_with(name=RES_NAME)
 
         # SubTest 6: Command error
         ret = {
@@ -933,8 +963,179 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
+                                        'drbd.is_support_status_json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
-            with patch.object(time, 'time', mock_time_time):
-                with patch.object(time, 'sleep', mock_time_sleep):
-                    assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
-                    mock_sync_status.assert_called_with(name=RES_NAME)
+            with patch.object(time, 'time', mock_time_time), \
+                    patch.object(time, 'sleep', mock_time_sleep):
+                assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
+                mock_sync_status.assert_called_with(name=RES_NAME)
+
+    def test_get_resource_status_drbdsetup_json(self):
+        '''
+        Test __get_res_drbdsetup_status with json support via started()
+             and wait_for_successful_synced().
+        '''
+
+        # SubTest 1: Resource is already started with json support. started()
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {},
+            'comment': 'Resource {} is already started.'.format(RES_NAME),
+        }
+
+        # A full 'drbdsetup status --json xxx' output:
+        # [
+        # {
+        #   "name": "shanghai",
+        #   "node-id": 1,
+        #   "role": "Primary",
+        #   "suspended": false,
+        #   "write-ordering": "flush",
+        #   "devices": [
+        #     {
+        #       "volume": 0,
+        #       "minor": 2,
+        #       "disk-state": "UpToDate",
+        #       "client": false,
+        #       "quorum": true,
+        #       "size": 699332,
+        #       "read": 21,
+        #       "written": 2504,
+        #       "al-writes": 2,
+        #       "bm-writes": 0,
+        #       "upper-pending": 0,
+        #       "lower-pending": 0
+        #     } ],
+        #   "connections": [
+        #     {
+        #       "peer-node-id": 2,
+        #       "name": "dummytest-drbd02",
+        #       "connection-state": "Connected",
+        #       "congested": false,
+        #       "peer-role": "Secondary",
+        #       "ap-in-flight": 0,
+        #       "rs-in-flight": 0,
+        #       "peer_devices": [
+        #         {
+        #           "volume": 0,
+        #           "replication-state": "Established",
+        #           "peer-disk-state": "UpToDate",
+        #           "peer-client": false,
+        #           "resync-suspended": "no",
+        #           "received": 0,
+        #           "sent": 2504,
+        #           "out-of-sync": 0,
+        #           "pending": 0,
+        #           "unacked": 0,
+        #           "has-sync-details": false,
+        #           "has-online-verify-details": false,
+        #           "percent-in-sync": 100.00
+        #         } ]
+        #     } ]
+        # }
+        # ]
+        #
+        # A full resource example
+        # {'name': 'shanghai', 'node-id': 1, 'role': 'Primary', 'suspended': False, 'write-ordering': 'flush',
+        #  'devices': [{'volume': 0, 'minor': 2, 'disk-state': 'UpToDate', 'client': False, 'quorum': True,
+        #               'size': 699332, 'read': 21, 'written': 2880, 'al-writes': 2, 'bm-writes': 0,
+        #               'upper-pending': 0, 'lower-pending': 0}],
+        #  'connections': [{'peer-node-id': 2, 'name': 'dummytest-drbd02', 'connection-state': 'Connected',
+        #                   'congested': False, 'peer-role': 'Secondary', 'ap-in-flight': 0, 'rs-in-flight': 0,
+        #                   'peer_devices': [{'volume': 0, 'replication-state': 'Established',
+        #                                     'peer-disk-state': 'UpToDate', 'peer-client': False,
+        #                                     'resync-suspended': 'no', 'received': 0, 'sent': 2880,
+        #                                     'out-of-sync': 0, 'pending': 0, 'unacked': 0,
+        #                                     'has-sync-details': False, 'has-online-verify-details': False,
+        #                   'percent-in-sync': 100.0}]
+        #                  }]
+        # }
+
+        res_status = [{'name': RES_NAME}]
+
+        mock_cmd = MagicMock(return_value=0)
+        mock_status = MagicMock(return_value=res_status)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status}):
+            assert drbd.started(RES_NAME) == ret
+
+        # Test 2: drbdsetup status --json raise Exception
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {},
+            'comment': 'Resource {} is already stopped.'.format(RES_NAME),
+        }
+
+        mock_cmd = MagicMock(return_value=0)
+        mock_status = MagicMock(side_effect=exceptions.CommandExecutionError)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status}):
+            assert drbd.stopped(RES_NAME) == ret
+
+        # Test 3: drbdsetup status --json get empty result
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {},
+            'comment': 'Resource {} is already stopped.'.format(RES_NAME),
+        }
+
+        mock_cmd = MagicMock(return_value=0)
+        mock_status = MagicMock(return_value=None)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status}):
+            assert drbd.stopped(RES_NAME) == ret
+
+        # Test 4: drbdsetup status --json get result but name is not the same
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {},
+            'comment': 'Resource {} is already stopped.'.format(RES_NAME),
+        }
+
+        result = [{'name': 'not same name'}]
+
+        mock_cmd = MagicMock(return_value=0)
+        mock_status = MagicMock(return_value=result)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status}):
+            assert drbd.stopped(RES_NAME) == ret
+
+        # SubTest 5: Command error with json support. wait_for_successful_synced()
+        ret = {
+            'name': RES_NAME,
+            'result': False,
+            'changes': {},
+            'comment': 'drbd.check_sync_status: (drdbsetup status --json {}) error.'.format(
+                       RES_NAME),
+        }
+
+        res_status = [{'name': RES_NAME}]
+
+        mock_cmd = MagicMock(side_effect=[0, 1])
+        mock_status = MagicMock(return_value=res_status)
+        mock_sync_status = MagicMock(side_effect=[0, 0, 0, exceptions.CommandExecutionError(
+            'drbd.check_sync_status: (drdbsetup status --json {}) error.'.format(RES_NAME))])
+
+        mock_time_sleep = MagicMock()
+        mock_time_time = MagicMock(side_effect=[1557121667.98029,
+                                                1557121667.99029,
+                                                1557121668.29029,
+                                                1557121668.59029,
+                                                1557121668.89029,
+                                                1557121669.19029])
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status,
+                                        'drbd.check_sync_status': mock_sync_status}):
+            with patch.object(time, 'time', mock_time_time), \
+                    patch.object(time, 'sleep', mock_time_sleep):
+                assert drbd.wait_for_successful_synced(RES_NAME, interval=0.3, timeout=1) == ret
+                mock_sync_status.assert_called_with(name=RES_NAME)
