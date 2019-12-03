@@ -217,18 +217,18 @@ def _is_local_all_uptodated(name):
     Check whether all local volumes are UpToDate.
     '''
     if is_json_format_available():
-        format = 'json'
+        form = 'json'
     else:
-        format = 'text'
+        form = 'text'
 
-    res = OUTPUT_OPTIONS[format]["get_res_func"](name)
+    res = OUTPUT_OPTIONS[form]["get_res_func"](name)
 
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for vol in res[0][OUTPUT_OPTIONS[format]["volume"]]:
-        if vol[OUTPUT_OPTIONS[format]["state"]] != 'UpToDate':
+    for vol in res[0][OUTPUT_OPTIONS[form]["volume"]]:
+        if vol[OUTPUT_OPTIONS[form]["state"]] != 'UpToDate':
             return False
 
     return True
@@ -243,22 +243,22 @@ def _is_peers_uptodated(name, peernode='all'):
         If peernode is not match, will return None, same as False.
     '''
     if is_json_format_available():
-        format = 'json'
+        form = 'json'
     else:
-        format = 'text'
+        form = 'text'
 
-    res = OUTPUT_OPTIONS[format]["get_res_func"](name)
+    res = OUTPUT_OPTIONS[form]["get_res_func"](name)
 
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for node in res[0][OUTPUT_OPTIONS[format]["connection"]]:
-        if peernode != 'all' and node[OUTPUT_OPTIONS[format]["peer_node"]] != peernode:
+    for node in res[0][OUTPUT_OPTIONS[form]["connection"]]:
+        if peernode != 'all' and node[OUTPUT_OPTIONS[form]["peer_node"]] != peernode:
             continue
 
-        for vol in node[OUTPUT_OPTIONS[format]["peer_node_vol"]]:
-            if vol[OUTPUT_OPTIONS[format]["peer_node_state"]] != 'UpToDate':
+        for vol in node[OUTPUT_OPTIONS[form]["peer_node_vol"]]:
+            if vol[OUTPUT_OPTIONS[form]["peer_node_state"]] != 'UpToDate':
                 return False
             else:
                 # At lease one volume is 'UpToDate'

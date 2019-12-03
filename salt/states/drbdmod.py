@@ -288,6 +288,17 @@ def stopped(name):
         return ret
 
 
+# Define OUTPUT_OPTIONS before it used in promoted() and demoted()
+OUTPUT_OPTIONS = {
+  'json': {
+    'role': 'role',
+  },
+  'text': {
+    'role': 'local role',
+  }
+}
+
+
 def promoted(name, force=False):
     '''
     Make sure the DRBD resource is being primary.
@@ -313,12 +324,15 @@ def promoted(name, force=False):
         return ret
 
     json_format = __salt__['drbd.is_json_format_available']
+    if json_format:
+        form = 'json'
+    else:
+        form = 'text'
 
     # Check resource is running
     res = _get_res_status(name)
     if res:
-        if (json_format and res['role'] == 'Primary') or \
-            (not json_format and res['local role'] == 'Primary'):
+        if res[OUTPUT_OPTIONS[form]['role']] == 'Primary':
             ret['result'] = True
             ret['comment'] = 'Resource {} has already been promoted.'.format(name)
             return ret
@@ -376,12 +390,15 @@ def demoted(name):
         return ret
 
     json_format = __salt__['drbd.is_json_format_available']
+    if json_format:
+        form = 'json'
+    else:
+        form = 'text'
 
     # Check resource is running
     res = _get_res_status(name)
     if res:
-        if (json_format and res['role'] == 'Secondary') or \
-            (not json_format and res['local role'] == 'Secondary'):
+        if res[OUTPUT_OPTIONS[form]['role']] == 'Secondary':
             ret['result'] = True
             ret['comment'] = 'Resource {} has already been demoted.'.format(name)
             return ret

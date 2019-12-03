@@ -564,7 +564,7 @@ resource shanghai {
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
 
-        # SubTest 5: Succeed in promotion
+        # SubTest 5.1: Succeed in promotion
         ret = {
             'name': RES_NAME,
             'result': True,
@@ -581,6 +581,27 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
                                         'drbd.is_json_format_available': False,
+                                        'drbd.primary': mock_primary}):
+            assert drbd.promoted(RES_NAME) == ret
+            mock_primary.assert_called_once_with(force=False, name=RES_NAME)
+
+        # SubTest 5.2: Succeed in promotion with json
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {'name': RES_NAME},
+            'comment': 'Resource {} is promoted.'.format(RES_NAME),
+        }
+
+        res_status = [{'name': RES_NAME, 'role': 'Secondary'}]
+
+        mock_cmd = MagicMock(side_effect=[0, 1])
+        mock_status = MagicMock(return_value=res_status)
+        mock_primary = MagicMock(return_value=0)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status,
+                                        'drbd.is_json_format_available': True,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -723,7 +744,7 @@ resource shanghai {
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
 
-        # SubTest 5: Succeed in demotion
+        # SubTest 5.1: Succeed in demotion
         ret = {
             'name': RES_NAME,
             'result': True,
@@ -740,6 +761,27 @@ resource shanghai {
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
                                         'drbd.is_json_format_available': False,
+                                        'drbd.secondary': mock_secondary}):
+            assert drbd.demoted(RES_NAME) == ret
+            mock_secondary.assert_called_once_with(name=RES_NAME)
+
+        # SubTest 5.2: Succeed in demotion with json
+        ret = {
+            'name': RES_NAME,
+            'result': True,
+            'changes': {'name': RES_NAME},
+            'comment': 'Resource {} is demoted.'.format(RES_NAME),
+        }
+
+        res_status = [{'name': RES_NAME, 'role': 'Primary'}]
+
+        mock_cmd = MagicMock(side_effect=[0, 1])
+        mock_status = MagicMock(return_value=res_status)
+        mock_secondary = MagicMock(return_value=0)
+
+        with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
+                                        'drbd.setup_status': mock_status,
+                                        'drbd.is_json_format_available': True,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
