@@ -216,22 +216,19 @@ def _is_local_all_uptodated(name):
     '''
     Check whether all local volumes are UpToDate.
     '''
-
-    if is_support_status_json():
-        volkey = 'devices'
-        statekey = 'disk-state'
-        res = setup_status(name)
+    if is_json_format_available():
+        format = 'json'
     else:
-        volkey = 'local volumes'
-        statekey = 'disk'
-        res = status(name)
+        format = 'text'
+
+    res = OUTPUT_OPTIONS[format]["get_res_func"](name)
 
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for vol in res[0][volkey]:
-        if vol[statekey] != 'UpToDate':
+    for vol in res[0][OUTPUT_OPTIONS[format]["volume"]]:
+        if vol[OUTPUT_OPTIONS[format]["state"]] != 'UpToDate':
             return False
 
     return True
@@ -245,35 +242,41 @@ def _is_peers_uptodated(name, peernode='all'):
 
         If peernode is not match, will return None, same as False.
     '''
-    if is_support_status_json():
-        conkey = 'connections'
-        pnamekey = 'name'
-        pvolkey = 'peer_devices'
-        pstatekey = 'peer-disk-state'
-        res = setup_status(name)
+    if is_json_format_available():
+        format = 'json'
     else:
-        conkey = 'peer nodes'
-        pnamekey = 'peernode name'
-        pvolkey = 'peer volumes'
-        pstatekey = 'peer-disk'
-        res = status(name)
+        format = 'text'
+
+    res = OUTPUT_OPTIONS[format]["get_res_func"](name)
 
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for node in res[0][conkey]:
-        if peernode != 'all' and node[pnamekey] != peernode:
+    for node in res[0][OUTPUT_OPTIONS[format]["connection"]]:
+        if peernode != 'all' and node[OUTPUT_OPTIONS[format]["peer_node"]] != peernode:
             continue
 
-        for vol in node[pvolkey]:
-            if vol[pstatekey] != 'UpToDate':
+        for vol in node[OUTPUT_OPTIONS[format]["peer_node_vol"]]:
+            if vol[OUTPUT_OPTIONS[format]["peer_node_state"]] != 'UpToDate':
                 return False
             else:
                 # At lease one volume is 'UpToDate'
                 ret = True
 
     return ret
+
+
+def _comp_ver(current, expect):
+    '''
+    Compart the DRBD version.
+
+    .. note::
+
+        return True if version is newer than expect.
+    '''
+
+    return int(current) >= int(expect)
 
 
 def overview():
@@ -646,6 +649,29 @@ def setup_status(name='all'):
     return ret
 
 
+# Define OUTPUT_OPTIONS after setup_status() and status() defined
+OUTPUT_OPTIONS = {
+  "json": {
+    "volume": "devices",
+    "state": "disk-state",
+    "connection": "connections",
+    "peer_node": "name",
+    "peer_node_vol": "peer_devices",
+    "peer_node_state": "peer-disk-state",
+    "get_res_func": setup_status
+  },
+  "text": {
+    "volume": "local volumes",
+    "state": "disk",
+    "connection": "peer nodes",
+    "peer_node": "peernode name",
+    "peer_node_vol": "peer volumes",
+    "peer_node_state": "peer-disk",
+    "get_res_func": status
+  }
+}
+
+
 def check_sync_status(name, peernode='all'):
     '''
     Query a drbd resource until fully synced for all volumes.
@@ -671,20 +697,29 @@ def check_sync_status(name, peernode='all'):
     return False
 
 
-def is_support_status_json():
+def is_json_format_available():
     '''
     Use drbdsetup status --json instead of drbdadm for status.
-    At least in drbd9 and drbd-utils >= 8.9.8
+    At least in drbd9 and drbd-utils >= 9.0.0
     '''
 
     if not WITH_JSON:
         return False
 
-    cmd = 'drbdsetup status --help 2>/dev/null'
+    # Output of `drbdadm -V`:
+    # DRBDADM_BUILDTAG=GIT-hash:\ xxx\ reproducible\ build\,\ 2019-09-20\ 12:00:00
+    # DRBDADM_API_VERSION=2
+    # DRBD_KERNEL_VERSION_CODE=0x090010
+    # DRBD_KERNEL_VERSION=9.0.16
+    # DRBDADM_VERSION_CODE=0x090600
+    # DRBDADM_VERSION=9.6.0
+
+    cmd = 'drbdadm -V 2>/dev/null'
     result = __salt__['cmd.run'](cmd).splitlines()
 
     for line in result:
-        if "[--json]" in line:
+        if line.startswith("DRBDADM_VERSION_CODE") and _comp_ver(
+                line.split("=")[1].split("x")[1], "090000"):
             return True
 
     return False

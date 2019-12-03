@@ -533,7 +533,7 @@ beijing role:Primary
         fake['retcode'] = 0
 
         mock_cmd = MagicMock(return_value=fake)
-        # 'WITH_JSON == True', output of 'drbdsetup status --help' is empty
+        # 'WITH_JSON == True', output of 'drbdadm -V' is empty
         # To cover more code to test
         mock_drbdsetup = MagicMock(return_value="")
 
@@ -655,7 +655,7 @@ beijing role:Primary
     def test_check_sync_status_drbdsetup_json(self):
         '''
         Test if check_sync_status function work well with drbdsetup status --json
-        in drbd9 and drbd-utils >= 8.9.8
+        in drbd9 and drbd-utils >= 9.0.0
         '''
 
         # Test 1: Test all UpToDate
@@ -717,10 +717,12 @@ beijing role:Primary
         fake['retcode'] = 0
 
         jsupport = '''
-drbdsetup status - Show the state of a resource, or of all resources.
-
-USAGE: drbdsetup status { {resource} | all }
-    [--verbose] [--statistics] [--color=...] [--json]
+DRBDADM_BUILDTAG=GIT-hash: xxx
+DRBDADM_API_VERSION=2
+DRBD_KERNEL_VERSION_CODE=0x090010
+DRBD_KERNEL_VERSION=9.0.16
+DRBDADM_VERSION_CODE=0x090600
+DRBDADM_VERSION=9.6.0
 '''
 
         mock_cmd = MagicMock(return_value=fake)

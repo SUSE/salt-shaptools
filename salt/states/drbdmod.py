@@ -63,7 +63,7 @@ def _resource_not_exist(name):
 
 
 def _get_res_status(name):
-    if __salt__['drbd.is_support_status_json']:
+    if __salt__['drbd.is_json_format_available']:
         res = __get_res_drbdsetup_status(name)
     else:
         res = __get_res_drbdadm_status(name)
@@ -312,11 +312,13 @@ def promoted(name, force=False):
         ret['comment'] = 'Resource {} not defined in your config.'.format(name)
         return ret
 
+    json_format = __salt__['drbd.is_json_format_available']
+
     # Check resource is running
     res = _get_res_status(name)
     if res:
-        if (__salt__['drbd.is_support_status_json'] and res['role'] == 'Primary') or \
-            (not __salt__['drbd.is_support_status_json'] and res['local role'] == 'Primary'):
+        if (json_format and res['role'] == 'Primary') or \
+            (not json_format and res['local role'] == 'Primary'):
             ret['result'] = True
             ret['comment'] = 'Resource {} has already been promoted.'.format(name)
             return ret
@@ -373,11 +375,13 @@ def demoted(name):
         ret['comment'] = 'Resource {} not defined in your config.'.format(name)
         return ret
 
+    json_format = __salt__['drbd.is_json_format_available']
+
     # Check resource is running
     res = _get_res_status(name)
     if res:
-        if (__salt__['drbd.is_support_status_json'] and res['role'] == 'Secondary') or \
-            (not __salt__['drbd.is_support_status_json'] and res['local role'] == 'Secondary'):
+        if (json_format and res['role'] == 'Secondary') or \
+            (not json_format and res['local role'] == 'Secondary'):
             ret['result'] = True
             ret['comment'] = 'Resource {} has already been demoted.'.format(name)
             return ret
