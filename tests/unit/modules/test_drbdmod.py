@@ -533,14 +533,12 @@ beijing role:Primary
         fake['retcode'] = 0
 
         mock_cmd = MagicMock(return_value=fake)
-        # 'WITH_JSON == True', output of 'drbdadm -V' is empty
-        # To cover more code to test
         mock_drbdsetup = MagicMock(return_value="")
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            with patch.dict(drbd.__salt__, {'cmd.run': mock_drbdsetup}):
-                assert drbd.check_sync_status('beijing')
-                mock_cmd.assert_called_with('drbdadm status beijing')
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
+                patch.object(drbd, 'WITH_JSON', False):
+            assert drbd.check_sync_status('beijing')
+            mock_cmd.assert_called_with('drbdadm status beijing')
 
         # Test 2: Test local is not UpToDate
         fake = {}

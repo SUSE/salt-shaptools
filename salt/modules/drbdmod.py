@@ -33,13 +33,23 @@ DRBD_COMMAND = 'drbdadm'
 ERR_STR = 'UNKNOWN'
 DUMMY_STR = 'IGNORED'
 WITH_JSON = True
+DRBDADM = 'drbd-utils'
+# drbd-utils >= 9.0.0 for json status
+DRBDADM_JSON_VERSION = '9.0.0'
 
 
 def __virtual__():  # pragma: no cover
     '''
     Only load this module if drbdadm(drbd-utils) is installed
     '''
+    global WITH_JSON
     if bool(salt.utils.path.which(DRBD_COMMAND)):
+        version = __salt__['pkg.version'](DRBDADM)
+        json_support = __salt__['pkg.version_cmp'](version,
+            DRBDADM_JSON_VERSION) >= 0
+        if not json_support:
+            WITH_JSON = False
+
         return __virtualname__
     return (
         False,
@@ -216,19 +226,19 @@ def _is_local_all_uptodated(name):
     '''
     Check whether all local volumes are UpToDate.
     '''
-    if is_json_format_available():
-        form = 'json'
+    if WITH_JSON:
+        output = OUTPUT_OPTIONS['json']
     else:
-        form = 'text'
+        output = OUTPUT_OPTIONS['text']
 
-    res = OUTPUT_OPTIONS[form]["get_res_func"](name)
+    res = output["get_res_func"](name)
 
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for vol in res[0][OUTPUT_OPTIONS[form]["volume"]]:
-        if vol[OUTPUT_OPTIONS[form]["state"]] != 'UpToDate':
+    for vol in res[0][output["volume"]]:
+        if vol[output["state"]] != 'UpToDate':
             return False
 
     return True
@@ -242,41 +252,29 @@ def _is_peers_uptodated(name, peernode='all'):
 
         If peernode is not match, will return None, same as False.
     '''
-    if is_json_format_available():
-        form = 'json'
+    if WITH_JSON:
+        output = OUTPUT_OPTIONS['json']
     else:
-        form = 'text'
+        output = OUTPUT_OPTIONS['text']
 
-    res = OUTPUT_OPTIONS[form]["get_res_func"](name)
+    res = output["get_res_func"](name)
 
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for node in res[0][OUTPUT_OPTIONS[form]["connection"]]:
-        if peernode != 'all' and node[OUTPUT_OPTIONS[form]["peer_node"]] != peernode:
+    for node in res[0][output["connection"]]:
+        if peernode != 'all' and node[output["peer_node"]] != peernode:
             continue
 
-        for vol in node[OUTPUT_OPTIONS[form]["peer_node_vol"]]:
-            if vol[OUTPUT_OPTIONS[form]["peer_node_state"]] != 'UpToDate':
+        for vol in node[output["peer_node_vol"]]:
+            if vol[output["peer_node_state"]] != 'UpToDate':
                 return False
             else:
                 # At lease one volume is 'UpToDate'
                 ret = True
 
     return ret
-
-
-def _comp_ver(current, expect):
-    '''
-    Compart the DRBD version.
-
-    .. note::
-
-        return True if version is newer than expect.
-    '''
-
-    return int(current) >= int(expect)
 
 
 def overview():
@@ -693,33 +691,5 @@ def check_sync_status(name, peernode='all'):
     if _is_local_all_uptodated(name) and _is_peers_uptodated(
             name, peernode=peernode):
         return True
-
-    return False
-
-
-def is_json_format_available():
-    '''
-    Use drbdsetup status --json instead of drbdadm for status.
-    At least in drbd9 and drbd-utils >= 9.0.0
-    '''
-
-    if not WITH_JSON:
-        return False
-
-    # Output of `drbdadm -V`:
-    # DRBDADM_BUILDTAG=GIT-hash:\ xxx\ reproducible\ build\,\ 2019-09-20\ 12:00:00
-    # DRBDADM_API_VERSION=2
-    # DRBD_KERNEL_VERSION_CODE=0x090010
-    # DRBD_KERNEL_VERSION=9.0.16
-    # DRBDADM_VERSION_CODE=0x090600
-    # DRBDADM_VERSION=9.6.0
-
-    cmd = 'drbdadm -V 2>/dev/null'
-    result = __salt__['cmd.run'](cmd).splitlines()
-
-    for line in result:
-        if line.startswith("DRBDADM_VERSION_CODE") and _comp_ver(
-                line.split("=")[1].split("x")[1], "090000"):
-            return True
 
     return False
