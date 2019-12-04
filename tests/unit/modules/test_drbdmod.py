@@ -29,7 +29,7 @@ class DrbdTestCase(TestCase, LoaderModuleMockMixin):
     Test cases for salt.modules.drbd
     '''
     def setup_loader_modules(self):
-        return {drbd: {'WITH_JSON': True}}
+        return {drbd: {'__salt__': {'drbd.json': True}}}
 
     # 'overview' function tests: 1
     def test_overview(self):
@@ -535,8 +535,8 @@ beijing role:Primary
         mock_cmd = MagicMock(return_value=fake)
         mock_drbdsetup = MagicMock(return_value="")
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
-                patch.object(drbd, 'WITH_JSON', False):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
+                                        'drbd.json': False}):
             assert drbd.check_sync_status('beijing')
             mock_cmd.assert_called_with('drbdadm status beijing')
 
@@ -559,8 +559,8 @@ beijing role:Primary
 
         mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
-                patch.object(drbd, 'WITH_JSON', False):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
+                                        'drbd.json': False}):
             assert not drbd.check_sync_status('beijing')
             mock_cmd.assert_called_with('drbdadm status beijing')
 
@@ -583,8 +583,8 @@ beijing role:Primary
 
         mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
-                patch.object(drbd, 'WITH_JSON', False):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
+                                        'drbd.json': False}):
             assert not drbd.check_sync_status('beijing')
             mock_cmd.assert_called_with('drbdadm status beijing')
 
@@ -607,8 +607,8 @@ beijing role:Primary
 
         mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
-                patch.object(drbd, 'WITH_JSON', False):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
+                                        'drbd.json': False}):
             assert drbd.check_sync_status('beijing', peernode='node3')
 
         # Test 4.1: Test status return Error
@@ -619,8 +619,8 @@ beijing role:Primary
 
         mock_cmd = MagicMock(return_value=fake)
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
-                patch.object(drbd, 'WITH_JSON', False):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
+                                        'drbd.json': False}):
             assert not drbd.check_sync_status('beijing')
 
         # Test 4.2: Test status return Error
@@ -646,8 +646,8 @@ beijing role:Primary
         fake1['retcode'] = 1
         mock_cmd = MagicMock(side_effect=[fake, fake1])
 
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}), \
-                patch.object(drbd, 'WITH_JSON', False):
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
+                                        'drbd.json': False}):
             assert not drbd.check_sync_status('beijing')
 
     def test_check_sync_status_drbdsetup_json(self):
@@ -714,19 +714,8 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        jsupport = '''
-DRBDADM_BUILDTAG=GIT-hash: xxx
-DRBDADM_API_VERSION=2
-DRBD_KERNEL_VERSION_CODE=0x090010
-DRBD_KERNEL_VERSION=9.0.16
-DRBDADM_VERSION_CODE=0x090600
-DRBDADM_VERSION=9.6.0
-'''
-
         mock_cmd = MagicMock(return_value=fake)
-        mock_drbdsetup = MagicMock(return_value=jsupport)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            with patch.dict(drbd.__salt__, {'cmd.run': mock_drbdsetup}):
-                assert drbd.check_sync_status('shanghai')
-                mock_cmd.assert_called_with('drbdsetup status --json shanghai')
+            assert drbd.check_sync_status('shanghai')
+            mock_cmd.assert_called_with('drbdsetup status --json shanghai')

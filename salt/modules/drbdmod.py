@@ -42,13 +42,14 @@ def __virtual__():  # pragma: no cover
     '''
     Only load this module if drbdadm(drbd-utils) is installed
     '''
-    global WITH_JSON
     if bool(salt.utils.path.which(DRBD_COMMAND)):
+        __salt__['drbd.json'] = WITH_JSON
+
         version = __salt__['pkg.version'](DRBDADM)
         json_support = __salt__['pkg.version_cmp'](version,
             DRBDADM_JSON_VERSION) >= 0
         if not json_support:
-            WITH_JSON = False
+            __salt__['drbd.json'] = False
 
         return __virtualname__
     return (
@@ -226,7 +227,7 @@ def _is_local_all_uptodated(name):
     '''
     Check whether all local volumes are UpToDate.
     '''
-    if WITH_JSON:
+    if __salt__['drbd.json']:
         output = OUTPUT_OPTIONS['json']
     else:
         output = OUTPUT_OPTIONS['text']
@@ -252,7 +253,7 @@ def _is_peers_uptodated(name, peernode='all'):
 
         If peernode is not match, will return None, same as False.
     '''
-    if WITH_JSON:
+    if __salt__['drbd.json']:
         output = OUTPUT_OPTIONS['json']
     else:
         output = OUTPUT_OPTIONS['text']

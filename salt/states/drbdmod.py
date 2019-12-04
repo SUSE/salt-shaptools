@@ -63,7 +63,7 @@ def _resource_not_exist(name):
 
 
 def _get_res_status(name):
-    if __salt__['drbd.WITH_JSON']:
+    if __salt__['drbd.json']:
         res = __get_res_drbdsetup_status(name)
     else:
         res = __get_res_drbdadm_status(name)
@@ -323,7 +323,7 @@ def promoted(name, force=False):
         ret['comment'] = 'Resource {} not defined in your config.'.format(name)
         return ret
 
-    json_format = __salt__['drbd.WITH_JSON']
+    json_format = __salt__['drbd.json']
     if json_format:
         output = OUTPUT_OPTIONS['json']
     else:
@@ -389,7 +389,7 @@ def demoted(name):
         ret['comment'] = 'Resource {} not defined in your config.'.format(name)
         return ret
 
-    json_format = __salt__['drbd.WITH_JSON']
+    json_format = __salt__['drbd.json']
     if json_format:
         output = OUTPUT_OPTIONS['json']
     else:

@@ -32,7 +32,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
     '''
     def setup_loader_modules(self):
         return {drbd: {'__opts__': {'test': False},
-                       '__salt__': {'drbd.WITH_JSON': True}}}
+                       '__salt__': {'drbd.json': True}}}
 
     def test_initialized(self):
         '''
@@ -145,7 +145,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.stopped(RES_NAME) == ret
 
         # Test 2: drbd status return empty []
@@ -161,7 +161,7 @@ class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.stopped(RES_NAME) == ret
 
     def test_get_resource_list(self):
@@ -232,7 +232,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.started(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -251,7 +251,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                             'drbd.status': mock_status,
-                                            'drbd.WITH_JSON': False}):
+                                            'drbd.json': False}):
                 assert drbd.started(RES_NAME) == ret
 
         # SubTest 4: Error in start
@@ -270,7 +270,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.up': mock_up}):
             assert drbd.started(RES_NAME) == ret
             mock_up.assert_called_once_with(name=RES_NAME)
@@ -291,7 +291,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.up': mock_up}):
             assert drbd.started(RES_NAME) == ret
             mock_up.assert_called_once_with(name=RES_NAME)
@@ -313,7 +313,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.up': mock_up}):
             assert drbd.started(RES_NAME) == ret
             mock_up.assert_called_once_with(name=RES_NAME)
@@ -362,7 +362,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.stopped(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -381,7 +381,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                             'drbd.status': mock_status,
-                                            'drbd.WITH_JSON': False}):
+                                            'drbd.json': False}):
                 assert drbd.stopped(RES_NAME) == ret
 
         # SubTest 4: Error in stop
@@ -400,7 +400,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.down': mock_down}):
             assert drbd.stopped(RES_NAME) == ret
             mock_down.assert_called_once_with(name=RES_NAME)
@@ -421,7 +421,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.down': mock_down}):
             assert drbd.stopped(RES_NAME) == ret
             mock_down.assert_called_once_with(name=RES_NAME)
@@ -443,7 +443,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.down': mock_down}):
             assert drbd.stopped(RES_NAME) == ret
             mock_down.assert_called_once_with(name=RES_NAME)
@@ -492,7 +492,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
@@ -521,7 +521,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -540,7 +540,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                             'drbd.status': mock_status,
-                                            'drbd.WITH_JSON': False}):
+                                            'drbd.json': False}):
                 assert drbd.promoted(RES_NAME) == ret
 
         # SubTest 4: Error in promotion
@@ -559,7 +559,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -580,7 +580,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -601,7 +601,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.setup_status': mock_status,
-                                        'drbd.WITH_JSON': True,
+                                        'drbd.json': True,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -623,7 +623,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.primary': mock_primary}):
             assert drbd.promoted(RES_NAME) == ret
             mock_primary.assert_called_once_with(force=False, name=RES_NAME)
@@ -672,7 +672,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 2.2: Resource is stopped
@@ -701,7 +701,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -720,7 +720,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                             'drbd.status': mock_status,
-                                            'drbd.WITH_JSON': False}):
+                                            'drbd.json': False}):
                 assert drbd.demoted(RES_NAME) == ret
 
         # SubTest 4: Error in demotion
@@ -739,7 +739,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -760,7 +760,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -781,7 +781,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.setup_status': mock_status,
-                                        'drbd.WITH_JSON': True,
+                                        'drbd.json': True,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -803,7 +803,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.secondary': mock_secondary}):
             assert drbd.demoted(RES_NAME) == ret
             mock_secondary.assert_called_once_with(name=RES_NAME)
@@ -853,7 +853,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
             assert drbd.wait_for_successful_synced(RES_NAME) == ret
 
@@ -883,7 +883,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False}):
+                                        'drbd.json': False}):
             assert drbd.wait_for_successful_synced(RES_NAME) == ret
 
         # SubTest 3: The test option
@@ -904,7 +904,7 @@ resource shanghai {
         with patch.dict(drbd.__opts__, {'test': True}):
             with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                             'drbd.status': mock_status,
-                                            'drbd.WITH_JSON': False,
+                                            'drbd.json': False,
                                             'drbd.check_sync_status': mock_sync_status}):
                 assert drbd.wait_for_successful_synced(RES_NAME) == ret
                 mock_sync_status.assert_called_once_with(name=RES_NAME)
@@ -942,7 +942,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
             with patch.object(time, 'time', mock_time_time):
                 with patch.object(time, 'sleep', mock_time_sleep):
@@ -973,7 +973,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
             with patch.object(time, 'time', mock_time_time), \
                     patch.object(time, 'sleep', mock_time_sleep):
@@ -1005,7 +1005,7 @@ resource shanghai {
 
         with patch.dict(drbd.__salt__, {'cmd.retcode': mock_cmd,
                                         'drbd.status': mock_status,
-                                        'drbd.WITH_JSON': False,
+                                        'drbd.json': False,
                                         'drbd.check_sync_status': mock_sync_status}):
             with patch.object(time, 'time', mock_time_time), \
                     patch.object(time, 'sleep', mock_time_sleep):
