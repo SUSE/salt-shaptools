@@ -50,9 +50,6 @@ def __virtual__():
         version = __salt__['pkg.version'](CRMSH)
         use_crm = __salt__['pkg.version_cmp'](
             version, CRM_NEW_VERSION) >= 0
-        LOGGER.info('crmsh version: %s', version)
-        LOGGER.info(
-            '%s will be used', 'crm' if use_crm else 'ha-cluster')
 
     else:
         return (
@@ -66,7 +63,7 @@ def __virtual__():
             'The crmsh execution module failed to load: the ha-cluster-init'
             ' package is not available.')
 
-    __salt__['crmsh.version'] = use_crm
+    __salt__['crm.version'] = use_crm
     return __virtualname__
 
 
@@ -389,7 +386,7 @@ def cluster_init(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __salt__['crmsh.version']:
+    if __salt__['crm.version']:
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
@@ -475,7 +472,7 @@ def cluster_join(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __salt__['crmsh.version']:
+    if __salt__['crm.version']:
         return _crm_join(host, watchdog, interface, quiet)
 
     return _ha_cluster_join(host, watchdog, interface, quiet)

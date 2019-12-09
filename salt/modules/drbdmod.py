@@ -32,6 +32,10 @@ __virtualname__ = 'drbd'
 DRBD_COMMAND = 'drbdadm'
 ERR_STR = 'UNKNOWN'
 DUMMY_STR = 'IGNORED'
+WITH_JSON = True
+DRBDADM = 'drbd-utils'
+# drbd-utils >= 9.0.0 for json status
+DRBDADM_JSON_VERSION = '9.0.0'
 
 
 def __virtual__():  # pragma: no cover
@@ -39,6 +43,14 @@ def __virtual__():  # pragma: no cover
     Only load this module if drbdadm(drbd-utils) is installed
     '''
     if bool(salt.utils.path.which(DRBD_COMMAND)):
+        __salt__['drbd.json'] = WITH_JSON
+
+        version = __salt__['pkg.version'](DRBDADM)
+        json_support = __salt__['pkg.version_cmp'](version,
+            DRBDADM_JSON_VERSION) >= 0
+        if not json_support:
+            __salt__['drbd.json'] = False
+
         return __virtualname__
     return (
         False,
@@ -215,14 +227,19 @@ def _is_local_all_uptodated(name):
     '''
     Check whether all local volumes are UpToDate.
     '''
+    if __salt__['drbd.json']:
+        output = OUTPUT_OPTIONS['json']
+    else:
+        output = OUTPUT_OPTIONS['text']
 
-    res = status(name)
+    res = output["get_res_func"](name)
+
     if not res:
         return False
 
     # Since name is not all, res only have one element
-    for vol in res[0]['local volumes']:
-        if vol['disk'] != 'UpToDate':
+    for vol in res[0][output["volume"]]:
+        if vol[output["state"]] != 'UpToDate':
             return False
 
     return True
@@ -236,19 +253,23 @@ def _is_peers_uptodated(name, peernode='all'):
 
         If peernode is not match, will return None, same as False.
     '''
-    ret = None
+    if __salt__['drbd.json']:
+        output = OUTPUT_OPTIONS['json']
+    else:
+        output = OUTPUT_OPTIONS['text']
 
-    res = status(name)
+    res = output["get_res_func"](name)
+
     if not res:
-        return ret
+        return False
 
     # Since name is not all, res only have one element
-    for node in res[0]['peer nodes']:
-        if peernode != 'all' and node['peernode name'] != peernode:
+    for node in res[0][output["connection"]]:
+        if peernode != 'all' and node[output["peer_node"]] != peernode:
             continue
 
-        for vol in node['peer volumes']:
-            if vol['peer-disk'] != 'UpToDate':
+        for vol in node[output["peer_node_vol"]]:
+            if vol[output["peer_node_state"]] != 'UpToDate':
                 return False
             else:
                 # At lease one volume is 'UpToDate'
@@ -610,18 +631,13 @@ def setup_status(name='all'):
         salt '*' drbd.setup_status name=<resource name>
     '''
 
-    ret = {'name': name,
-           'result': False,
-           'comment': ''}
-
     cmd = 'drbdsetup status --json {}'.format(name)
 
     results = __salt__['cmd.run_all'](cmd)
 
     if 'retcode' not in results or results['retcode'] != 0:
-        ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
-            results['retcode'])
-        return ret
+        LOGGER.info('No drbdsetup status due to %s (%s).', results['stderr'], results['retcode'])
+        return None
 
     try:
         ret = salt.utils.json.loads(results['stdout'], strict=False)
@@ -630,6 +646,29 @@ def setup_status(name='all'):
                                     info=results)
 
     return ret
+
+
+# Define OUTPUT_OPTIONS after setup_status() and status() defined
+OUTPUT_OPTIONS = {
+  "json": {
+    "volume": "devices",
+    "state": "disk-state",
+    "connection": "connections",
+    "peer_node": "name",
+    "peer_node_vol": "peer_devices",
+    "peer_node_state": "peer-disk-state",
+    "get_res_func": setup_status
+  },
+  "text": {
+    "volume": "local volumes",
+    "state": "disk",
+    "connection": "peer nodes",
+    "peer_node": "peernode name",
+    "peer_node_vol": "peer volumes",
+    "peer_node_state": "peer-disk",
+    "get_res_func": status
+  }
+}
 
 
 def check_sync_status(name, peernode='all'):

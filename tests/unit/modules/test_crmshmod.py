@@ -34,9 +34,8 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
     def setup_loader_modules(self):
         return {crmshmod: {}}
 
-    @mock.patch('logging.Logger.info')
     @mock.patch('salt.utils.path.which')
-    def test_virtual_crm(self, mock_which, logger):
+    def test_virtual_crm(self, mock_which):
         mock_pkg_version = MagicMock(return_value='1.0.0')
         mock_pkg_version_cmp = MagicMock(return_value=1)
 
@@ -46,10 +45,6 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 'pkg.version_cmp': mock_pkg_version_cmp}):
             assert crmshmod.__virtual__() == 'crm'
             mock_which.assert_called_once_with(crmshmod.CRM_COMMAND)
-            logger.assert_has_calls([
-                mock.call('crmsh version: %s', '1.0.0'),
-                mock.call('%s will be used', 'crm')
-            ])
 
     @mock.patch('salt.utils.path.which')
     def test_virtual_crm_error(self, mock_which):
@@ -61,9 +56,8 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             ' is not available.')
         mock_which.assert_called_once_with(crmshmod.CRM_COMMAND)
 
-    @mock.patch('logging.Logger.info')
     @mock.patch('salt.utils.path.which')
-    def test_virtual_ha(self, mock_which, logger):
+    def test_virtual_ha(self, mock_which):
         mock_pkg_version = MagicMock(return_value='1.0.0')
         mock_pkg_version_cmp = MagicMock(return_value=-1)
 
@@ -72,18 +66,13 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 'pkg.version': mock_pkg_version,
                 'pkg.version_cmp': mock_pkg_version_cmp}):
             assert crmshmod.__virtual__() == 'crm'
-            logger.assert_has_calls([
-                mock.call('crmsh version: %s', '1.0.0'),
-                mock.call('%s will be used', 'ha-cluster')
-            ])
             mock_which.assert_has_calls([
                 mock.call(crmshmod.CRM_COMMAND),
                 mock.call(crmshmod.HA_INIT_COMMAND)
             ])
 
-    @mock.patch('logging.Logger.info')
     @mock.patch('salt.utils.path.which')
-    def test_virtual_ha_error(self, mock_which, logger):
+    def test_virtual_ha_error(self, mock_which):
         mock_pkg_version = MagicMock(return_value='1.0.0')
         mock_pkg_version_cmp = MagicMock(return_value=-1)
 
@@ -92,10 +81,6 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 'pkg.version': mock_pkg_version,
                 'pkg.version_cmp': mock_pkg_version_cmp}):
             response = crmshmod.__virtual__()
-            logger.assert_has_calls([
-                mock.call('crmsh version: %s', '1.0.0'),
-                mock.call('%s will be used', 'ha-cluster')
-            ])
             mock_which.assert_has_calls([
                 mock.call(crmshmod.CRM_COMMAND),
                 mock.call(crmshmod.HA_INIT_COMMAND)
@@ -414,7 +399,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_init with crm option
         '''
-        with patch.dict(crmshmod.__salt__, {'crmsh.version': True}):
+        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
             crm_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
@@ -427,7 +412,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_init with ha_cluster_init option
         '''
-        with patch.dict(crmshmod.__salt__, {'crmsh.version': False}):
+        with patch.dict(crmshmod.__salt__, {'crm.version': False}):
             ha_cluster_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
@@ -521,7 +506,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_join with crm option
         '''
-        with patch.dict(crmshmod.__salt__, {'crmsh.version': True}):
+        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
             crm_join.return_value = 0
             value = crmshmod.cluster_join('host', 'dog', 'eth1')
             assert value == 0
@@ -533,7 +518,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_join with ha_cluster_join option
         '''
-        with patch.dict(crmshmod.__salt__, {'crmsh.version': False}):
+        with patch.dict(crmshmod.__salt__, {'crm.version': False}):
             ha_cluster_join.return_value = 0
             value = crmshmod.cluster_join('host', 'dog', 'eth1')
             assert value == 0
