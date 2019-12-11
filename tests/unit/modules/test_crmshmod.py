@@ -356,7 +356,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} '
-                '--enable-sbd -s {} --no-overwrite-sshkeys -q'.format(
+                '--enable-sbd -s {} --no-overwrite-sshkey -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'sbd_dev'))
 
     def test_ha_cluster_init_basic(self):
