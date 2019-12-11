@@ -352,10 +352,11 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._crm_init(
-                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True, True)
             assert result
             mock_cmd_run.assert_called_once_with(
-                '{} cluster init -y -n {} -w {} -i {} -u -A {} --enable-sbd -s {} -q'.format(
+                '{} cluster init -y -n {} -w {} -i {} -u -A {} '
+                '--enable-sbd -s {} --no-overwrite-sshkeys -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'sbd_dev'))
 
     def test_ha_cluster_init_basic(self):
@@ -404,7 +405,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, None, None, None)
+                'hacluster', 'dog', 'eth1', None, None, None, None, False, None)
 
     @mock.patch('logging.Logger.warn')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')
@@ -414,10 +415,13 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         with patch.dict(crmshmod.__salt__, {'crm.version': False}):
             ha_cluster_init.return_value = 0
-            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
+            value = crmshmod.cluster_init(
+                'hacluster', 'dog', 'eth1', no_overwrite_sshkey=True)
             assert value == 0
-            logger.assert_called_once_with(
-                'The parameter name is not considered!')
+            logger.assert_has_calls([
+                mock.call('The parameter name is not considered!'),
+                mock.call('--no_overwrite_sshkey option not available')
+            ])
             ha_cluster_init.assert_called_once_with(
                 'dog', 'eth1', None, None, None, None, None)
 
