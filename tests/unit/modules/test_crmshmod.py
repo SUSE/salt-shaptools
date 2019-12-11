@@ -352,11 +352,12 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._crm_init(
-                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True)
             assert result
             mock_cmd_run.assert_called_once_with(
-                '{} cluster init -y -n {} -w {} -i {} -u -A {} --enable-sbd -s {} -q'.format(
-                    crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'sbd_dev'))
+                '{} cluster init -y -n {} -w {} -i {} -u -A {} '
+                '--enable-sbd -s {} -s {} -q'.format(
+                    crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'dev1', 'dev2'))
 
     def test_ha_cluster_init_basic(self):
         '''
@@ -385,26 +386,43 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 'network.get_hostname': mock_get_hostname,
                 'network.interface_ip': mock_interface_ip}):
             result = crmshmod._ha_cluster_init(
-                'dog', 'eth1', True, '192.168.1.50', True, 'sbd_dev', True)
+                'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True)
             assert result == 0
             mock_watchdog.assert_called_once_with('dog')
             mock_corosync.assert_called_once_with('1.0.1.0', 'node')
             mock_interface_ip.assert_called_once_with('eth1')
             mock_cmd_run.assert_called_once_with(
-                '{} -y -i {} -A {} -S -s {} -q'.format(
-                    crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'sbd_dev'))
+                '{} -y -i {} -A {} -S -s {} -s {} -q'.format(
+                    crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'dev1', 'dev2'))
 
     @mock.patch('salt.modules.crmshmod._crm_init')
     def test_cluster_init_crm(self, crm_init):
         '''
         Test cluster_init with crm option
         '''
+
         with patch.dict(crmshmod.__salt__, {'crm.version': True}):
             crm_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
             crm_init.assert_called_once_with(
                 'hacluster', 'dog', 'eth1', None, None, None, None, None)
+            crm_init.reset_mock()
+
+        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
+            crm_init.return_value = 0
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev=['disk1', 'disk2'])
+            assert value == 0
+            crm_init.assert_called_once_with(
+                'hacluster', 'dog', 'eth1', None, None, None, ['disk1', 'disk2'], None)
+            crm_init.reset_mock()
+
+        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
+            crm_init.return_value = 0
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev='disk1')
+            assert value == 0
+            crm_init.assert_called_once_with(
+                'hacluster', 'dog', 'eth1', None, None, None, ['disk1'], None)
 
     @mock.patch('logging.Logger.warn')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')

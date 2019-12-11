@@ -304,7 +304,8 @@ def _crm_init(
     if sbd:
         cmd = '{cmd} --enable-sbd'.format(cmd=cmd)
         if sbd_dev:
-            cmd = '{cmd} -s {sbd_dev}'.format(cmd=cmd, sbd_dev=sbd_dev)
+            sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
+            cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
@@ -334,7 +335,8 @@ def _ha_cluster_init(
     if sbd:
         cmd = '{cmd} -S'.format(cmd=cmd)
         if sbd_dev:
-            cmd = '{cmd} -s {sbd_dev}'.format(cmd=cmd, sbd_dev=sbd_dev)
+            sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
+            cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
@@ -384,6 +386,10 @@ def cluster_init(
 
         salt '*' crm.cluster_init hacluster
     '''
+    # sbd disks are managed as list, but individual disk is accepted to be more compatible
+    if sbd_dev and not isinstance(sbd_dev, list):
+        sbd_dev = [sbd_dev]
+
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
     if __salt__['crm.version']:
