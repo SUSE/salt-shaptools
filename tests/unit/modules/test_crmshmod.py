@@ -395,6 +395,64 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 '{} -y -i {} -A {} -S -s {} -s {} -q'.format(
                     crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'dev1', 'dev2'))
 
+    def test_manage_multiple_sbd(self):
+
+        sbd, devs = crmshmod._manage_multiple_sbd(None, None)
+        assert sbd is None
+        assert devs is None
+
+        sbd, devs = crmshmod._manage_multiple_sbd(True, 'disk')
+        assert sbd is True
+        assert devs == ['disk']
+
+    def test_manage_multiple_sbd_workaround(self):
+
+        mock_cmd_run = MagicMock(side_effect=[0, 0])
+        mock_file_replace = MagicMock(return_code=0)
+
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.retcode': mock_cmd_run,
+                'file.replace': mock_file_replace}):
+            sbd, devs = crmshmod._manage_multiple_sbd(True, ['disk1', 'disk2'])
+
+        mock_cmd_run.assert_has_calls([
+            mock.call('sbd -d disk1 -d disk2 create'),
+            mock.call('{} cluster init sbd -s {}'.format(crmshmod.CRM_COMMAND, 'disk1'))
+        ])
+        mock_file_replace.assert_called_once_with(
+            path='/etc/sysconfig/sbd',
+            pattern='^SBD_DEVICE=.*',
+            repl='SBD_DEVICE={}'.format(';'.join(['disk1', 'disk2'])),
+            append_if_not_found=True
+        )
+        assert sbd is None
+        assert devs is None
+
+    def test_manage_multiple_sbd_workaround_errors(self):
+
+        mock_cmd_run = MagicMock(side_effect=[1, 0])
+
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.retcode': mock_cmd_run}):
+            with pytest.raises(exceptions.SaltInvocationError) as err:
+                crmshmod._manage_multiple_sbd(True, ['disk1', 'disk2'])
+
+        assert 'sbd disks could not be formatted properly' in str(err.value)
+        mock_cmd_run.assert_called_once_with('sbd -d disk1 -d disk2 create')
+
+        mock_cmd_run = MagicMock(side_effect=[0, 1])
+
+        with patch.dict(crmshmod.__salt__, {
+                'cmd.retcode': mock_cmd_run}):
+            with pytest.raises(exceptions.SaltInvocationError) as err:
+                crmshmod._manage_multiple_sbd(True, ['disk1', 'disk2'])
+
+        assert 'crm cluster init sbd failed' in str(err.value)
+        mock_cmd_run.assert_has_calls([
+            mock.call('sbd -d disk1 -d disk2 create'),
+            mock.call('{} cluster init sbd -s {}'.format(crmshmod.CRM_COMMAND, 'disk1'))
+        ])
+
     @mock.patch('salt.modules.crmshmod._manage_multiple_sbd')
     @mock.patch('salt.modules.crmshmod._crm_init')
     def test_cluster_init_crm(self, crm_init, manage_sbd):
