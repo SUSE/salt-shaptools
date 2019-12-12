@@ -348,6 +348,44 @@ def _ha_cluster_init(
     return return_code
 
 
+def _manage_multiple_sbd(sbd_enabled, sbd_dev):
+    '''
+    crmsh doesn't support multiple sbd disk usage by now. This method workaround this scenario
+    modifying the /etc/syconfig/sbd file before running crmsh
+    '''
+    # sbd disks are managed as list, but individual disk is accepted to be more compatible
+    if sbd_dev and not isinstance(sbd_dev, list):
+        sbd_dev = [sbd_dev]
+
+    # return sbd_dev
+
+    if not sbd_enabled or not sbd_dev or len(sbd_dev) == 1:
+        return sbd_enabled, sbd_dev
+
+    LOGGER.warning('crmsh will say that sbd is not configured')
+
+    sbd_str = ' '.join(['-d {}'.format(sbd) for sbd in sbd_dev])
+    cmd = 'sbd {disks} create'.format(disks=sbd_str)
+    return_code = __salt__['cmd.retcode'](cmd)
+    if return_code:
+        raise exceptions.SaltInvocationError('sbd disks could not be formatted properly')
+
+    cmd = '{crm_command} cluster init sbd -s {sbd}'.format(crm_command=CRM_COMMAND, sbd=sbd_dev[0])
+    return_code = __salt__['cmd.retcode'](cmd)
+    if return_code:
+        raise exceptions.SaltInvocationError('crm cluster init sbd failed')
+
+    __salt__['file.replace'](
+        path='/etc/sysconfig/sbd',
+        pattern='^SBD_DEVICE=.*',
+        repl='SBD_DEVICE={}'.format(';'.join(sbd_dev)),
+        append_if_not_found=True
+    )
+
+    # return None, None to avoid sbd configuration in crmsh
+    return None, None
+
+
 def cluster_init(
         name,
         watchdog=None,
@@ -386,9 +424,8 @@ def cluster_init(
 
         salt '*' crm.cluster_init hacluster
     '''
-    # sbd disks are managed as list, but individual disk is accepted to be more compatible
-    if sbd_dev and not isinstance(sbd_dev, list):
-        sbd_dev = [sbd_dev]
+    # Workaournd while multiple sbd disks are not supported by crmsh
+    sbd, sbd_dev = _manage_multiple_sbd(sbd, sbd_dev)
 
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
@@ -396,7 +433,7 @@ def cluster_init(
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
-    LOGGER.warn('The parameter name is not considered!')
+    LOGGER.warning('The parameter name is not considered!')
     return _ha_cluster_init(
         watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 

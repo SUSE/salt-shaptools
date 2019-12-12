@@ -395,18 +395,21 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 '{} -y -i {} -A {} -S -s {} -s {} -q'.format(
                     crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'dev1', 'dev2'))
 
+    @mock.patch('salt.modules.crmshmod._manage_multiple_sbd')
     @mock.patch('salt.modules.crmshmod._crm_init')
-    def test_cluster_init_crm(self, crm_init):
+    def test_cluster_init_crm(self, crm_init, manage_sbd):
         '''
         Test cluster_init with crm option
         '''
+
+        manage_sbd.return_value = ('sbd', 'devs')
 
         with patch.dict(crmshmod.__salt__, {'crm.version': True}):
             crm_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, None, None, None)
+                'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', None)
             crm_init.reset_mock()
 
         with patch.dict(crmshmod.__salt__, {'crm.version': True}):
@@ -414,7 +417,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev=['disk1', 'disk2'])
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, None, ['disk1', 'disk2'], None)
+                'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', None)
             crm_init.reset_mock()
 
         with patch.dict(crmshmod.__salt__, {'crm.version': True}):
@@ -422,14 +425,17 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev='disk1')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, None, ['disk1'], None)
+                'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', None)
 
-    @mock.patch('logging.Logger.warn')
+    @mock.patch('logging.Logger.warning')
+    @mock.patch('salt.modules.crmshmod._manage_multiple_sbd')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')
-    def test_cluster_init_ha(self, ha_cluster_init, logger):
+    def test_cluster_init_ha(self, ha_cluster_init, manage_sbd, logger):
         '''
         Test cluster_init with ha_cluster_init option
         '''
+        manage_sbd.return_value = ('sbd', 'devs')
+
         with patch.dict(crmshmod.__salt__, {'crm.version': False}):
             ha_cluster_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
@@ -437,7 +443,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             logger.assert_called_once_with(
                 'The parameter name is not considered!')
             ha_cluster_init.assert_called_once_with(
-                'dog', 'eth1', None, None, None, None, None)
+                'dog', 'eth1', None, None, 'sbd', 'devs', None)
 
     def test_crm_join_basic(self):
         '''
