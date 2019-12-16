@@ -662,3 +662,15 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                     crm_command=crmshmod.CRM_COMMAND,
                     method='update',
                     url='file.conf'))
+
+    def test_detect_cloud(self):
+        '''
+        Test detect_cloud
+        '''
+        mock_utils = MagicMock()
+        mock_crmsh = MagicMock(utils=mock_utils)
+        mock_utils.detect_cloud.return_value = 'my-cloud'
+
+        with patch.dict('sys.modules', crmsh=mock_crmsh):
+            result = crmshmod.detect_cloud()
+            assert result == 'my-cloud'

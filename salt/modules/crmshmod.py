@@ -582,3 +582,17 @@ def configure_load(
         method=method, url=url)
 
     return __salt__['cmd.retcode'](cmd)
+
+
+def detect_cloud():
+    '''
+    Detect if crmsh is being executed in some cloud provider
+
+    These are the currently known platforms:
+    * amazon-web-services
+    * microsoft-azure
+    * google-cloud-platform
+    * none (otherwise)
+    '''
+    from crmsh import utils
+    return utils.detect_cloud()
