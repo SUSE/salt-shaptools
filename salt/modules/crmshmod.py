@@ -63,7 +63,8 @@ def __virtual__():
             'The crmsh execution module failed to load: the ha-cluster-init'
             ' package is not available.')
 
-    __salt__['crm.version'] = use_crm
+    __salt__['crm.version'] = version
+    __salt__['crm.use_crm'] = use_crm
     return __virtualname__
 
 
@@ -429,7 +430,7 @@ def cluster_init(
 
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __salt__['crm.version']:
+    if __salt__['crm.use_crm']:
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
@@ -515,7 +516,7 @@ def cluster_join(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __salt__['crm.version']:
+    if __salt__['crm.use_crm']:
         return _crm_join(host, watchdog, interface, quiet)
 
     return _ha_cluster_join(host, watchdog, interface, quiet)
@@ -588,11 +589,26 @@ def detect_cloud():
     '''
     Detect if crmsh is being executed in some cloud provider
 
+    INFO: The code is implemented this way because crmsh is still using python2 in
+    SLE12SP3 and python3 beyond, but salt is running python2 until SLE15, so SLE12SP4 breaks
+    the rule.
+
+    Otherwise we could just use:
+    from crmsh import utils
+    return utils.detect_cloud()
+
     These are the currently known platforms:
     * amazon-web-services
     * microsoft-azure
     * google-cloud-platform
-    * none (otherwise)
+    * None (as string)(otherwise)
     '''
-    from crmsh import utils
-    return utils.detect_cloud()
+    if int(__salt__['crm.version'][0]) <= 3:
+        version = 'python'
+    else:
+        version = 'python3'
+
+    cmd = '{version} -c "from crmsh import utils; print(utils.detect_cloud());"'.format(
+        version=version)
+    provider = __salt__['cmd.run'](cmd).strip()
+    return provider
