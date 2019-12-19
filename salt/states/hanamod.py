@@ -239,8 +239,8 @@ def installed(
             hdb_pwd_file = __salt__['hana.update_hdb_pwd_file'](
                 hdb_pwd_file=TMP_HDB_PWD_FILE,
                 root_password=root_password,
-                sapadm_password='sapadm_password',
-                system_user_password='system_user_password')
+                sapadm_password=sapadm_password,
+                system_user_password=system_user_password)
             ret['changes']['hdb_pwd_file'] = 'new'
         if config_file:
             __salt__['cp.get_file'](
