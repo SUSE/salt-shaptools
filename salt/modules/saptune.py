@@ -35,7 +35,7 @@ def __virtual__():
     Only load this module if crm package is installed
     '''
     if bool(salt.utils.path.which(SAPTUNE_BIN)):
-        version = __salt__['pkg.version']('saptune')
+        return __virtualname__
 
     else:
         return (
@@ -43,8 +43,6 @@ def __virtual__():
             'The saptune execution module failed to load: the saptune package'
             ' is not available.')
 
-    __salt__['saptune.version'] = version
-    return __virtualname__
 
 
 def apply_solution(solution_name):
