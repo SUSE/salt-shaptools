@@ -26,22 +26,16 @@ import salt.modules.saptune as saptune
 
 
 @skipIf(NO_MOCK, NO_MOCK_REASON)
-class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
+class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
     '''
-    This class contains a set of functions that test salt.modules.crm.
+    This class contains a set of functions that test salt.modules.saptune.
     '''
 
     def setup_loader_modules(self):
-        return {crmshmod: {}}
+        return {saptune: {}}
 
     @mock.patch('salt.utils.path.which')
-    def test_virtual_crm(self, mock_which):
-        mock_pkg_version = MagicMock(return_value='1.0.0')
-        mock_pkg_version_cmp = MagicMock(return_value=1)
-
+    def test_virtual_saptune(self, mock_which):
         mock_which.side_effect = [True, True]
-        with patch.dict(crmshmod.__salt__, {
-                'pkg.version': mock_pkg_version,
-                'pkg.version_cmp': mock_pkg_version_cmp}):
-            assert crmshmod.__virtual__() == 'crm'
-            mock_which.assert_called_once_with(crmshmod.CRM_COMMAND)
+        assert saptune.__virtual__() == 'saptune'
+        mock_which.assert_called_once_with(saptune.SAPTUNE_BIN)

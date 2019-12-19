@@ -17,12 +17,8 @@ State module to provide Saptune functionality to Salt
 
 .. code-block:: yaml
   solution_is_removed:
-    saptune.solution_is_absent:
-        - name: HANA
-        (option to apply multiple solution)
-        - solutions:
-            - solution1
-            - solution2
+    saptune.apply_solution:
+        - solution_name: HANA
 '''
 
 
