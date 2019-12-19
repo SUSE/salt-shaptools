@@ -67,6 +67,7 @@ from salt.ext import six
 __virtualname__ = 'hana'
 
 TMP_CONFIG_FILE = '/tmp/hana.conf'
+TMP_HDB_PWD_FILE = '/root/hdb_passwords.xml'
 INI_PARAM_PRELOAD_CS = {'section_name': 'system_replication', 'parameter_name': 'preload_column_tables'}
 INI_PARAM_GAL = {'section_name': 'memorymanager', 'parameter_name': 'global_allocation_limit'}
 
@@ -150,6 +151,7 @@ def installed(
         root_user,
         root_password,
         config_file=None,
+        hdb_pwd_file=None,
         sapadm_password=None,
         system_user_password=None,
         extra_parameters={}):
@@ -177,11 +179,16 @@ def installed(
         to the minion and used in the installation. Values in this file might
         be changed setting then in the extra_parameters dictionary using the
         exact name as in the config file as a key
+    hdb_pwd_file
+        If hdb_pwd_file paremeter is set, it will be downloaded from the master
+        to the minion and used in the installation. Values in this file might
+        be changed setting then in the extra_parameters dictionary using the
+        exact name as in the XML file as a key
     sapadm_password
-        If the config file is not set, the sapadm_password is mandatory. The
+        If the password in config file or hdb_pwd_file is not set, the sapadm_password is mandatory. The
         password of the sap administrator user
     system_user_password
-        If the config file is not set, the system_user_password is mandatory. The
+        If the password in config file or hdb_pwd_file is not set, the system_user_password is mandatory. The
         password of the database SYSTEM (superuser) user
     extra_parameters
         Optional configuration parameters (exact name as in the config file as a key)
@@ -209,16 +216,38 @@ def installed(
 
     try:
         #  Here starts the actual process
+        if hdb_pwd_file:
+            __salt__['cp.get_file'](
+                path=hdb_pwd_file,
+                dest=TMP_HDB_PWD_FILE)
+            ret['changes']['hdb_pwd_file'] = hdb_pwd_file
+            hdb_pwd_file = TMP_HDB_PWD_FILE
+        elif system_user_password is None or sapadm_password is None:
+            ret['comment'] = 'If XML password file is not provided '\
+                'system_user_password and sapadm_password are mandatory'
+            return ret
+        else:
+            temp_file = __salt__['hana.create_conf_file'](
+                software_path=software_path,
+                conf_file=TMP_CONFIG_FILE,
+                root_user=root_user,
+                root_password=root_password)
+            pwd_file = '{}.xml'.format(TMP_CONFIG_FILE)
+            __salt__['file.move'](
+                src=pwd_file,
+                dst=TMP_HDB_PWD_FILE)
+            hdb_pwd_file = __salt__['hana.update_hdb_pwd_file'](
+                hdb_pwd_file=TMP_HDB_PWD_FILE,
+                root_password=root_password,
+                sapadm_password='sapadm_password',
+                system_user_password='system_user_password')
+            ret['changes']['hdb_pwd_file'] = 'new'
         if config_file:
             __salt__['cp.get_file'](
                 path=config_file,
                 dest=TMP_CONFIG_FILE)
             ret['changes']['config_file'] = config_file
             config_file = TMP_CONFIG_FILE
-        elif system_user_password is None or sapadm_password is None:
-            ret['comment'] = 'If config_file is not provided '\
-                'system_user_password and sapadm_password are mandatory'
-            return ret
         else:
             config_file = __salt__['hana.create_conf_file'](
                 software_path=software_path,
@@ -230,10 +259,7 @@ def installed(
                 sid=sid.upper(),
                 password=password,
                 number='{:0>2}'.format(inst),
-                root_user=root_user,
-                root_password=root_password,
-                sapadm_password=sapadm_password,
-                system_user_password=system_user_password)
+                root_user=root_user)
             ret['changes']['config_file'] = 'new'
         if extra_parameters:
             extra_parameters = _parse_dict(extra_parameters)
@@ -244,6 +270,7 @@ def installed(
         __salt__['hana.install'](
             software_path=software_path,
             conf_file=config_file,
+            hdb_pwd_file=hdb_pwd_file,
             root_user=root_user,
             root_password=root_password)
         ret['changes']['sid'] = sid
