@@ -278,6 +278,33 @@ def _is_peers_uptodated(name, peernode='all'):
     return ret
 
 
+def _is_no_backing_dev_request(name):
+    '''
+    Check whether all volumes have no unfinished backing device request.
+    Only working when json status supported.
+
+    Metadata still need to sync to disk after state changed.
+    Only reply to sync target to change when I/O request finished,
+    which is unpredictable. Local refernece count is not 0 before endio.
+
+    '''
+    if not __salt__['drbd.json']:
+        return True
+
+    output = OUTPUT_OPTIONS['json']
+    res = output["get_res_func"](name)
+
+    if not res:
+        return False
+
+    # Since name is not all, res only have one element
+    for vol in res[0][output["volume"]]:
+        if int(vol[output["local_cnt"]]) != 0:
+            return False
+
+    return True
+
+
 def overview():
     '''
     Show status of the DRBD devices, support two nodes only.
@@ -657,6 +684,7 @@ OUTPUT_OPTIONS = {
     "peer_node": "name",
     "peer_node_vol": "peer_devices",
     "peer_node_state": "peer-disk-state",
+    "local_cnt": "lower-pending",
     "get_res_func": setup_status
   },
   "text": {
@@ -690,7 +718,7 @@ def check_sync_status(name, peernode='all'):
         salt '*' drbd.check_sync_status <resource name> <peernode name>
     '''
     if _is_local_all_uptodated(name) and _is_peers_uptodated(
-            name, peernode=peernode):
+            name, peernode=peernode) and _is_no_backing_dev_request(name):
         return True
 
     return False
