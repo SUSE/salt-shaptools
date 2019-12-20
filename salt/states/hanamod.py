@@ -152,6 +152,7 @@ def installed(
         root_password,
         config_file=None,
         hdb_pwd_file=None,
+        remove_pwd_files=True,
         sapadm_password=None,
         system_user_password=None,
         extra_parameters={}):
@@ -184,6 +185,8 @@ def installed(
         to the minion and used in the installation. Values in this file might
         be changed setting then in the extra_parameters dictionary using the
         exact name as in the XML file as a key
+    remove_pwd_files
+        If remove the XML password hdb_pwd_file after installation
     sapadm_password
         If the password in config file or hdb_pwd_file is not set, the sapadm_password is mandatory. The
         password of the sap administrator user
@@ -216,6 +219,11 @@ def installed(
 
     try:
         #  Here starts the actual process
+        temp_file = __salt__['hana.create_conf_file'](
+            software_path=software_path,
+            conf_file=TMP_CONFIG_FILE,
+            root_user=root_user,
+            root_password=root_password)        
         if hdb_pwd_file:
             __salt__['cp.get_file'](
                 path=hdb_pwd_file,
@@ -227,11 +235,6 @@ def installed(
                 'system_user_password and sapadm_password are mandatory'
             return ret
         else:
-            temp_file = __salt__['hana.create_conf_file'](
-                software_path=software_path,
-                conf_file=TMP_CONFIG_FILE,
-                root_user=root_user,
-                root_password=root_password)
             pwd_file = '{}.xml'.format(TMP_CONFIG_FILE)
             __salt__['file.move'](
                 src=pwd_file,
@@ -249,13 +252,8 @@ def installed(
             ret['changes']['config_file'] = config_file
             config_file = TMP_CONFIG_FILE
         else:
-            config_file = __salt__['hana.create_conf_file'](
-                software_path=software_path,
-                conf_file=TMP_CONFIG_FILE,
-                root_user=root_user,
-                root_password=root_password)
             config_file = __salt__['hana.update_conf_file'](
-                conf_file=config_file,
+                conf_file=temp_file,
                 sid=sid.upper(),
                 password=password,
                 number='{:0>2}'.format(inst),
@@ -273,6 +271,8 @@ def installed(
             hdb_pwd_file=hdb_pwd_file,
             root_user=root_user,
             root_password=root_password)
+        if remove_pwd_files:
+            __salt__['file.remove'](hdb_pwd_file)
         ret['changes']['sid'] = sid
         ret['comment'] = 'HANA installed'
         ret['result'] = True
@@ -282,7 +282,6 @@ def installed(
         ret['comment'] = six.text_type(err)
         return ret
     finally:
-        __salt__['file.remove'](TMP_CONFIG_FILE)
         __salt__['file.remove']('{}.xml'.format(TMP_CONFIG_FILE))
 
 
