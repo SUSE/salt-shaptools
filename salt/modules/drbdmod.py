@@ -223,48 +223,29 @@ def _line_parser(line):
     func(line)
 
 
-def _is_local_all_uptodated(name):
+def _is_local_all_uptodated(res, output):
     '''
-    Check whether all local volumes are UpToDate.
+    Check whether all local volumes of given resource are UpToDate.
     '''
-    if __salt__['drbd.json']:
-        output = OUTPUT_OPTIONS['json']
-    else:
-        output = OUTPUT_OPTIONS['text']
 
-    res = output["get_res_func"](name)
-
-    if not res:
-        return False
-
-    # Since name is not all, res only have one element
-    for vol in res[0][output["volume"]]:
+    for vol in res[output["volume"]]:
         if vol[output["state"]] != 'UpToDate':
             return False
 
     return True
 
 
-def _is_peers_uptodated(name, peernode='all'):
+def _is_peers_uptodated(res, output, peernode='all'):
     '''
-    Check whether all volumes of peer node are UpToDate.
+    Check whether all volumes of peer node of given resource are UpToDate.
 
     .. note::
 
         If peernode is not match, will return None, same as False.
     '''
-    if __salt__['drbd.json']:
-        output = OUTPUT_OPTIONS['json']
-    else:
-        output = OUTPUT_OPTIONS['text']
+    ret = False
 
-    res = output["get_res_func"](name)
-
-    if not res:
-        return False
-
-    # Since name is not all, res only have one element
-    for node in res[0][output["connection"]]:
+    for node in res[output["connection"]]:
         if peernode != 'all' and node[output["peer_node"]] != peernode:
             continue
 
@@ -278,7 +259,7 @@ def _is_peers_uptodated(name, peernode='all'):
     return ret
 
 
-def _is_no_backing_dev_request(name):
+def _is_no_backing_dev_request(res, output):
     '''
     Check whether all volumes have no unfinished backing device request.
     Only working when json status supported.
@@ -291,14 +272,8 @@ def _is_no_backing_dev_request(name):
     if not __salt__['drbd.json']:
         return True
 
-    output = OUTPUT_OPTIONS['json']
-    res = output["get_res_func"](name)
-
-    if not res:
-        return False
-
     # Since name is not all, res only have one element
-    for vol in res[0][output["volume"]]:
+    for vol in res[output["volume"]]:
         if int(vol[output["local_cnt"]]) != 0:
             return False
 
@@ -717,8 +692,22 @@ def check_sync_status(name, peernode='all'):
 
         salt '*' drbd.check_sync_status <resource name> <peernode name>
     '''
-    if _is_local_all_uptodated(name) and _is_peers_uptodated(
-            name, peernode=peernode) and _is_no_backing_dev_request(name):
+    if __salt__['drbd.json']:
+        output = OUTPUT_OPTIONS['json']
+    else:
+        output = OUTPUT_OPTIONS['text']
+
+    # Need a specific node name instead of `all`. res should only have one element
+    resources = output["get_res_func"](name)
+
+    if not resources:
+        return False
+
+    res = resources[0]
+
+    if _is_local_all_uptodated(res, output) and _is_peers_uptodated(
+            res, output, peernode=peernode) and _is_no_backing_dev_request(
+            res, output):
         return True
 
     return False
