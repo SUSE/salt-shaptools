@@ -155,15 +155,39 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         assert 'hana error' in str(err.value)
 
     @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_update_hdb_pwd_file_return(self, mock_hana):
+        '''
+        Test update_hdb_pwd_file method - return
+        '''
+        mock_hana.update_hdb_pwd_file.return_value = 'hana.conf.xml'
+        hdb_pwd_file = hanamod.update_hdb_pwd_file(
+            'hana.conf.xml', sapadm_password='Test1234', system_user_password='Syst1234')
+        assert u'hana.conf.xml' == hdb_pwd_file
+        mock_hana.update_hdb_pwd_file.assert_called_once_with(
+            'hana.conf.xml', sapadm_password='Test1234', system_user_password='Syst1234')
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_update_hdb_pwd_file_raise(self, mock_hana):
+        '''
+        Test update_hdb_pwd_file method - raise
+        '''
+        mock_hana.update_hdb_pwd_file.side_effect = IOError('hana error')
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            hanamod.update_hdb_pwd_file('hana.conf.xml', sapadm_password='Test1234', system_user_password='Syst1234')
+        mock_hana.update_hdb_pwd_file.assert_called_once_with(
+            'hana.conf.xml', sapadm_password='Test1234', system_user_password='Syst1234')
+        assert 'hana error' in str(err.value)
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
     def test_install_return(self, mock_hana):
         '''
         Test install method - return
         '''
         mock_hana.install.return_value = 'hana.conf'
         hanamod.install(
-            'software_path', 'hana.conf', 'root', 'root')
+            'software_path', 'hana.conf', 'root', 'root', 'hana.conf.xml')
         mock_hana.install.assert_called_once_with(
-            'software_path', 'hana.conf', 'root', 'root')
+            'software_path', 'hana.conf', 'root', 'root', 'hana.conf.xml')
 
     @patch('salt.modules.hanamod.hana.HanaInstance')
     def test_install_raise(self, mock_hana):
@@ -174,9 +198,9 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             'hana error'
         )
         with pytest.raises(exceptions.CommandExecutionError) as err:
-            hanamod.install('software_path', 'hana.conf', 'root', 'root')
+            hanamod.install('software_path', 'hana.conf', 'root', 'root', 'hana.conf.xml')
         mock_hana.install.assert_called_once_with(
-            'software_path', 'hana.conf', 'root', 'root')
+            'software_path', 'hana.conf', 'root', 'root', 'hana.conf.xml')
         assert 'hana error' in str(err.value)
 
     def test_uninstall_return(self):
