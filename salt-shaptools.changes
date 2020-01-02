@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan  2 22:41:36 UTC 2020 - Simranpal Singh <simranpal.singh@suse.com>
+
+- Version 0.2.10
+  * Add functionality to install hana with xml passwords file
+
+-------------------------------------------------------------------
 Mon Dec 23 07:39:31 UTC 2019 - nick wang <nwang@suse.com>
 
 - Version 0.2.9
