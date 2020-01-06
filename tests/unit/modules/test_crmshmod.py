@@ -462,7 +462,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
 
         manage_sbd.return_value = ('sbd', 'devs')
 
-        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
+        with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
@@ -470,7 +470,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', None)
             crm_init.reset_mock()
 
-        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
+        with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev=['disk1', 'disk2'])
             assert value == 0
@@ -478,7 +478,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                 'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', None)
             crm_init.reset_mock()
 
-        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
+        with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev='disk1')
             assert value == 0
@@ -494,7 +494,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         manage_sbd.return_value = ('sbd', 'devs')
 
-        with patch.dict(crmshmod.__salt__, {'crm.version': False}):
+        with patch.dict(crmshmod.__salt__, {'crm.use_crm': False}):
             ha_cluster_init.return_value = 0
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
             assert value == 0
@@ -588,7 +588,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_join with crm option
         '''
-        with patch.dict(crmshmod.__salt__, {'crm.version': True}):
+        with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_join.return_value = 0
             value = crmshmod.cluster_join('host', 'dog', 'eth1')
             assert value == 0
@@ -600,7 +600,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test cluster_join with ha_cluster_join option
         '''
-        with patch.dict(crmshmod.__salt__, {'crm.version': False}):
+        with patch.dict(crmshmod.__salt__, {'crm.use_crm': False}):
             ha_cluster_join.return_value = 0
             value = crmshmod.cluster_join('host', 'dog', 'eth1')
             assert value == 0
@@ -662,3 +662,35 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                     crm_command=crmshmod.CRM_COMMAND,
                     method='update',
                     url='file.conf'))
+
+    def test_detect_cloud_py2(self):
+        '''
+        Test detect_cloud
+        '''
+        mock_versin = '3.0.0'
+        mock_cmd_run = MagicMock(return_value='my-cloud ')
+
+        with patch.dict(crmshmod.__salt__, {
+                'crm.version': mock_versin,
+                'cmd.run': mock_cmd_run}):
+            result = crmshmod.detect_cloud()
+            assert result == 'my-cloud'
+
+        mock_cmd_run.assert_called_once_with(
+            'python -c "from crmsh import utils; print(utils.detect_cloud());"')
+
+    def test_detect_cloud_py3(self):
+        '''
+        Test detect_cloud
+        '''
+        mock_versin = '4.0.0'
+        mock_cmd_run = MagicMock(return_value='my-cloud ')
+
+        with patch.dict(crmshmod.__salt__, {
+                'crm.version': mock_versin,
+                'cmd.run': mock_cmd_run}):
+            result = crmshmod.detect_cloud()
+            assert result == 'my-cloud'
+
+        mock_cmd_run.assert_called_once_with(
+            'python3 -c "from crmsh import utils; print(utils.detect_cloud());"')

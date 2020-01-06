@@ -623,33 +623,6 @@ beijing role:Primary
                                         'drbd.json': False}):
             assert not drbd.check_sync_status('beijing')
 
-        # Test 4.2: Test status return Error
-        fake = {}
-        fake['stdout'] = '''
-beijing role:Primary
-  volume:0 disk:UpToDate
-  volume:1 disk:UpToDate
-  node2 role:Secondary
-    volume:0 peer-disk:UpToDate
-    volume:1 peer-disk:UpToDate
-  node3 role:Secondary
-    volume:0 peer-disk:UpToDate
-    volume:1 peer-disk:UpToDate
-
-'''
-        fake['stderr'] = ""
-        fake['retcode'] = 0
-
-        fake1 = {}
-        fake1['stdout'] = ""
-        fake1['stderr'] = ""
-        fake1['retcode'] = 1
-        mock_cmd = MagicMock(side_effect=[fake, fake1])
-
-        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd,
-                                        'drbd.json': False}):
-            assert not drbd.check_sync_status('beijing')
-
     def test_check_sync_status_drbdsetup_json(self):
         '''
         Test if check_sync_status function work well with drbdsetup status --json
@@ -657,6 +630,134 @@ beijing role:Primary
         '''
 
         # Test 1: Test all UpToDate
+        fake = {}
+        fake['stdout'] = '''
+[
+{
+  "name": "shanghai",
+  "node-id": 1,
+  "role": "Secondary",
+  "suspended": false,
+  "write-ordering": "flush",
+  "devices": [
+    {
+      "volume": 0,
+      "minor": 2,
+      "disk-state": "UpToDate",
+      "client": false,
+      "quorum": true,
+      "size": 699332,
+      "read": 0,
+      "written": 0,
+      "al-writes": 0,
+      "bm-writes": 0,
+      "upper-pending": 0,
+      "lower-pending": 0
+    } ],
+  "connections": [
+    {
+      "peer-node-id": 2,
+      "name": "dummytest-drbd02",
+      "connection-state": "Connected",
+      "congested": false,
+      "peer-role": "Secondary",
+      "ap-in-flight": 0,
+      "rs-in-flight": 0,
+      "peer_devices": [
+        {
+          "volume": 0,
+          "replication-state": "Established",
+          "peer-disk-state": "UpToDate",
+          "peer-client": false,
+          "resync-suspended": "no",
+          "received": 0,
+          "sent": 0,
+          "out-of-sync": 0,
+          "pending": 0,
+          "unacked": 0,
+          "has-sync-details": false,
+          "has-online-verify-details": false,
+          "percent-in-sync": 100.00
+        } ]
+    } ]
+}
+]
+
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock_cmd = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
+            assert drbd.check_sync_status('shanghai')
+            mock_cmd.assert_called_with('drbdsetup status --json shanghai')
+
+        # Test 2: Test _is_no_backing_dev_request() have unfinished requrests
+        fake = {}
+        fake['stdout'] = '''
+[
+{
+  "name": "shanghai",
+  "node-id": 1,
+  "role": "Secondary",
+  "suspended": false,
+  "write-ordering": "flush",
+  "devices": [
+    {
+      "volume": 0,
+      "minor": 2,
+      "disk-state": "UpToDate",
+      "client": false,
+      "quorum": true,
+      "size": 699332,
+      "read": 0,
+      "written": 0,
+      "al-writes": 0,
+      "bm-writes": 0,
+      "upper-pending": 0,
+      "lower-pending": 3
+    } ],
+  "connections": [
+    {
+      "peer-node-id": 2,
+      "name": "dummytest-drbd02",
+      "connection-state": "Connected",
+      "congested": false,
+      "peer-role": "Secondary",
+      "ap-in-flight": 0,
+      "rs-in-flight": 0,
+      "peer_devices": [
+        {
+          "volume": 0,
+          "replication-state": "Established",
+          "peer-disk-state": "UpToDate",
+          "peer-client": false,
+          "resync-suspended": "no",
+          "received": 0,
+          "sent": 0,
+          "out-of-sync": 0,
+          "pending": 0,
+          "unacked": 0,
+          "has-sync-details": false,
+          "has-online-verify-details": false,
+          "percent-in-sync": 100.00
+        } ]
+    } ]
+}
+]
+
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        mock_cmd = MagicMock(return_value=fake)
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
+            assert not drbd.check_sync_status('shanghai')
+            mock_cmd.assert_called_with('drbdsetup status --json shanghai')
+
+        # Test 3: Test _is_no_backing_dev_request() all requrests finished
         fake = {}
         fake['stdout'] = '''
 [
