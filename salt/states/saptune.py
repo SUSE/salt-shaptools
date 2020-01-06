@@ -8,17 +8,7 @@ State module to provide Saptune functionality to Salt
 :depends:       saptune
 :platform:      all
 
-:configuration: This module requires the saptune python module and uses the
-    following defaults which may be overridden in the minion configuration:
-
-.. code-block:: yaml
-
-:usage:
-
-.. code-block:: yaml
-  solution_is_removed:
-    saptune.apply_solution:
-        - solution_name: HANA
+:configuration: This module requires the saptune python module
 '''
 
 
