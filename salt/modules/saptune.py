@@ -67,5 +67,5 @@ def apply_solution(solution_name):
 
         salt '*' saptune.apply_solution solution-name
     '''
-    cmd = '{0} solution apply {1}'.format(SAPTUNE_BIN, solution_name)
+    cmd = '{} solution apply {}'.format(SAPTUNE_BIN, solution_name)
     return __salt__['cmd.retcode'](cmd)
