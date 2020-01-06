@@ -39,7 +39,7 @@ def solution_applied(name):
            'result': False,
            'comment': ''}
 
-    if __salt__['saptune.apply_solution'](solution_name=name):
+    if __salt__['saptune.is_solution_applied'](solution_name=name):
         ret['result'] = True
         ret['comment'] = 'Saptune solution is already applied'
         return ret

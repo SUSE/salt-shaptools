@@ -43,7 +43,18 @@ def __virtual__():
             'The saptune execution module failed to load: the saptune package'
             ' is not available.')
 
+def is_solution_applied(solution_name):
+    '''
+    check if the saptune solution is applied or not
+    '''
 
+    SOLUTION_TO_SEARCH = "TUNE_FOR_SOLUTIONS=\"{}\"".format(solution_name)
+
+    # open the config file and search if the solution is enabled
+    with open("/etc/syconfig/saptune") as conf:
+        if SOLUTION_TO_SEARCH in conf.read():
+           return True
+    return False
 
 def apply_solution(solution_name):
     '''
