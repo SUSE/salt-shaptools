@@ -69,4 +69,12 @@ def apply_solution(solution_name):
         salt '*' saptune.apply_solution solution-name
     '''
     cmd = '{} solution apply {}'.format(SAPTUNE_BIN, solution_name)
-    return __salt__['cmd.retcode'](cmd)
+    retcode = __salt__['cmd.retcode'](cmd)
+
+    if is_solution_applied(solution_name) and retcode == 0:
+        LOGGER.info("solution {} applied sucessfully")
+        return 0
+
+    if is_solution_applied(solution_name) == False:
+        LOGGER.error("solution {} was not applied. Check if another one is already applied and revert it before apply a new one")
+        return 1
