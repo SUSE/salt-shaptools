@@ -27,12 +27,13 @@ import salt.utils.path
 __virtualname__ = 'saptune'
 
 SAPTUNE_BIN = '/usr/sbin/saptune'
+SAPTUNE_CONF = '/etc/sysconfig/saptune'
 
 LOGGER = logging.getLogger(__name__)
 
 def __virtual__():
     '''
-    Only load this module if crm package is installed
+    Only load this module if saptune package is installed
     '''
     if bool(salt.utils.path.which(SAPTUNE_BIN)):
         return __virtualname__
@@ -48,11 +49,11 @@ def is_solution_applied(solution_name):
     check if the saptune solution is applied or not
     '''
 
-    SOLUTION_TO_SEARCH = "TUNE_FOR_SOLUTIONS=\"{}\"".format(solution_name)
+    solution_to_search = "TUNE_FOR_SOLUTIONS=\"{}\"".format(solution_name)
 
     # open the config file and search if the solution is enabled
-    with open("/etc/syconfig/saptune") as conf:
-        if SOLUTION_TO_SEARCH in conf.read():
+    with open(SAPTUNE_CONF) as conf:
+        if solution_to_search in conf.read():
            return True
     return False
 
