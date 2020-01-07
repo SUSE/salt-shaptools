@@ -33,11 +33,11 @@ To run the module funcionalities in the minions:
 2. Copy the content of **states** in your "salt://_states/" (by default /srv/salt/_states)
 3. Synchronize modules with the minions. For that run:
 ```bash
-sudo salt '*' saltutil.sync_states
+sudo salt-call --local saltutil.sync_all
 ```
 4. Execute the module functionalities. For that run:
 ```bash
-sudo salt-call hana.is_installed
+sudo salt-call --local hana.is_installed
 ```
 
 ## How to run the tests
