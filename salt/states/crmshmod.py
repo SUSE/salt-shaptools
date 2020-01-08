@@ -124,6 +124,7 @@ def cluster_initialized(
     sbd_dev
         sbd device path. To be used "sbd" parameter must be used too. If None,
             the sbd is set as diskless.
+        This parameter can be a string (meaning one disk) or a list with multiple disks
     no_overwrite_sshkey
         No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
         Only available after crmsh 3.0.0
