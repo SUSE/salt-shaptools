@@ -130,29 +130,47 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
     def test_installed_config_file(self):
         '''
-        Test to check installed when config file is imported
+        Test to check installed when config file is imported and XML password file is created
         '''
 
         ret = {'name': 'prd',
-               'changes': {'sid': 'prd', 'config_file': 'hana.conf'},
+               'changes': {'sid': 'prd', 'config_file': 'hana.conf', 'hdb_pwd_file': 'new'},
                'result': True,
                'comment': 'HANA installed'}
 
         mock_installed = MagicMock(return_value=False)
         mock_cp = MagicMock()
+        mock_mv = MagicMock()
+        mock_create_xml = MagicMock(return_value='temp.conf')
+        mock_update_xml = MagicMock(return_value=hanamod.TMP_HDB_PWD_FILE)
         mock_update = MagicMock(return_value='hana_updated.conf')
         mock_install = MagicMock()
         mock_remove = MagicMock()
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
                                            'cp.get_file': mock_cp,
+                                           'file.move': mock_mv,
+                                           'hana.create_conf_file': mock_create_xml,
+                                           'hana.update_hdb_pwd_file':mock_update_xml,
                                            'hana.update_conf_file': mock_update,
                                            'hana.install': mock_install,
                                            'file.remove': mock_remove}):
             assert hanamod.installed(
                 'prd', '00', 'pass', '/software',
-                'root', 'pass', config_file='hana.conf',
+                'root', config_file='hana.conf', root_password='Test1234',
+                sapadm_password='Test1234', system_user_password='Test1234',
                 extra_parameters=[{'hostname': 'hana01'}]) == ret
 
+            mock_create_xml.assert_called_once_with(
+                software_path='/software',
+                conf_file=hanamod.TMP_CONFIG_FILE,
+                root_user='root',
+                root_password='Test1234')
+            mock_mv.assert_called_once_with(
+                src='/tmp/hana.conf.xml',
+                dst=hanamod.TMP_HDB_PWD_FILE)
+            mock_update_xml.assert_called_once_with(
+                hdb_pwd_file=hanamod.TMP_HDB_PWD_FILE, root_password='Test1234',
+                password='pass', sapadm_password='Test1234', system_user_password='Test1234')
             mock_cp.assert_called_once_with(
                 path='hana.conf',
                 dest=hanamod.TMP_CONFIG_FILE)
@@ -162,29 +180,30 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             mock_install.assert_called_once_with(
                 software_path='/software',
                 conf_file='hana_updated.conf',
-                root_user='root',
-                root_password='pass')
+                root_user='root', root_password='Test1234',
+                hdb_pwd_file=hanamod.TMP_HDB_PWD_FILE)
             mock_remove.assert_has_calls([
-                mock.call(hanamod.TMP_CONFIG_FILE),
                 mock.call('{}.xml'.format(hanamod.TMP_CONFIG_FILE))
             ])
 
     def test_installed_dump(self):
         '''
-        Test to check installed when new config file is created
+        Test to check installed when new config file is created and XML password file is imported
         '''
 
         ret = {'name': 'prd',
-               'changes': {'sid': 'prd', 'config_file': 'new'},
+               'changes': {'sid': 'prd', 'config_file': 'new', 'hdb_pwd_file': 'passwords.xml'},
                'result': True,
                'comment': 'HANA installed'}
 
         mock_installed = MagicMock(return_value=False)
+        mock_cp = MagicMock()
         mock_create = MagicMock(return_value='hana_created.conf')
         mock_update = MagicMock(return_value='hana_updated.conf')
         mock_install = MagicMock()
         mock_remove = MagicMock()
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
+                                           'cp.get_file': mock_cp,
                                            'hana.create_conf_file': mock_create,
                                            'hana.update_conf_file': mock_update,
                                            'hana.install': mock_install,
@@ -192,10 +211,12 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             assert hanamod.installed(
                 'prd', 0, 'pass', '/software',
                 'root', 'pass',
-                system_user_password='sys_pass',
-                sapadm_password='pass',
+                hdb_pwd_file='passwords.xml',
                 extra_parameters=[{'hostname': 'hana01'}]) == ret
 
+            mock_cp.assert_called_once_with(
+                path='passwords.xml',
+                dest=hanamod.TMP_HDB_PWD_FILE)
             mock_create.assert_called_once_with(
                 software_path='/software',
                 conf_file=hanamod.TMP_CONFIG_FILE,
@@ -204,8 +225,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             mock_update.assert_has_calls([
                 mock.call(
                     conf_file='hana_created.conf', sid='PRD', number='00',
-                    password='pass', root_user='root', root_password='pass',
-                    sapadm_password='pass', system_user_password='sys_pass'),
+                    root_user='root'),
                 mock.call(
                     conf_file='hana_updated.conf',
                     extra_parameters={u'hostname': u'hana01'})
@@ -215,9 +235,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 software_path='/software',
                 conf_file='hana_updated.conf',
                 root_user='root',
-                root_password='pass')
+                root_password='pass',
+                hdb_pwd_file=hanamod.TMP_HDB_PWD_FILE)
             mock_remove.assert_has_calls([
-                mock.call(hanamod.TMP_CONFIG_FILE),
                 mock.call('{}.xml'.format(hanamod.TMP_CONFIG_FILE))
             ])
 
@@ -229,20 +249,27 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         ret = {'name': 'prd',
                'changes': {},
                'result': False,
-               'comment': 'If config_file is not provided '
+               'comment': 'If XML password file is not provided '
                           'system_user_password and sapadm_password are mandatory'}
 
         mock_installed = MagicMock(return_value=False)
+        mock_create = MagicMock(return_value='hana_created.conf')
 
         mock_remove = MagicMock()
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
+                                           'hana.create_conf_file': mock_create,
                                            'file.remove': mock_remove}):
             assert hanamod.installed(
                 'prd', '00', 'pass', '/software',
                 'root', 'pass') == ret
+            
+            mock_create.assert_called_once_with(
+                software_path='/software',
+                conf_file=hanamod.TMP_CONFIG_FILE,
+                root_user='root',
+                root_password='pass')
 
             mock_remove.assert_has_calls([
-                mock.call(hanamod.TMP_CONFIG_FILE),
                 mock.call('{}.xml'.format(hanamod.TMP_CONFIG_FILE))
             ])
 
@@ -252,44 +279,46 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         '''
 
         ret = {'name': 'prd',
-               'changes': {'config_file': 'new'},
+               'changes': {'config_file': 'new', 'hdb_pwd_file': 'passwords.xml'},
                'result': False,
                'comment': 'hana command error'}
 
         mock_installed = MagicMock(return_value=False)
+        mock_cp = MagicMock()
         mock_create = MagicMock(return_value='hana_created.conf')
         mock_update = MagicMock(return_value='hana_updated.conf')
         mock_install = MagicMock(
             side_effect=exceptions.CommandExecutionError('hana command error'))
         mock_remove = MagicMock()
         with patch.dict(hanamod.__salt__, {'hana.is_installed': mock_installed,
+                                           'cp.get_file': mock_cp,
                                            'hana.create_conf_file': mock_create,
                                            'hana.update_conf_file': mock_update,
                                            'hana.install': mock_install,
                                            'file.remove': mock_remove}):
             assert hanamod.installed(
                 'prd', '00', 'pass', '/software',
-                'root', 'pass',
-                sapadm_password='pass',
-                system_user_password='sys_pass') == ret
+                'root', 'pass', hdb_pwd_file='passwords.xml') == ret
 
             mock_create.assert_called_once_with(
                 software_path='/software',
                 conf_file=hanamod.TMP_CONFIG_FILE,
                 root_user='root',
                 root_password='pass')
+            mock_cp.assert_called_with(
+                path='passwords.xml',
+                dest=hanamod.TMP_HDB_PWD_FILE)
             mock_update.assert_called_once_with(
                     conf_file='hana_created.conf', sid='PRD', number='00',
-                    password='pass', root_user='root', root_password='pass',
-                    sapadm_password='pass', system_user_password='sys_pass')
+                    root_user='root')
 
             mock_install.assert_called_once_with(
                 software_path='/software',
                 conf_file='hana_updated.conf',
                 root_user='root',
-                root_password='pass')
+                root_password='pass',
+                hdb_pwd_file=hanamod.TMP_HDB_PWD_FILE)
             mock_remove.assert_has_calls([
-                mock.call(hanamod.TMP_CONFIG_FILE),
                 mock.call('{}.xml'.format(hanamod.TMP_CONFIG_FILE))
             ])
 
