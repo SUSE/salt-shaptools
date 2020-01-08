@@ -186,7 +186,7 @@ def installed(
         be changed setting then in the extra_parameters dictionary using the
         exact name as in the XML file as a key
     remove_pwd_files
-        If remove the XML password hdb_pwd_file after installation
+        If remove the XML password hdb_pwd_file after installation. True by default
     sapadm_password
         If the password in config file or hdb_pwd_file is not set, the sapadm_password is mandatory. The
         password of the sap administrator user
