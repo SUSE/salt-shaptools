@@ -104,6 +104,7 @@ def cluster_initialized(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        no_overwrite_sshkey=False,
         quiet=None):
     """
     Machine is running a cluster node
@@ -124,6 +125,9 @@ def cluster_initialized(
         sbd device path. To be used "sbd" parameter must be used too. If None,
             the sbd is set as diskless.
         This parameter can be a string (meaning one disk) or a list with multiple disks
+    no_overwrite_sshkey
+        No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
+        Only available after crmsh 3.0.0
     quiet:
         execute the command in quiet mode (no output)
     """
@@ -153,6 +157,7 @@ def cluster_initialized(
             admin_ip=admin_ip,
             sbd=sbd,
             sbd_dev=sbd_dev,
+            no_overwrite_sshkey=no_overwrite_sshkey,
             quiet=quiet)
 
         if result:
