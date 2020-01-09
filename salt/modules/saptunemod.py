@@ -28,6 +28,7 @@ __virtualname__ = 'saptune'
 
 SAPTUNE_BIN = '/usr/sbin/saptune'
 SAPTUNE_CONF = '/etc/sysconfig/saptune'
+MINIMAL_SAPTUNE_SUP_VERSION = '2.0.0'
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +37,13 @@ def __virtual__():
     Only load this module if saptune package is installed
     '''
     if bool(salt.utils.path.which(SAPTUNE_BIN)):
-        return __virtualname__
+        version = __salt__['pkg.version']('saptune')
+        # don't support older then 2.0
+        use_saptune_supported = __salt__['pkg.version_cmp'](version,
+            MINIMAL_SAPTUNE_SUP_VERSION) >= 0
+
+        if use_saptune_supported:
+          return __virtualname__
 
     else:
         return (

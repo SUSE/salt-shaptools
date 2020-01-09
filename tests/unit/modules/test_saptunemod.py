@@ -36,19 +36,29 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
 
     @mock.patch('salt.utils.path.which')
     def test_virtual_saptune(self, mock_which):
+        mock_pkg_version = MagicMock(return_value='2.0.0')
+        mock_pkg_version_cmp = MagicMock(return_value=2)
+
         mock_which.side_effect = [True, True]
-        assert saptune.__virtual__() == 'saptune'
-        mock_which.assert_called_once_with(saptune.SAPTUNE_BIN)
+        with patch.dict(saptune.__salt__, {
+                'pkg.version': mock_pkg_version,
+                'pkg.version_cmp': mock_pkg_version_cmp}):
+            assert saptune.__virtual__() == 'saptune'
+            mock_which.assert_called_once_with(saptune.SAPTUNE_BIN)
 
     @mock.patch('salt.utils.path.which')
     def test_virtual_saptune_error(self, mock_which):
-
+        mock_pkg_version = MagicMock(return_value='2.0.0')
+        mock_pkg_version_cmp = MagicMock(return_value=2)
         mock_which.side_effect = [False, True]
         response = saptune.__virtual__()
-        assert response == (
-            False, 'The saptune execution module failed to load: the saptune package'
-            ' is not available.')
-        mock_which.assert_called_once_with(saptune.SAPTUNE_BIN)
+        with patch.dict(saptune.__salt__, {
+                'pkg.version': mock_pkg_version,
+                'pkg.version_cmp': mock_pkg_version_cmp}):
+            assert response == (
+              False, 'The saptune execution module failed to load: the saptune package'
+              ' is not available.')
+            mock_which.assert_called_once_with(saptune.SAPTUNE_BIN)
 
     def test_is_solution_applied_return_false(self):
         '''

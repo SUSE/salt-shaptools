@@ -42,8 +42,7 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
                'result': True,
                'comment': 'Saptune solution applied'}
 
-        reponse = MagicMock(return_value=True)
-        with patch.dict(saptune.__salt__, {'saptune.apply_solution': reponse}):
-            assert saptune.apply_solution(
-                'fakesolution', {}, True, 'Saptune solution applied') == ret
+        response = MagicMock(return_value=True)
+        with patch.dict(saptune.__salt__, {'saptune.is_solution_applied': response}):
+            assert saptune.solution_applied('fakesolution')
 
