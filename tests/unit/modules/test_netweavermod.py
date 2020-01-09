@@ -312,6 +312,30 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         assert 'error running "ip address" command' in str(err.value)
 
     @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_update_conf_file(self, mock_netweaver):
+        '''
+        Test update_conf_file method - return
+        '''
+        mock_netweaver.update_conf_file.return_value = 'nw.inifile.params'
+        conf_file = netweavermod.update_conf_file(
+            'nw.inifile.params', sid='HA1', masterPwd='Suse1234')
+        assert u'nw.inifile.params' == conf_file
+        mock_netweaver.update_conf_file.assert_called_once_with(
+            'nw.inifile.params', sid='HA1', masterPwd='Suse1234')
+
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_update_conf_file_raise(self, mock_netweaver):
+        '''
+        Test update_conf_file method - raise
+        '''
+        mock_netweaver.update_conf_file.side_effect = IOError('netweaver error')
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            netweavermod.update_conf_file('nw.inifile.params', sid='HA1', masterPwd='Suse1234')
+        mock_netweaver.update_conf_file.assert_called_once_with(
+            'nw.inifile.params', sid='HA1', masterPwd='Suse1234')
+        assert 'netweaver error' in str(err.value)
+
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
     def test_install(self, mock_netweaver):
         '''
         Test install method - return
