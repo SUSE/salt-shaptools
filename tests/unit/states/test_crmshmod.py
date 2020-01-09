@@ -177,6 +177,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                no_overwrite_sshkey=True,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
             mock_init.assert_called_once_with(
@@ -187,6 +188,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                no_overwrite_sshkey=True,
                 quiet=False)
 
     def test_initialized_error(self):
@@ -211,6 +213,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                no_overwrite_sshkey=True,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
             mock_init.assert_called_once_with(
@@ -221,6 +224,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                no_overwrite_sshkey=True,
                 quiet=False)
 
     def test_initialized_command_error(self):
@@ -246,6 +250,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                no_overwrite_sshkey=False,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
             mock_init.assert_called_once_with(
@@ -256,6 +261,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                no_overwrite_sshkey=False,
                 quiet=False)
 
     # 'joined' function tests

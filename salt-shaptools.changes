@@ -1,8 +1,50 @@
 -------------------------------------------------------------------
-Tue Nov 12 19:58:14 UTC 2019 - Simranpal Singh <simranpal.singh@suse.com>
+Wed Jan  8 16:45:18 UTC 2020 - Simranpal Singh <simranpal.singh@suse.com>
 
-- Create package version 0.2.4. Add module fn to update nw installation
-  conf files
+- Version 0.2.11
+  * Add functionality to install hana with xml passwords file
+
+-------------------------------------------------------------------
+Wed Jan 08 10:16:53 UTC 2020 - Xabier Arbulu <xarbulu@suse.com>
+
+- Version 0.2.10
+  Add crmsh --no-overwrite-sshkeys option 
+
+-------------------------------------------------------------------
+Mon Dec 23 07:39:31 UTC 2019 - nick wang <nwang@suse.com>
+
+- Version 0.2.9
+  * DRBD: refactory check_sync_status to avoid call drbdsetup
+    multiple times
+
+-------------------------------------------------------------------
+Fri Dec 20 09:12:51 UTC 2019 - nick wang <nwang@suse.com>
+
+- Version 0.2.8
+  * DRBD: check unfinished request in sync status via json
+
+-------------------------------------------------------------------
+Mon Dec 16 09:31:18 UTC 2019 - Xabier Arbulu <xarbulu@suse.com>
+
+- Version 0.2.7
+  * Add automatic cloud detection method to the salt module 
+
+-------------------------------------------------------------------
+Wed Dec 11 10:16:53 UTC 2019 - Xabier Arbulu <xarbulu@suse.com>
+
+- Version 0.2.6
+  * Add option to configure multiple sbd disks
+
+-------------------------------------------------------------------
+Tue Dec  3 06:41:36 UTC 2019 - nick wang <nwang@suse.com>
+
+- Version 0.2.5
+  DRBD: support to get status via json format by default.
+
+-------------------------------------------------------------------
+Thu Nov 21 09:05:07 UTC 2019 - nick wang <nwang@suse.com>
+
+- Version 0.2.4, fix error parsing drbd status when congested.
 
 -------------------------------------------------------------------
 Mon Nov  5 08:48:50 UTC 2019 - nick wang <nwang@suse.com>
@@ -13,13 +55,13 @@ Mon Nov  5 08:48:50 UTC 2019 - nick wang <nwang@suse.com>
 Thu Oct 31 14:58:19 UTC 2019 - Xabier Arbulu <xarbulu@suse.com>
 
 - Create package version 0.2.2 updating how additional_dvds is used
-  in netweavermod 
+  in netweavermod
 
 -------------------------------------------------------------------
 Wed Aug  7 12:54:03 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>
 
 - Create first salt modules and states to manage SAP Netweaver
-  * Install ASCS SAP instance in a idempotent way 
+  * Install ASCS SAP instance in a idempotent way
 
 -------------------------------------------------------------------
 Tue Jun 11 11:34:25 UTC 2019 - Xabier Arbulu Insausti <xarbulu@suse.com>

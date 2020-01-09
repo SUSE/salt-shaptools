@@ -50,9 +50,6 @@ def __virtual__():
         version = __salt__['pkg.version'](CRMSH)
         use_crm = __salt__['pkg.version_cmp'](
             version, CRM_NEW_VERSION) >= 0
-        LOGGER.info('crmsh version: %s', version)
-        LOGGER.info(
-            '%s will be used', 'crm' if use_crm else 'ha-cluster')
 
     else:
         return (
@@ -66,7 +63,8 @@ def __virtual__():
             'The crmsh execution module failed to load: the ha-cluster-init'
             ' package is not available.')
 
-    __salt__['crmsh.version'] = use_crm
+    __salt__['crm.version'] = version
+    __salt__['crm.use_crm'] = use_crm
     return __virtualname__
 
 
@@ -290,6 +288,7 @@ def _crm_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        no_overwrite_sshkey=False,
         quiet=None):
     '''
     crm cluster init command execution
@@ -307,7 +306,10 @@ def _crm_init(
     if sbd:
         cmd = '{cmd} --enable-sbd'.format(cmd=cmd)
         if sbd_dev:
-            cmd = '{cmd} -s {sbd_dev}'.format(cmd=cmd, sbd_dev=sbd_dev)
+            sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
+            cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
+    if no_overwrite_sshkey:
+        cmd = '{cmd} --no-overwrite-sshkey'.format(cmd=cmd)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
@@ -337,7 +339,8 @@ def _ha_cluster_init(
     if sbd:
         cmd = '{cmd} -S'.format(cmd=cmd)
         if sbd_dev:
-            cmd = '{cmd} -s {sbd_dev}'.format(cmd=cmd, sbd_dev=sbd_dev)
+            sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
+            cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
@@ -349,6 +352,44 @@ def _ha_cluster_init(
     return return_code
 
 
+def _manage_multiple_sbd(sbd_enabled, sbd_dev):
+    '''
+    crmsh doesn't support multiple sbd disk usage by now. This method workaround this scenario
+    modifying the /etc/syconfig/sbd file before running crmsh
+    '''
+    # sbd disks are managed as list, but individual disk is accepted to be more compatible
+    if sbd_dev and not isinstance(sbd_dev, list):
+        sbd_dev = [sbd_dev]
+
+    # return sbd_dev
+
+    if not sbd_enabled or not sbd_dev or len(sbd_dev) == 1:
+        return sbd_enabled, sbd_dev
+
+    LOGGER.warning('crmsh will say that sbd is not configured')
+
+    sbd_str = ' '.join(['-d {}'.format(sbd) for sbd in sbd_dev])
+    cmd = 'sbd {disks} create'.format(disks=sbd_str)
+    return_code = __salt__['cmd.retcode'](cmd)
+    if return_code:
+        raise exceptions.SaltInvocationError('sbd disks could not be formatted properly')
+
+    cmd = '{crm_command} cluster init sbd -s {sbd}'.format(crm_command=CRM_COMMAND, sbd=sbd_dev[0])
+    return_code = __salt__['cmd.retcode'](cmd)
+    if return_code:
+        raise exceptions.SaltInvocationError('crm cluster init sbd failed')
+
+    __salt__['file.replace'](
+        path='/etc/sysconfig/sbd',
+        pattern='^SBD_DEVICE=.*',
+        repl='SBD_DEVICE={}'.format(';'.join(sbd_dev)),
+        append_if_not_found=True
+    )
+
+    # return None, None to avoid sbd configuration in crmsh
+    return None, None
+
+
 def cluster_init(
         name,
         watchdog=None,
@@ -357,6 +398,7 @@ def cluster_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        no_overwrite_sshkey=False,
         quiet=None):
     '''
     Initialize a cluster from scratch.
@@ -378,6 +420,9 @@ def cluster_init(
     sbd_dev
         sbd device path. To be used "sbd" parameter must be used too. If None,
             the sbd is set as diskless.
+    no_overwrite_sshkey
+        No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
+        Only available after crmsh 3.0.0
     quiet:
         execute the command in quiet mode (no output)
 
@@ -387,13 +432,18 @@ def cluster_init(
 
         salt '*' crm.cluster_init hacluster
     '''
+    # Workaournd while multiple sbd disks are not supported by crmsh
+    sbd, sbd_dev = _manage_multiple_sbd(sbd, sbd_dev)
+
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __salt__['crmsh.version']:
+    if __salt__['crm.use_crm']:
         return _crm_init(
-            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
+            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey, quiet)
 
-    LOGGER.warn('The parameter name is not considered!')
+    LOGGER.warning('The parameter name is not considered!')
+    LOGGER.warning('--no_overwrite_sshkey option not available')
+
     return _ha_cluster_init(
         watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
@@ -475,7 +525,7 @@ def cluster_join(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
-    if __salt__['crmsh.version']:
+    if __salt__['crm.use_crm']:
         return _crm_join(host, watchdog, interface, quiet)
 
     return _ha_cluster_join(host, watchdog, interface, quiet)
@@ -542,3 +592,32 @@ def configure_load(
         method=method, url=url)
 
     return __salt__['cmd.retcode'](cmd)
+
+
+def detect_cloud():
+    '''
+    Detect if crmsh is being executed in some cloud provider
+
+    INFO: The code is implemented this way because crmsh is still using python2 in
+    SLE12SP3 and python3 beyond, but salt is running python2 until SLE15, so SLE12SP4 breaks
+    the rule.
+
+    Otherwise we could just use:
+    from crmsh import utils
+    return utils.detect_cloud()
+
+    These are the currently known platforms:
+    * amazon-web-services
+    * microsoft-azure
+    * google-cloud-platform
+    * None (as string)(otherwise)
+    '''
+    if int(__salt__['crm.version'][0]) <= 3:
+        version = 'python'
+    else:
+        version = 'python3'
+
+    cmd = '{version} -c "from crmsh import utils; print(utils.detect_cloud());"'.format(
+        version=version)
+    provider = __salt__['cmd.run'](cmd).strip()
+    return provider

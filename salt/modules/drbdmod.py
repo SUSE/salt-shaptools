@@ -30,6 +30,12 @@ LOGGER = logging.getLogger(__name__)
 __virtualname__ = 'drbd'
 
 DRBD_COMMAND = 'drbdadm'
+ERR_STR = 'UNKNOWN'
+DUMMY_STR = 'IGNORED'
+WITH_JSON = True
+DRBDADM = 'drbd-utils'
+# drbd-utils >= 9.0.0 for json status
+DRBDADM_JSON_VERSION = '9.0.0'
 
 
 def __virtual__():  # pragma: no cover
@@ -37,6 +43,14 @@ def __virtual__():  # pragma: no cover
     Only load this module if drbdadm(drbd-utils) is installed
     '''
     if bool(salt.utils.path.which(DRBD_COMMAND)):
+        __salt__['drbd.json'] = WITH_JSON
+
+        version = __salt__['pkg.version'](DRBDADM)
+        json_support = __salt__['pkg.version_cmp'](version,
+            DRBDADM_JSON_VERSION) >= 0
+        if not json_support:
+            __salt__['drbd.json'] = False
+
         return __virtualname__
     return (
         False,
@@ -85,10 +99,12 @@ def _analyse_status_type(line):
     switch = {
         0: 'RESOURCE',
         2: {' disk:': 'LOCALDISK', ' role:': 'PEERNODE', ' connection:': 'PEERNODE'},
-        4: {' peer-disk:': 'PEERDISK'}
+        4: {' peer-disk:': 'PEERDISK'},
+        6: DUMMY_STR,
+        8: DUMMY_STR,
     }
 
-    ret = switch.get(spaces, 'UNKNOWN')
+    ret = switch.get(spaces, ERR_STR)
 
     # isinstance(ret, str) only works when run directly, calling need unicode(six)
     if isinstance(ret, six.text_type):
@@ -97,6 +113,9 @@ def _analyse_status_type(line):
     for x in ret:
         if x in line:
             return ret[x]
+
+    # Doesn't find expected KEY in support indent
+    return ERR_STR
 
 
 def _add_res(line):
@@ -171,7 +190,7 @@ def _add_peernode(line):
 
 def _empty(dummy):
     '''
-    Action of empty line of ``drbdadm status``
+    Action of empty line or extra verbose info of ``drbdadm status``
     '''
 
 
@@ -179,7 +198,7 @@ def _unknown_parser(line):
     '''
     Action of unsupported line of ``drbdadm status``
     '''
-    __context__['drbd.statusret'] = {"Unknown parser": line}
+    raise CommandExecutionError('The unknown line:\n' + line)
 
 
 def _line_parser(line):
@@ -195,6 +214,8 @@ def _line_parser(line):
         'PEERNODE': _add_peernode,
         'LOCALDISK': _add_volume,
         'PEERDISK': _add_volume,
+        DUMMY_STR: _empty,
+        ERR_STR: _unknown_parser,
     }
 
     func = switch.get(section, _unknown_parser)
@@ -202,50 +223,61 @@ def _line_parser(line):
     func(line)
 
 
-def _is_local_all_uptodated(name):
+def _is_local_all_uptodated(res, output):
     '''
-    Check whether all local volumes are UpToDate.
+    Check whether all local volumes of given resource are UpToDate.
     '''
 
-    res = status(name)
-    if not res:
-        return False
-
-    # Since name is not all, res only have one element
-    for vol in res[0]['local volumes']:
-        if vol['disk'] != 'UpToDate':
+    for vol in res[output["volume"]]:
+        if vol[output["state"]] != 'UpToDate':
             return False
 
     return True
 
 
-def _is_peers_uptodated(name, peernode='all'):
+def _is_peers_uptodated(res, output, peernode='all'):
     '''
-    Check whether all volumes of peer node are UpToDate.
+    Check whether all volumes of peer node of given resource are UpToDate.
 
     .. note::
 
         If peernode is not match, will return None, same as False.
     '''
-    ret = None
+    ret = False
 
-    res = status(name)
-    if not res:
-        return ret
-
-    # Since name is not all, res only have one element
-    for node in res[0]['peer nodes']:
-        if peernode != 'all' and node['peernode name'] != peernode:
+    for node in res[output["connection"]]:
+        if peernode != 'all' and node[output["peer_node"]] != peernode:
             continue
 
-        for vol in node['peer volumes']:
-            if vol['peer-disk'] != 'UpToDate':
+        for vol in node[output["peer_node_vol"]]:
+            if vol[output["peer_node_state"]] != 'UpToDate':
                 return False
             else:
                 # At lease one volume is 'UpToDate'
                 ret = True
 
     return ret
+
+
+def _is_no_backing_dev_request(res, output):
+    '''
+    Check whether all volumes have no unfinished backing device request.
+    Only working when json status supported.
+
+    Metadata still need to sync to disk after state changed.
+    Only reply to sync target to change when I/O request finished,
+    which is unpredictable. Local refernece count is not 0 before endio.
+
+    '''
+    if not __salt__['drbd.json']:
+        return True
+
+    # Since name is not all, res only have one element
+    for vol in res[output["volume"]]:
+        if int(vol[output["local_cnt"]]) != 0:
+            return False
+
+    return True
 
 
 def overview():
@@ -365,8 +397,13 @@ def status(name='all'):
         LOGGER.info('No status due to %s (%s).', result['stderr'], result['retcode'])
         return None
 
-    for line in result['stdout'].splitlines():
-        _line_parser(line)
+    try:
+        for line in result['stdout'].splitlines():
+            _line_parser(line)
+    except CommandExecutionError as err:
+        raise CommandExecutionError('UNKNOWN status output format found',
+                                    info=(result['stdout'] + "\n\n" +
+                                    six.text_type(err)))
 
     if __context__['drbd.resource']:
         __context__['drbd.statusret'].append(__context__['drbd.resource'])
@@ -596,18 +633,13 @@ def setup_status(name='all'):
         salt '*' drbd.setup_status name=<resource name>
     '''
 
-    ret = {'name': name,
-           'result': False,
-           'comment': ''}
-
     cmd = 'drbdsetup status --json {}'.format(name)
 
     results = __salt__['cmd.run_all'](cmd)
 
     if 'retcode' not in results or results['retcode'] != 0:
-        ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
-            results['retcode'])
-        return ret
+        LOGGER.info('No drbdsetup status due to %s (%s).', results['stderr'], results['retcode'])
+        return None
 
     try:
         ret = salt.utils.json.loads(results['stdout'], strict=False)
@@ -616,6 +648,30 @@ def setup_status(name='all'):
                                     info=results)
 
     return ret
+
+
+# Define OUTPUT_OPTIONS after setup_status() and status() defined
+OUTPUT_OPTIONS = {
+  "json": {
+    "volume": "devices",
+    "state": "disk-state",
+    "connection": "connections",
+    "peer_node": "name",
+    "peer_node_vol": "peer_devices",
+    "peer_node_state": "peer-disk-state",
+    "local_cnt": "lower-pending",
+    "get_res_func": setup_status
+  },
+  "text": {
+    "volume": "local volumes",
+    "state": "disk",
+    "connection": "peer nodes",
+    "peer_node": "peernode name",
+    "peer_node_vol": "peer volumes",
+    "peer_node_state": "peer-disk",
+    "get_res_func": status
+  }
+}
 
 
 def check_sync_status(name, peernode='all'):
@@ -636,8 +692,22 @@ def check_sync_status(name, peernode='all'):
 
         salt '*' drbd.check_sync_status <resource name> <peernode name>
     '''
-    if _is_local_all_uptodated(name) and _is_peers_uptodated(
-            name, peernode=peernode):
+    if __salt__['drbd.json']:
+        output = OUTPUT_OPTIONS['json']
+    else:
+        output = OUTPUT_OPTIONS['text']
+
+    # Need a specific node name instead of `all`. res should only have one element
+    resources = output["get_res_func"](name)
+
+    if not resources:
+        return False
+
+    res = resources[0]
+
+    if _is_local_all_uptodated(res, output) and _is_peers_uptodated(
+            res, output, peernode=peernode) and _is_no_backing_dev_request(
+            res, output):
         return True
 
     return False
