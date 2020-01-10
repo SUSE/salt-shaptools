@@ -32,17 +32,44 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
         return {saptune: {'__opts__': {'test': False}}}
 
 
-    def test_solution_applied(self):
+    def test_solution_applied_true(self):
         '''
-        Test solution is applied method
+        Test solution is applied method true
         '''
+        solution_name = 'normalmode'
+        expected_ret = { 'changes': {}, 
+          'result': True,
+          'name': solution_name,
+          'comment': "Saptune {} solution is already applied".format(solution_name)} 
+        expected_ret2 = { 'changes': {}, 
+          'result': False,
+          'name': solution_name,
+          'comment': 'Saptune solution was not applied correctly. Perhaps an already applied solution need to be reverted first'}
+          
+        sol_applied_resp = MagicMock(return_value=True)
+        with patch.dict(saptune.__salt__, {'saptune.is_solution_applied': sol_applied_resp}):
+            assert saptune.solution_applied(solution_name) == expected_ret
 
-        ret = {'name': 'fakesolution',
-               'changes': {},
-               'result': True,
-               'comment': 'Saptune solution applied'}
+        sol_applied_resp = MagicMock(return_value=False)
+        apply_sol_response = MagicMock(return_value=True)
+        with patch.dict(saptune.__salt__, {'saptune.is_solution_applied': sol_applied_resp, 'saptune.apply_solution': apply_sol_response}):
+                assert saptune.solution_applied(solution_name) == expected_ret2
+    
 
-        response = MagicMock(return_value=True)
+    def test_solution_applied_test_mode(self):
+        '''
+        Test solution is applied method false
+        '''
+        solution_name = 'testmode'
+        expected_ret = {'changes': {'name': solution_name},
+               'result': None,
+               'name':  solution_name,
+               'comment': "Saptune {} solution would be applied".format(solution_name)}
+
+        response = MagicMock(return_value=False)
+     
         with patch.dict(saptune.__salt__, {'saptune.is_solution_applied': response}):
-            assert saptune.solution_applied('fakesolution')
+            with patch.dict(saptune.__opts__, {'test': True}):
+              ret = saptune.solution_applied(solution_name)
+              assert ret == expected_ret
 

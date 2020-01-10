@@ -6,14 +6,10 @@ Module to provide Saptune functionality to Salt
 
 :maintainer:    Dario Maiocchi <dmaiocchi@suse.com>
 :maturity:      alpha
-:depends:       ``saptune`` Python module
+:depends:       ``saptune`` package
 :platform:      all
 
-:configuration: This module requires the saptune python module and uses the
-    following defaults which may be overridden in the minion configuration:
-
-.. code-block:: yaml
- TODO
+:configuration: This module requires the saptune package
 '''
 
 # Import Python libs
@@ -45,11 +41,10 @@ def __virtual__():
         if use_saptune_supported:
           return __virtualname__
 
-    else:
-        return (
+    return (
             False,
             'The saptune execution module failed to load: the saptune package'
-            ' is not available.')
+            ' is not available, or the version is older than {}'.format(MINIMAL_SAPTUNE_SUP_VERSION))
 
 def is_solution_applied(solution_name):
     '''

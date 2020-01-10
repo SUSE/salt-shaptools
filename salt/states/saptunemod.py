@@ -33,6 +33,10 @@ def __virtual__():  # pragma: no cover
 def solution_applied(name):
     """
     Apply a saptune solution
+
+    solution_name
+        Solution to be applied by saptune
+
     """
     ret = {'name': name,
            'changes': {},
@@ -41,7 +45,7 @@ def solution_applied(name):
 
     if __salt__['saptune.is_solution_applied'](solution_name=name):
         ret['result'] = True
-        ret['comment'] = 'Saptune solution is already applied'
+        ret['comment'] = 'Saptune {} solution is already applied'.format(name)
         return ret
 
     if __opts__['test']:
@@ -51,14 +55,20 @@ def solution_applied(name):
         return ret
 
     try:
+
         #  Here starts the actual process
         result = __salt__['saptune.apply_solution'](solution_name=name)
-
-        if result:
-            ret['changes']['name'] = name
+        
+        if not result:
             ret['comment'] = 'Error appling saptune solution'
             ret['result'] = False
             return ret
+
+        # check if the solution was applied or not (if an already is applied we can't apply a new one)
+        if not __salt__['saptune.is_solution_applied'](solution_name=name):
+          ret['result'] = False
+          ret['comment'] = 'Saptune solution was not applied correctly. Perhaps an already applied solution need to be reverted first'
+          return ret
 
         ret['changes']['name'] = name
         ret['comment'] = 'Saptune solution applied'
