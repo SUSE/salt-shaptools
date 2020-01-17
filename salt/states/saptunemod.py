@@ -58,8 +58,9 @@ def solution_applied(name):
 
         #  Here starts the actual process
         result = __salt__['saptune.apply_solution'](solution_name=name)
-        
-        if not result:
+       
+        # result is not null 0, so we have error
+        if result:
             ret['comment'] = 'Error appling saptune solution'
             ret['result'] = False
             return ret
