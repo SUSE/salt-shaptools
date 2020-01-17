@@ -23,6 +23,7 @@ from salt.ext import six
 
 __virtualname__ = 'saptune'
 
+
 def __virtual__():  # pragma: no cover
     '''
     Only load if the saptune module is in __salt__
@@ -67,9 +68,9 @@ def solution_applied(name):
 
         # check if the solution was applied or not (if an already is applied we can't apply a new one)
         if not __salt__['saptune.is_solution_applied'](solution_name=name):
-          ret['result'] = False
-          ret['comment'] = 'Saptune solution was not applied correctly. Perhaps an already applied solution need to be reverted first'
-          return ret
+            ret['result'] = False
+            ret['comment'] = 'Saptune solution was not applied correctly. Perhaps an already applied solution need to be reverted first'
+            return ret
 
         ret['changes']['name'] = name
         ret['comment'] = 'Saptune solution applied'
