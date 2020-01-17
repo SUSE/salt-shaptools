@@ -86,6 +86,20 @@ sudo chmod 755 tests/run.sh
 ./tests/run.sh
 ```
 
+4) Running your modules/states:
+
+For testing/running modules:
+
+```
+salt-call --local saptune.apply_solution "SAP-ASE"
+
+```
+
+For testing/running states:
+```
+salt-call --local state.single saptune.solution_applied "HANA"
+```
+
 
 ## Dependencies
 

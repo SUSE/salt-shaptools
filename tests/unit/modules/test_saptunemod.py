@@ -41,6 +41,7 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
         except:
             pass
 
+
     @mock.patch('salt.utils.path.which')
     def test_virtual_saptune(self, mock_which):
         mock_pkg_version = MagicMock(return_value='2.0.0')
@@ -68,7 +69,8 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
         assert saptune.__virtual__() == (
             False, 'The saptune execution module failed to load: the saptune package'
              ' is not available, or the version is older than 2.0.0')
-    
+
+
     def test_is_solution_applied_return_false(self):
         '''
         Test is_solution_applied method return false
@@ -79,12 +81,15 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
             # we don't find the solution foo in file so it should be false
         assert not saptune.is_solution_applied('foo')
 
+
     def test_is_solution_applied_return_true(self):
         '''
         Test is_solution_applied method return true
         '''
         solution_name = 'ok_solution'
         saptune.SAPTUNE_CONF = FAKE_SAPTUNE_CONF
+
+
     def test_is_solution_applied_return_false(self):
         '''
         Test is_solution_applied method return false
@@ -94,6 +99,7 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
             conf.write("NO_SOLUTION")
             # we don't find the solution foo in file so it should be false
         assert not saptune.is_solution_applied('foo')
+
 
     def test_is_solution_applied_return_true(self):
         '''
@@ -105,6 +111,7 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
             conf.write("TUNE_FOR_SOLUTIONS=\"{}\"".format(solution_name))
         assert saptune.is_solution_applied(solution_name)
 
+
     def test_apply_solution(self):
         '''
         Test apply solution method 
@@ -113,6 +120,7 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
         mock_cmd = MagicMock(return_value=True)
         with patch.dict(saptune.__salt__, {'cmd.retcode': mock_cmd}):
             assert saptune.apply_solution('foo')
+
 
     def test_apply_solution_false(self):
         '''
