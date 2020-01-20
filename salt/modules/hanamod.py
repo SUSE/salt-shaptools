@@ -162,12 +162,37 @@ def update_conf_file(
     except IOError as err:
         raise exceptions.CommandExecutionError(err)
 
+def update_hdb_pwd_file(
+        hdb_pwd_file,
+        **extra_parameters):
+    '''
+    Update SAP HANA XML password file
+
+    hdb_pwd_file
+        Path to the existing XML password file
+    extra_parameters (dict): Dictionary with the values to be updated. Use the exact
+        name of the SAP XML password file for the key
+
+    Returns:
+        str: XML password file path
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.update_hdb_pwd_file /root /root/hdb_passwords.xml sapadm_password=DummyPasswd
+    '''
+    try:
+        return hana.HanaInstance.update_hdb_pwd_file(hdb_pwd_file, **extra_parameters)
+    except IOError as err:
+        raise exceptions.CommandExecutionError(err)
 
 def install(
         software_path,
         conf_file,
         root_user,
-        root_password):
+        root_password,
+        hdb_pwd_file=None):
     '''
     Install SAP HANA with configuration file
 
@@ -179,16 +204,17 @@ def install(
         Root user name
     root_password
         Root user password
-
+    hdb_pwd_file
+        Path where XML password file exists(optional)
     CLI Example:
 
     .. code-block:: bash
 
-        salt '*' hana.install /installation_path /home/myuser/hana.conf root root
+        salt '*' hana.install /installation_path /home/myuser/hana.conf root root /root/hdb_passwords.xml
     '''
     try:
         hana.HanaInstance.install(
-            software_path, conf_file, root_user, root_password)
+            software_path, conf_file, root_user, root_password, hdb_pwd_file)
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 

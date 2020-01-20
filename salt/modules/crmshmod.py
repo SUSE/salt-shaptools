@@ -288,6 +288,7 @@ def _crm_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        no_overwrite_sshkey=False,
         quiet=None):
     '''
     crm cluster init command execution
@@ -307,6 +308,8 @@ def _crm_init(
         if sbd_dev:
             sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
             cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
+    if no_overwrite_sshkey:
+        cmd = '{cmd} --no-overwrite-sshkey'.format(cmd=cmd)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
@@ -395,6 +398,7 @@ def cluster_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        no_overwrite_sshkey=False,
         quiet=None):
     '''
     Initialize a cluster from scratch.
@@ -416,6 +420,9 @@ def cluster_init(
     sbd_dev
         sbd device path. To be used "sbd" parameter must be used too. If None,
             the sbd is set as diskless.
+    no_overwrite_sshkey
+        No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
+        Only available after crmsh 3.0.0
     quiet:
         execute the command in quiet mode (no output)
 
@@ -432,9 +439,11 @@ def cluster_init(
     # and create the corresponing UT
     if __salt__['crm.use_crm']:
         return _crm_init(
-            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
+            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey, quiet)
 
     LOGGER.warning('The parameter name is not considered!')
+    LOGGER.warning('--no_overwrite_sshkey option not available')
+
     return _ha_cluster_init(
         watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
 
