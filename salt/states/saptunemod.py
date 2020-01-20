@@ -59,7 +59,7 @@ def solution_applied(name):
 
         #  Here starts the actual process
         result = __salt__['saptune.apply_solution'](solution_name=name)
-       
+
         # result is not null 0, so we have error
         if result:
             ret['comment'] = 'Error appling saptune solution'
@@ -69,7 +69,8 @@ def solution_applied(name):
         # check if the solution was applied or not (if an already is applied we can't apply a new one)
         if not __salt__['saptune.is_solution_applied'](solution_name=name):
             ret['result'] = False
-            ret['comment'] = 'Saptune solution was not applied correctly. Perhaps an already applied solution need to be reverted first'
+            ret['comment'] = 'Saptune solution was not applied correctly. Perhaps an already '\
+                'applied solution need to be reverted first'
             return ret
 
         ret['changes']['name'] = name
