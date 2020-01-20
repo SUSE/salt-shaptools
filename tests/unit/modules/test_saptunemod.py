@@ -59,16 +59,15 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
             False, 'The saptune execution module failed to load: the saptune'
                     ' package is not available, or the version is older than 2.0.0')
 
-    @mock.patch("salt.modules.saptunemod.is_solution_applied.open", create=True)
-    def test_is_solution_applied_return_false(self, mock_open):
+    @mock.patch("salt.modules.saptunemod.open")
+    def test_is_solution_applied(self, mock_open):
         '''
         Test is_solution_applied method return false
         '''
-        sol_name = 'false_solution'
+        sol_name = 'ok_solution'
         mock_open(read_data="TUNE_FOR_SOLUTIONS=\"{}\"".format(sol_name))
         assert saptune.is_solution_applied(sol_name)
-        assert not saptune.is_solution_applied('foo')
-
+        
     def test_apply_solution(self):
         '''
         Test apply solution method
