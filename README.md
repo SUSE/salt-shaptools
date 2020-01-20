@@ -23,7 +23,7 @@ sudo salt-call --local -m modules hana.is_installed
 To run the state modules (there is a demo example in the demo folder) run:
 ```bash
 cd salt-shaptools
-sudo salt-call --local --retcode-passthrough -l debug -m . state.template demo/primary.sls
+sudo salt-call --retcode-passthrough -l debug -m . state.template demo/primary.sls
 ```
 
 ### Run in minions
@@ -33,12 +33,15 @@ To run the module funcionalities in the minions:
 2. Copy the content of **states** in your "salt://_states/" (by default /srv/salt/_states)
 3. Synchronize modules with the minions. For that run:
 ```bash
-sudo salt '*' saltutil.sync_states
+sudo salt-call  saltutil.sync_all
 ```
 4. Execute the module functionalities. For that run:
 ```bash
 sudo salt-call hana.is_installed
 ```
+## Writing unit test
+
+You can have look at: https://docs.saltstack.com/en/latest/topics/development/tests/unit.html
 
 ## How to run the tests
 Salt has a quite particular way to execute the tests. As a summary, tests are splitted
@@ -51,17 +54,29 @@ tests folder sub-folder (integration or unit, for example). By now, as the proje
 is in a separated repository, the easiest way is to copy our project code to a
 actual salt repository and run the tests. For that follow the next instructions:
 
-1. Download the salt project in the same folder of this project:
+1. Download 2 **needed extra projects**: (saltstack and shaptools)
+
 ```bash
-git clone git@github.com:saltstack/salt.git
+git clone --depth=50 https://github.com/openSUSE/salt 
+git clone https://github.com/SUSE/shaptools.git
 ```
-2. Create a virtual environment (python2 must be used here) and install dependencies:
+
+Your directory layout should looks like ( all the 3 dirs are in same three dir level)
+```
+- salt-shaptools
+- salt
+- shaptools
+```
+
+
+2. Create a virtual environment, inside the `salt-shaptools` dir  and install dependencies:
 ```bash
 virtualenv saltvirtenv
 source saltvirtenv/bin/activate
-pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock
-pip install -e salt
-pip install -e shaptools #put the correct path
+pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov
+pip install -e ../salt
+pip install -e ../shaptools
+rm ../salt/tests/conftest.py # remove this file from the saltstack repo
 ```
 
 3. Run the tests. For that:
@@ -70,6 +85,21 @@ cd salt-shaptools
 sudo chmod 755 tests/run.sh
 ./tests/run.sh
 ```
+
+4) Running your modules/states:
+
+For testing/running modules:
+
+```
+salt-call --local saptune.apply_solution "SAP-ASE"
+
+```
+
+For testing/running states:
+```
+salt-call --local state.single saptune.solution_applied "HANA"
+```
+
 
 ## Dependencies
 
