@@ -18,6 +18,7 @@ import logging
 
 from salt import exceptions
 import salt.utils.path
+import salt.utils.files
 
 
 __virtualname__ = 'saptune'
@@ -55,7 +56,7 @@ def is_solution_applied(solution_name):
     solution_to_search = "TUNE_FOR_SOLUTIONS=\"{}\"".format(solution_name)
 
     # open the config file and search if the solution is enabled
-    with open(SAPTUNE_CONF) as conf:
+    with salt.utils.files.fopen(SAPTUNE_CONF) as conf:
         if solution_to_search in conf.read():
             return True
     return False

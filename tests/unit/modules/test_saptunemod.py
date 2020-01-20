@@ -14,6 +14,7 @@ from tests.support import mock
 from tests.support.mock import (
     MagicMock,
     patch,
+    mock_open,
     NO_MOCK,
     NO_MOCK_REASON
 )
@@ -57,21 +58,26 @@ class SaptuneModuleTest(TestCase, LoaderModuleMockMixin):
         mock_which.return_value = False
         assert saptune.__virtual__() == (
             False, 'The saptune execution module failed to load: the saptune'
-                    ' package is not available, or the version is older than 2.0.0')
+            ' package is not available, or the version is older than 2.0.0')
 
     def test_is_solution_applied(self):
         '''
-        Test is_solution_applied method 
+        Test is_solution_applied method
         '''
+
+        builtin_name = "salt.utils.files.fopen"
+
         sol_name = "foo"
-        open_name = "salt.modules.saptunemod.is_solution_applied.open"
-        filepath = '/tmp/saptune'
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=filepath)
-            with open(filepath, 'w') as f:
-                f.write(sol_name)
-                assert saptune.is_solution_applied(sol_name)
-            
+        file_content = "TUNE_FOR_SOLUTIONS=\"foo\""
+        with patch(builtin_name, mock_open(read_data=file_content)) as mock_file:
+            assert saptune.is_solution_applied(sol_name)
+            mock_file.assert_called_once_with(saptune.SAPTUNE_CONF)
+
+        file_content = "TUNE_FOR_SOLUTIONS=\"baz\""
+        with patch(builtin_name, mock_open(read_data=file_content)) as mock_file:
+            assert not saptune.is_solution_applied(sol_name)
+            mock_file.assert_called_once_with(saptune.SAPTUNE_CONF)
+
     def test_apply_solution(self):
         '''
         Test apply solution method
