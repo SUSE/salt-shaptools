@@ -31,7 +31,6 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
     def setup_loader_modules(self):
         return {saptune: {'__opts__': {'test': False}}}
 
-
     def test_solution_applied_true(self):
         '''
         Test solution is applied method true
@@ -54,7 +53,6 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
                                             'saptune.apply_solution': MagicMock(return_value=0)}):
                 assert saptune.solution_applied(solution_name) == expected_ret2
 
-
     def test_solution_applied_already(self):
         '''
         Test solution is applied method already
@@ -69,8 +67,7 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(saptune.__salt__, {'saptune.is_solution_applied': MagicMock(return_value=False), 
                                            'saptune.apply_solution': MagicMock(return_value=0)}):
                 assert saptune.solution_applied(solution_name) == expected_ret
-    
-    
+        
     def test_solution_applied_error(self):
         '''
         Test solution is applied method error
@@ -85,7 +82,6 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
                                             'saptune.apply_solution': MagicMock(return_value=1)}):
             assert saptune.solution_applied(solution_name) == expected_ret
     
-    
     def test_solution_applied_test_mode(self):
         '''
         Test solution is applied method false
@@ -97,16 +93,15 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
                'comment': "Saptune {} solution would be applied".format(solution_name)}
 
         response = MagicMock(return_value=False)
-     
+        
         with patch.dict(saptune.__salt__, {'saptune.is_solution_applied': response}):
             with patch.dict(saptune.__opts__, {'test': True}):
-              ret = saptune.solution_applied(solution_name)
-              assert ret == expected_ret
-
+                ret = saptune.solution_applied(solution_name)
+                assert ret == expected_ret
 
     def test_solution_applied_error_exception(self):
         '''
-        Test solution is applied method error exception 
+        Test solution is applied method error exception
         '''
         solution_name = 'normalmode'
 
