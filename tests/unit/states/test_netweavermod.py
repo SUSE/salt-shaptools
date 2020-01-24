@@ -106,7 +106,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
                 sid='prd', inst='00', password='pass', sap_instance='ascs')
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=24)
 
     @mock.patch('salt.states.netweavermod._get_sap_instance_type')
     def test_installed_correct(self, mock_get):
@@ -132,7 +132,8 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
                                                 'file.chown': mock_chown}):
             assert netweavermod.installed(
                 'prd', '00', 'pass', '/software', 'root', 'pass',
-                'config_file', 'vhost', 'eth1', 'productID', cwd='/tmp') == ret
+                'config_file', 'vhost', 'eth1', 'productID',
+                cwd='/tmp', virtual_host_mask=32) == ret
             mock_installed.assert_has_calls([
                 mock.call(sid='prd', inst='00', password='pass', sap_instance='di'),
                 mock.call(sid='prd', inst='00', password='pass', sap_instance='di'),
@@ -140,7 +141,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
 
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=32)
             mock_setup_cwd.assert_called_once_with(
                 software_path='/software', cwd='/tmp', additional_dvds=None)
             mock_install.assert_called_once_with(
@@ -181,7 +182,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             assert mock_chown.call_count == 0
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=24)
             mock_setup_cwd.assert_called_once_with(
                 software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
@@ -220,7 +221,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
 
             mock_get.assert_called_once_with('productID')
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=24)
             mock_setup_cwd.assert_called_once_with(
                 software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
@@ -290,7 +291,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             mock_db_installed.assert_called_once_with(
                 host='192.168.10.15', port=30015, schema_name='SAPABAP1', schema_password='schema_pass')
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=24)
 
     def test_db_installed_correct(self):
         '''
@@ -313,7 +314,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             assert netweavermod.db_installed(
                 '192.168.10.15', 30015, 'SAPABAP1', 'schema_pass',
                 '/software', 'root', 'pass',
-                'config_file', 'vhost', 'eth1', 'productID') == ret
+                'config_file', 'vhost', 'eth1', 'productID', virtual_host_mask=32) == ret
             mock_db_installed.assert_has_calls([
                 mock.call(
                     host='192.168.10.15', port=30015,
@@ -324,7 +325,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             ])
 
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=32)
             mock_setup_cwd.assert_called_once_with(
                 software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(
@@ -364,7 +365,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             ])
 
             mock_attach.assert_called_once_with(
-                virtual_host='vhost', virtual_host_interface='eth1')
+                virtual_host='vhost', virtual_host_interface='eth1', virtual_host_mask=24)
             mock_setup_cwd.assert_called_once_with(
                 software_path='/software', cwd='/tmp/swpm_unattended', additional_dvds=None)
             mock_install.assert_called_once_with(

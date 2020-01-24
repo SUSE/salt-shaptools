@@ -254,11 +254,11 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.dict(netweavermod.__salt__, {'hosts.get_ip': mock_get_ip,
                                                 'cmd.retcode': mock_retcode,
                                                 'cmd.run': mock_run}):
-            ip_address = netweavermod.attach_virtual_host('vhost', 'eth1')
+            ip_address = netweavermod.attach_virtual_host('vhost', 'eth1', 32)
 
         mock_get_ip.assert_called_once_with('vhost')
-        mock_retcode.assert_called_once_with('ip a | grep 192.168.15.1/24', python_shell=True)
-        mock_run.assert_called_once_with('ip address add 192.168.15.1/24 dev eth1')
+        mock_retcode.assert_called_once_with('ip a | grep 192.168.15.1/32', python_shell=True)
+        mock_run.assert_called_once_with('ip address add 192.168.15.1/32 dev eth1')
         assert ip_address == '192.168.15.1'
 
     def test_attach_virtual_host_not_ip(self):
