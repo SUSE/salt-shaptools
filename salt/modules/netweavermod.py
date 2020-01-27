@@ -229,14 +229,17 @@ def is_instance_installed(
 
 def attach_virtual_host(
         virtual_host,
-        virtual_host_interface='eth0'):
+        virtual_host_interface='eth0',
+        virtual_host_mask=24):
     '''
     Attach virtual host ip address to network interface
 
     virtual_host
         Virtual host name
-    virtual_host_interface:
+    virtual_host_interface
         Network interface to attach the virtual host ip address
+    virtual_host_mask
+        Ip address mask for the virtual address (24 be default)
 
     Returns:
         str: Attached ip address
@@ -250,10 +253,11 @@ def attach_virtual_host(
     ip_address = __salt__['hosts.get_ip'](virtual_host)
     if not ip_address:
         raise exceptions.CommandExecutionError('virtual host {} not available'.format(virtual_host))
-    result = __salt__['cmd.retcode']('ip a | grep {}/24'.format(ip_address), python_shell=True)
+    result = __salt__['cmd.retcode'](
+        'ip a | grep {}/{}'.format(ip_address, virtual_host_mask), python_shell=True)
     if result == 1:
-        result = __salt__['cmd.run']('ip address add {}/24 dev {}'.format(
-            ip_address, virtual_host_interface))
+        result = __salt__['cmd.run']('ip address add {}/{} dev {}'.format(
+            ip_address, virtual_host_mask, virtual_host_interface))
     # Non zero return code in any of the cmd commands
     if result:
         raise exceptions.CommandExecutionError('error running "ip address" command')
@@ -270,10 +274,10 @@ def update_conf_file(
         Path to the existing configuration file
     extra_parameters (dict): Dictionary with the values to be updated. Use the exact
         name of the SAP configuration file for the key
-    
+
     Returns:
         str: Configuration file path
-    
+
     CLI Example:
 
     .. code-block:: bash

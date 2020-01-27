@@ -74,6 +74,7 @@ def installed(
         cwd='/tmp/swpm_unattended',
         additional_dvds=None,
         ascs_password=None,
+        virtual_host_mask=24,
         timeout=0,
         interval=5):
     """
@@ -109,6 +110,8 @@ def installed(
     ascs_password (Only used when the Product is ERS.)
         Password of the SAP user in the machine hosting the ASCS instance.
         If it's not set the same password used to install ERS will be used
+    virtual_host_mask
+        Ip address mask for the virtual address (24 be default)
     timeout (Only used when the Product is ERS.)
         Timeout of the installation process. If 0 it will try to install the instance only once
     interval (Only used when the Product is ERS.)
@@ -143,7 +146,8 @@ def installed(
         #  Here starts the actual process
         __salt__['netweaver.attach_virtual_host'](
             virtual_host=virtual_host,
-            virtual_host_interface=virtual_host_interface)
+            virtual_host_interface=virtual_host_interface,
+            virtual_host_mask=virtual_host_mask)
 
         if cwd:
             cwd = __salt__['netweaver.setup_cwd'](
@@ -213,7 +217,8 @@ def db_installed(
         virtual_host_interface,
         product_id,
         cwd='/tmp/swpm_unattended',
-        additional_dvds=None):
+        additional_dvds=None,
+        virtual_host_mask=24):
     """
     Install SAP Netweaver DB instance if the instance is not installed yet.
 
@@ -244,6 +249,8 @@ def db_installed(
         New value for SAPINST_CWD parameter
     additional_dvds
         Additional folder where to retrieve required software for the installation
+    virtual_host_mask
+        Ip address mask for the virtual address (24 be default)
     """
     host = name
 
@@ -271,7 +278,8 @@ def db_installed(
         #  Here starts the actual process
         __salt__['netweaver.attach_virtual_host'](
             virtual_host=virtual_host,
-            virtual_host_interface=virtual_host_interface)
+            virtual_host_interface=virtual_host_interface,
+            virtual_host_mask=virtual_host_mask)
 
         if cwd:
             cwd = __salt__['netweaver.setup_cwd'](
