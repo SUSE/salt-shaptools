@@ -35,6 +35,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 # Import salt libs
 from salt import exceptions
+from salt import utils as salt_utils
 from salt.ext import six
 
 
@@ -287,3 +288,110 @@ def cluster_configured(
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
+
+
+def _convert2dict(file_content_lines):
+    """
+    Convert the corosync configuration file to a dictionary
+    """
+    corodict = {}
+    index = 0
+
+    for i, line in enumerate(file_content_lines):
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line[0] == '#':
+            continue
+
+        if index > i:
+            continue
+
+        line_items = stripped_line.split()
+        if '{' in stripped_line:
+            corodict[line_items[0]], new_index = _convert2dict(file_content_lines[i+1:])
+            index = i + new_index
+        elif line_items[0][-1] == ':':
+            corodict[line_items[0][:-1]] = line_items[-1]
+        elif '}' in stripped_line:
+            return corodict, i+2
+
+    return corodict, index
+
+
+def _mergedicts(main_dict, changes_dict, applied_changes, initial_path=''):
+    """
+    Merge the 2 dictionaries. We cannot use update as it changes all the children of an entry
+    """
+    for key, value in changes_dict.items():
+        current_path = '{}.{}'.format(initial_path, key)
+        if key in main_dict.keys() and not isinstance(value, dict):
+            if str(main_dict[key]) != str(value):
+                applied_changes[current_path] = value
+            main_dict[key] = value
+        elif key in main_dict.keys():
+            modified_dict, new_changes = _mergedicts(main_dict[key], value, applied_changes, current_path)
+            main_dict[key] = modified_dict
+            applied_changes.update(new_changes)
+
+        else:  # Entry not found in current main dictionary, so we can update all
+            main_dict[key] = changes_dict[key]
+            applied_changes[current_path] = value
+
+    return main_dict, applied_changes
+
+
+def _convert2corosync(corodict, indentation=''):
+    """
+    Convert a corosync data dictionary to the corosync configuration file format
+    """
+    output = ''
+    for key, value in corodict.items():
+        if isinstance(value, dict):
+            output += '{}{} {{\n'.format(indentation, key)
+            indentation += '\t'
+            output += _convert2corosync(value, indentation)
+            indentation = indentation[:-1]
+            output += '{}}}\n'.format(indentation)
+        else:
+            output += '{}{}: {}\n'.format(indentation, key, value)
+    return output
+
+
+def corosync_updated(
+        name,
+        data,
+        backup=True):
+    """
+    Configure corosync configuration file
+
+    name
+        Corosync configuration file path
+    data
+        Dictionary with the values that have to be changed. The method won't do any sanity check
+        so, it will put in the configuration file value added in this parameter
+    """
+
+    changes = {}
+    ret = {'name': name,
+           'changes': changes,
+           'result': False,
+           'comment': ''}
+
+    with salt_utils.files.fopen(name, 'r') as file_content:
+        corodict, _ = _convert2dict(file_content.read().splitlines())
+    new_conf_dict, changes = _mergedicts(corodict, data, {})
+
+    if not changes:
+        ret['changes'] = changes
+        ret['comment'] = 'Corosync already has the required configuration'
+        ret['result'] = True
+        return ret
+
+    new_conf_file_content = _convert2corosync(new_conf_dict)
+    if backup:
+        __salt__['file.copy'](name, '{}.backup'.format(name))
+    __salt__['file.write'](name, new_conf_file_content)
+
+    ret['changes'] = changes
+    ret['comment'] = 'Corosync configuration file updated'
+    ret['result'] = True
+    return ret
