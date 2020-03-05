@@ -678,7 +678,7 @@ quorum {
     @mock.patch('salt.states.crmshmod._convert2corosync')
     @mock.patch('salt.states.crmshmod._convert2dict')
     @mock.patch('salt.states.crmshmod._mergedicts')
-    def testt_corosync_updated(self, mock_mergedicts, mock_convert2dict, mock_convert2corosync):
+    def test_corosync_updated(self, mock_mergedicts, mock_convert2dict, mock_convert2corosync):
         '''
         Test to check corosync_updated when configuration is applied
         '''
