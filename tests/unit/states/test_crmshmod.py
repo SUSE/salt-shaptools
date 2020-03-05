@@ -6,6 +6,7 @@
 # Import Python libs
 from __future__ import absolute_import, unicode_literals, print_function
 
+import sys
 from salt import exceptions
 
 # Import Salt Testing Libs
@@ -646,7 +647,13 @@ quorum {
         }
 
         output = crmshmod._convert2corosync(main_dict, '')
-        assert output == "a {\n\tb {\n\t\tf: 7\n\t}\n\tc: 2\n}\nd: 3\n"
+
+        # Py2 and py3 have different way of ordering the `items` method
+        # For the functionality this does not really affect
+        if sys.version_info[0] == 2:
+            assert output == "a {\n\tc: 2\n\tb {\n\t\tf: 7\n\t}\n}\nd: 3\n"
+        else:
+            assert output == "a {\n\tb {\n\t\tf: 7\n\t}\n\tc: 2\n}\nd: 3\n"
 
     @mock.patch('salt.states.crmshmod._convert2dict')
     @mock.patch('salt.states.crmshmod._mergedicts')
