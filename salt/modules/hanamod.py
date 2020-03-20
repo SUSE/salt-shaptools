@@ -27,7 +27,10 @@ import logging
 import time
 import re
 
-import imp
+try:
+    import importlib as imp
+except ImportError:
+    import imp
 
 from salt import exceptions
 from salt.utils import files as salt_files
