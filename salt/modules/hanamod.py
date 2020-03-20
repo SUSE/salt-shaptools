@@ -26,6 +26,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import logging
 import time
 import re
+import imp
 
 from salt import exceptions
 from salt.utils import files as salt_files
@@ -917,6 +918,14 @@ def wait_for_connection(
             'HANA database not available after {} seconds in {}:{}'.format(
                 timeout, host, port
             ))
+
+
+def reload_hdb_connector():
+    '''
+    As hdb_connector uses pyhdb or dbapi, if these packages are installed on the fly,
+    we need to reload the connector to import the correct api
+    '''
+    imp.reload(hdb_connector)
 
 
 def _find_sap_folder(software_folders, hana_client_pattern):
