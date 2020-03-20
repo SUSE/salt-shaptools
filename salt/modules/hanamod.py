@@ -26,6 +26,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import logging
 import time
 import re
+
 import imp
 
 from salt import exceptions
@@ -928,7 +929,7 @@ def reload_hdb_connector():
     imp.reload(hdb_connector)
 
 
-def _find_sap_folder(software_folders, hana_client_pattern):
+def _find_sap_folder(software_folders, folder_pattern):
     '''
     Find a SAP folder following a recursive approach using the LABEL and LABELIDX files
     '''
@@ -937,7 +938,7 @@ def _find_sap_folder(software_folders, hana_client_pattern):
         try:
             with salt_files.fopen(label, 'r') as label_file_ptr:
                 label_content = label_file_ptr.read().strip()
-                if hana_client_pattern.match(label_content):
+                if folder_pattern.match(label_content):
                     return folder
                 else:
                     LOGGER.debug('%s folder does not containt HANA client', folder)
@@ -951,7 +952,7 @@ def _find_sap_folder(software_folders, hana_client_pattern):
                 new_folders = [
                     '{}/{}'.format(folder, new_folder) for new_folder in labelidx_content]
                 try:
-                    return _find_sap_folder(new_folders, hana_client_pattern)
+                    return _find_sap_folder(new_folders, folder_pattern)
                 except HanaClientNotFound:
                     continue
         except FileNotFoundError:
@@ -982,6 +983,6 @@ def extract_pydbapi(
         hana_client_folder = _find_sap_folder(software_folders, hana_client_pattern)
     except HanaClientNotFound:
         raise exceptions.CommandExecutionError('HANA client not found')
-    hana_client_folder = '{}/client/{}'.format(hana_client_folder, name)
-    __salt__['archive.tar'](options='xvf', tarfile=hana_client_folder, dest=output_dir)
-    return hana_client_folder
+    pydbapi_file = '{}/client/{}'.format(hana_client_folder, name)
+    __salt__['archive.tar'](options='xvf', tarfile=pydbapi_file, dest=output_dir)
+    return pydbapi_file
