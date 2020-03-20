@@ -945,7 +945,7 @@ def _find_sap_folder(software_folders, folder_pattern):
                     return folder
                 else:
                     LOGGER.debug('%s folder does not containt HANA client', folder)
-        except FileNotFoundError:
+        except IOError:
             LOGGER.debug('%s file not found in %s. Skipping folder', LABEL_FILE, folder)
 
         labelidx = '{}/{}'.format(folder, LABELIDX_FILE)
@@ -958,7 +958,7 @@ def _find_sap_folder(software_folders, folder_pattern):
                     return _find_sap_folder(new_folders, folder_pattern)
                 except HanaClientNotFound:
                     continue
-        except FileNotFoundError:
+        except IOError:
             LOGGER.debug('%s file not found in %s. Skipping folder', LABELIDX_FILE, folder)
 
     raise HanaClientNotFound('HANA client not found')

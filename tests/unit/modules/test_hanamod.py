@@ -826,7 +826,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
     def test_find_sap_folder_error(self, mock_fopen, mock_debug):
         mock_pattern = mock.Mock()
         mock_fopen.side_effect = [
-            FileNotFoundError, FileNotFoundError, FileNotFoundError, FileNotFoundError]
+            IOError, IOError, IOError, IOError]
         with pytest.raises(hanamod.HanaClientNotFound) as err:
             hanamod._find_sap_folder(['1234', '5678'], mock_pattern)
 
@@ -868,7 +868,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_pattern = mock.Mock()
         mock_pattern.match.side_effect = [False, False]
         with patch('salt.utils.files.fopen', mock_open(read_data=[
-                'data\n', 'DATA_UNITS\n', 'data_2\n', FileNotFoundError])) as mock_file:
+                'data\n', 'DATA_UNITS\n', 'data_2\n', IOError])) as mock_file:
             with pytest.raises(hanamod.HanaClientNotFound) as err:
                 folder = hanamod._find_sap_folder(['1234'], mock_pattern)
 
