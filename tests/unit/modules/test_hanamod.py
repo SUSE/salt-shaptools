@@ -17,6 +17,7 @@ from tests.support import mock
 from tests.support.mock import (
     MagicMock,
     patch,
+    mock_open,
     NO_MOCK,
     NO_MOCK_REASON
 )
@@ -813,3 +814,106 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock.call('192.168.10.15', 30015, user='SYSTEM', password='pass')
         ])
         assert 'HANA database not available after 2 seconds in 192.168.10.15:30015' in str(err.value)
+
+    @mock.patch('salt.modules.hanamod.hdb_connector')
+    @mock.patch('importlib.reload')
+    def test_reload_hdb_connector(self, mock_reload, mock_hdb_connector):
+        hanamod.reload_hdb_connector()
+        mock_reload.assert_called_once_with(mock_hdb_connector)
+
+    @mock.patch('logging.Logger.debug')
+    @mock.patch('salt.utils.files.fopen')
+    def test_find_sap_folder_error(self, mock_fopen, mock_debug):
+        mock_pattern = mock.Mock()
+        mock_fopen.side_effect = [
+            FileNotFoundError, FileNotFoundError, FileNotFoundError, FileNotFoundError]
+        with pytest.raises(hanamod.HanaClientNotFound) as err:
+            hanamod._find_sap_folder(['1234', '5678'], mock_pattern)
+
+        assert 'HANA client not found' in str(err.value)
+        mock_debug.assert_has_calls([
+            mock.call('%s file not found in %s. Skipping folder', 'LABEL.ASC', '1234'),
+            mock.call('%s file not found in %s. Skipping folder', 'LABELIDX.ASC', '1234'),
+            mock.call('%s file not found in %s. Skipping folder', 'LABEL.ASC', '5678'),
+            mock.call('%s file not found in %s. Skipping folder', 'LABELIDX.ASC', '5678')
+        ])
+
+    def test_find_sap_folder_contain_hana(self):
+        mock_pattern = mock.Mock(return_value=True)
+        with patch('salt.utils.files.fopen', mock_open(read_data='data\n')) as mock_file:
+            folder = hanamod._find_sap_folder(['1234', '5678'], mock_pattern)
+
+        mock_pattern.match.assert_called_once_with('data')
+        assert folder in '1234'
+
+    @mock.patch('logging.Logger.debug')
+    def test_find_sap_folder_contain_units(self, mock_debug):
+        mock_pattern = mock.Mock()
+        mock_pattern.match.side_effect = [False, True]
+        with patch('salt.utils.files.fopen', mock_open(read_data=
+                ['data\n', 'DATA_UNITS\n', 'data_2\n'])) as mock_file:
+            folder = hanamod._find_sap_folder(['1234', '5678'], mock_pattern)
+
+        mock_pattern.match.assert_has_calls([
+            mock.call('data'),
+            mock.call('data_2')
+        ])
+        mock_debug.assert_has_calls([
+            mock.call('%s folder does not containt HANA client', '1234')
+        ])
+        assert folder in '1234/DATA_UNITS'
+
+    @mock.patch('logging.Logger.debug')
+    def test_find_sap_folder_contain_units_error(self, mock_debug):
+        mock_pattern = mock.Mock()
+        mock_pattern.match.side_effect = [False, False]
+        with patch('salt.utils.files.fopen', mock_open(read_data=[
+                'data\n', 'DATA_UNITS\n', 'data_2\n', FileNotFoundError])) as mock_file:
+            with pytest.raises(hanamod.HanaClientNotFound) as err:
+                folder = hanamod._find_sap_folder(['1234'], mock_pattern)
+
+        mock_pattern.match.assert_has_calls([
+            mock.call('data'),
+            mock.call('data_2')
+        ])
+        mock_debug.assert_has_calls([
+            mock.call('%s folder does not containt HANA client', '1234')
+        ])
+        assert 'HANA client not found' in str(err.value)
+
+    @mock.patch('re.compile')
+    @mock.patch('salt.modules.hanamod._find_sap_folder')
+    @mock.patch('salt.modules.hanamod.hana.HanaInstance.get_platform')
+    def test_extract_pydbapi(self, mock_get_platform, mock_find_sap_folders, mock_compile):
+        mock_get_platform.return_value = 'LINUX_X86_64'
+        mock_find_sap_folders.return_value = 'my_folder'
+        compile_mocked = mock.Mock()
+        mock_compile.return_value = compile_mocked
+        mock_tar = MagicMock()
+        with patch.dict(hanamod.__salt__, {'archive.tar': mock_tar}):
+            pydbapi_file = hanamod.extract_pydbapi(
+                'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output')
+
+        mock_compile.assert_called_once_with('^HDB_CLIENT:20.*:LINUX_X86_64:.*')
+        mock_find_sap_folders.assert_called_once_with(
+            ['1234', '5678'], compile_mocked)
+        mock_tar.assert_called_once_with(
+            options='xvf', tarfile='my_folder/client/PYDBAPI.tar.gz', dest='/tmp/output')
+        assert pydbapi_file == 'my_folder/client/PYDBAPI.tar.gz'
+
+    @mock.patch('re.compile')
+    @mock.patch('salt.modules.hanamod._find_sap_folder')
+    @mock.patch('salt.modules.hanamod.hana.HanaInstance.get_platform')
+    def test_extract_pydbapi_error(self, mock_get_platform, mock_find_sap_folders, mock_compile):
+        mock_get_platform.return_value = 'LINUX_X86_64'
+        compile_mocked = mock.Mock()
+        mock_compile.return_value = compile_mocked
+        mock_find_sap_folders.side_effect = hanamod.HanaClientNotFound
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            pydbapi_file = hanamod.extract_pydbapi(
+                'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output')
+
+        mock_compile.assert_called_once_with('^HDB_CLIENT:20.*:LINUX_X86_64:.*')
+        mock_find_sap_folders.assert_called_once_with(
+            ['1234', '5678'], compile_mocked)
+        assert 'HANA client not found' in str(err.value)

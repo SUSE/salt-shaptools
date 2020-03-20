@@ -27,9 +27,9 @@ import logging
 import time
 import re
 
-try:
+try:  # pragma: no cover
     import importlib as imp
-except ImportError:
+except ImportError:  # pragma: no cover
     import imp
 
 from salt import exceptions
