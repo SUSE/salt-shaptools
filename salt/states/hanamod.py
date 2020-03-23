@@ -790,6 +790,12 @@ def pydbapi_extracted(
             'extraction)'.format(output_dir)
         return ret
 
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = '{} would be extracted'.format(name)
+        ret['changes']['output_dir'] = output_dir
+        return ret
+
     __salt__['file.mkdir'](output_dir)
 
     try:

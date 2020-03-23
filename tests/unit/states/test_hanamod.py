@@ -1056,6 +1056,16 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
 
         mock_dir_exists.assert_called_once_with('/tmp/output')
 
+    def test_pydbapi_extracted_test(self):
+        ret = {'name': 'PYDBAPI.tar',
+               'changes': {'output_dir': '/tmp/output'},
+               'result': None,
+               'comment': 'PYDBAPI.tar would be extracted'}
+
+        with patch.dict(hanamod.__opts__, {'test': True}):
+            assert hanamod.pydbapi_extracted(
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', force=True) == ret
+
     def test_pydbapi_extracted_error(self):
         ret = {'name': 'PYDBAPI.tar',
                'changes': {},
