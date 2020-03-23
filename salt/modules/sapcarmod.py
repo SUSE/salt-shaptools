@@ -25,7 +25,7 @@ try:
 except ImportError:  # pragma: no cover
     HAS_SAPUTILS = False
 
-__virtualname__ = 'saputils'
+__virtualname__ = 'sapcar'
 
 
 def __virtual__():  # pragma: no cover
@@ -40,7 +40,7 @@ def __virtual__():  # pragma: no cover
         ' library is not available.')
 
 
-def extract_sapcar_file(
+def extract(
         sapcar_exe,
         sar_file,
         output_dir=None,

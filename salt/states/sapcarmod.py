@@ -14,9 +14,9 @@ State module to provide SAP utilities functionality to Salt
 
 .. code-block:: yaml
     extract_sap_car_file:
-      saputils.sar_file_extracted:
+      sapcar.extracted:
+      - name: home/sapuser/saprouter_600-80003478.sar
       - sapcar_exe: ./SAPCAR.exe
-      - sar_file: home/sapuser/saprouter_600-80003478.sar
       - output_dir: home/sapuser/saprouter_inst
       - options: "-manifest SIGNATURE.SMF"
 '''
@@ -37,7 +37,7 @@ try:
 except ImportError:  # pragma: no cover
     HAS_SAPUTILS = False
 
-__virtualname__ = 'saputils'
+__virtualname__ = 'sapcar'
 
 
 def __virtual__():  # pragma: no cover
@@ -51,34 +51,31 @@ def __virtual__():  # pragma: no cover
         'The saputils execution module failed to load: the shaptools python'
         ' library is not available.')
 
-def sar_file_extracted(
+def extracted(
         name,
         sapcar_exe,
-        sar_file,
         output_dir=None,
         options=None):
     """
     Extract a SAPCAR sar archive
 
     name
-        SAR file name to ber extracted
+        SAR file name to be extracted
     sapcar_exe
         Path to the SAPCAR executable file. SAPCAR is a SAP tool to extract SAP SAR format archives 
-    sar_file
-        Path to the SAR file
     output_dir
-        Location where to extract the SAR file. If not provided, use current directory as sar_file
+        Location where to extract the SAR file. If not provided, use current directory as name
     options:
         Additional parameters to the SAPCAR tool
     """
-    ret = {'name': sar_file,
+    ret = {'name': name,
            'changes': {},
            'result': False,
            'comment': ''}
 
     if __opts__['test']:
         ret['result'] = None
-        ret['comment'] = '{} would be extracted'.format(sar_file)
+        ret['comment'] = '{} would be extracted'.format(name)
         ret['changes']['output_dir'] = output_dir
         return ret
     
@@ -86,14 +83,12 @@ def sar_file_extracted(
         #  Here starts the actual process
         __salt__['saputils.extract_sapcar_file'](
             sapcar_exe=sapcar_exe,
-            sar_file=sar_file,
+            sar_file=name,
             output_dir=output_dir,
             options=options)
-        if output_dir:
-            ret['changes']['output_dir'] = output_dir
-        else:
-            ret['changes']['output_dir'] = os.path.dirname(sar_file)
-        ret['comment'] = '{} file extracted'.format(sar_file)
+            
+        ret['changes']['output_dir'] = output_dir or os.path.dirname(name)
+        ret['comment'] = '{} file extracted'.format(name)
         ret['result'] = True
         return ret
 
