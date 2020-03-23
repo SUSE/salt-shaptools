@@ -53,9 +53,9 @@ LABEL_FILE = 'LABEL.ASC'
 LABELIDX_FILE = 'LABELIDX.ASC'
 
 
-class HanaClientNotFound(Exception):
+class SapFolderNotFoundError(Exception):
     '''
-    Hana client folder not found exception
+    SAP folder not found exception
     '''
 
 
@@ -944,7 +944,8 @@ def _find_sap_folder(software_folders, folder_pattern):
                 if folder_pattern.match(label_content):
                     return folder
                 else:
-                    LOGGER.debug('%s folder does not containt HANA client', folder)
+                    LOGGER.debug(
+                        '%s folder does not contain %s pattern', folder, folder_pattern.pattern)
         except IOError:
             LOGGER.debug('%s file not found in %s. Skipping folder', LABEL_FILE, folder)
 
@@ -956,12 +957,13 @@ def _find_sap_folder(software_folders, folder_pattern):
                     '{}/{}'.format(folder, new_folder) for new_folder in labelidx_content]
                 try:
                     return _find_sap_folder(new_folders, folder_pattern)
-                except HanaClientNotFound:
+                except SapFolderNotFoundError:
                     continue
         except IOError:
             LOGGER.debug('%s file not found in %s. Skipping folder', LABELIDX_FILE, folder)
 
-    raise HanaClientNotFound('HANA client not found')
+    raise SapFolderNotFoundError(
+        'SAP folder with {} pattern not found'.format(folder_pattern.pattern))
 
 
 def extract_pydbapi(
@@ -986,7 +988,7 @@ def extract_pydbapi(
         hana_version, current_platform))
     try:
         hana_client_folder = _find_sap_folder(software_folders, hana_client_pattern)
-    except HanaClientNotFound:
+    except SapFolderNotFoundError:
         raise exceptions.CommandExecutionError('HANA client not found')
     pydbapi_file = '{}/client/{}'.format(hana_client_folder, name)
     __salt__['archive.tar'](options='xvf', tarfile=pydbapi_file, dest=output_dir)

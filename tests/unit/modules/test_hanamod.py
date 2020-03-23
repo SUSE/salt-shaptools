@@ -824,13 +824,13 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
     @mock.patch('logging.Logger.debug')
     @mock.patch('salt.utils.files.fopen')
     def test_find_sap_folder_error(self, mock_fopen, mock_debug):
-        mock_pattern = mock.Mock()
+        mock_pattern = mock.Mock(pattern='my_pattern')
         mock_fopen.side_effect = [
             IOError, IOError, IOError, IOError]
-        with pytest.raises(hanamod.HanaClientNotFound) as err:
+        with pytest.raises(hanamod.SapFolderNotFoundError) as err:
             hanamod._find_sap_folder(['1234', '5678'], mock_pattern)
 
-        assert 'HANA client not found' in str(err.value)
+        assert 'SAP folder with my_pattern pattern not found' in str(err.value)
         mock_debug.assert_has_calls([
             mock.call('%s file not found in %s. Skipping folder', 'LABEL.ASC', '1234'),
             mock.call('%s file not found in %s. Skipping folder', 'LABELIDX.ASC', '1234'),
@@ -848,7 +848,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
 
     @mock.patch('logging.Logger.debug')
     def test_find_sap_folder_contain_units(self, mock_debug):
-        mock_pattern = mock.Mock()
+        mock_pattern = mock.Mock(pattern='my_pattern')
         mock_pattern.match.side_effect = [False, True]
         with patch('salt.utils.files.fopen', mock_open(read_data=
                 ['data\n', 'DATA_UNITS\n', 'data_2\n'])) as mock_file:
@@ -859,17 +859,17 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock.call('data_2')
         ])
         mock_debug.assert_has_calls([
-            mock.call('%s folder does not containt HANA client', '1234')
+            mock.call('%s folder does not contain %s pattern', '1234', 'my_pattern')
         ])
         assert folder in '1234/DATA_UNITS'
 
     @mock.patch('logging.Logger.debug')
     def test_find_sap_folder_contain_units_error(self, mock_debug):
-        mock_pattern = mock.Mock()
+        mock_pattern = mock.Mock(pattern='my_pattern')
         mock_pattern.match.side_effect = [False, False]
         with patch('salt.utils.files.fopen', mock_open(read_data=[
                 'data\n', 'DATA_UNITS\n', 'data_2\n', IOError])) as mock_file:
-            with pytest.raises(hanamod.HanaClientNotFound) as err:
+            with pytest.raises(hanamod.SapFolderNotFoundError) as err:
                 folder = hanamod._find_sap_folder(['1234'], mock_pattern)
 
         mock_pattern.match.assert_has_calls([
@@ -877,9 +877,9 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             mock.call('data_2')
         ])
         mock_debug.assert_has_calls([
-            mock.call('%s folder does not containt HANA client', '1234')
+            mock.call('%s folder does not contain %s pattern', '1234', 'my_pattern')
         ])
-        assert 'HANA client not found' in str(err.value)
+        assert 'SAP folder with my_pattern pattern not found' in str(err.value)
 
     @mock.patch('re.compile')
     @mock.patch('salt.modules.hanamod._find_sap_folder')
@@ -908,7 +908,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_get_platform.return_value = 'LINUX_X86_64'
         compile_mocked = mock.Mock()
         mock_compile.return_value = compile_mocked
-        mock_find_sap_folders.side_effect = hanamod.HanaClientNotFound
+        mock_find_sap_folders.side_effect = hanamod.SapFolderNotFoundError
         with pytest.raises(exceptions.CommandExecutionError) as err:
             pydbapi_file = hanamod.extract_pydbapi(
                 'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output')
