@@ -81,7 +81,7 @@ def extracted(
     
     try:
         #  Here starts the actual process
-        __salt__['saputils.extract_sapcar_file'](
+        __salt__['sapcar.extract'](
             sapcar_exe=sapcar_exe,
             sar_file=name,
             output_dir=output_dir,
