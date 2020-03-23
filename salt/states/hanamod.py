@@ -769,7 +769,9 @@ def pydbapi_extracted(
     name
         Name of the package that needs to be installed
     software_folders
-        Folders where the
+        Folders list where the HANA client is located. It's used as a list as the pydbapi client
+        will be found automatically among different folders and providing several folders is a
+        standard way in SAP landscape
     output_dir
         Folder where the package is extracted
     force
