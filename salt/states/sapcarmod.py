@@ -23,7 +23,7 @@ State module to provide SAP utilities functionality to Salt
 
 
 # Import python libs
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals
 
 import os
 
@@ -31,25 +31,16 @@ import os
 from salt import exceptions
 from salt.ext import six
 
-try:
-    from shaptools import saputils
-    HAS_SAPUTILS = True
-except ImportError:  # pragma: no cover
-    HAS_SAPUTILS = False
 
 __virtualname__ = 'sapcar'
 
 
 def __virtual__():  # pragma: no cover
     '''
-    Only load this module if shaptools python module is installed
+    Only load this module if sapcar python module is installed
     '''
-    if HAS_SAPUTILS:
-        return __virtualname__
-    return (
-        False,
-        'The saputils execution module failed to load: the shaptools python'
-        ' library is not available.')
+    return 'sapcar.extract' in __salt__
+
 
 def extracted(
         name,

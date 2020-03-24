@@ -14,7 +14,7 @@ Module to provide SAP tools functionality to Salt
 
 
 # Import Python libs
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals
 
 from salt import exceptions
 
@@ -36,7 +36,7 @@ def __virtual__():  # pragma: no cover
         return __virtualname__
     return (
         False,
-        'The saputils execution module failed to load: the shaptools python'
+        'The sapcar execution module failed to load: the shaptools python'
         ' library is not available.')
 
 
