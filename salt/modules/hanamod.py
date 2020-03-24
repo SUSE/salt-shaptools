@@ -22,9 +22,19 @@ Module to provide SAP HANA functionality to Salt
 
 # Import Python libs
 from __future__ import absolute_import, unicode_literals, print_function
+
+import logging
 import time
+import re
+
+try:  # pragma: no cover
+    import importlib as imp
+except ImportError:  # pragma: no cover
+    import imp
 
 from salt import exceptions
+from salt.utils import files as salt_files
+
 
 # Import third party libs
 try:
@@ -35,7 +45,18 @@ try:
 except ImportError:  # pragma: no cover
     HAS_HANA = False
 
+LOGGER = logging.getLogger(__name__)
+
 __virtualname__ = 'hana'
+
+LABEL_FILE = 'LABEL.ASC'
+LABELIDX_FILE = 'LABELIDX.ASC'
+
+
+class SapFolderNotFoundError(Exception):
+    '''
+    SAP folder not found exception
+    '''
 
 
 def __virtual__():  # pragma: no cover
@@ -865,17 +886,17 @@ def wait_for_connection(
     '''
     Wait until HANA is ready trying to connect to the database
 
-    host:
+    host
         Host where HANA is running
-    port:
+    port
         HANA database port
-    user:
+    user
         User to connect to the databse
-    password:
+    password
         Password to connect to the database
-    timeout:
+    timeout
         Timeout to try to connect to the database
-    interval:
+    interval
         Interval to try the connection
 
     CLI Example:
@@ -901,3 +922,74 @@ def wait_for_connection(
             'HANA database not available after {} seconds in {}:{}'.format(
                 timeout, host, port
             ))
+
+
+def reload_hdb_connector():
+    '''
+    As hdb_connector uses pyhdb or dbapi, if these packages are installed on the fly,
+    we need to reload the connector to import the correct api
+    '''
+    imp.reload(hdb_connector)
+
+
+def _find_sap_folder(software_folders, folder_pattern):
+    '''
+    Find a SAP folder following a recursive approach using the LABEL and LABELIDX files
+    '''
+    for folder in software_folders:
+        label = '{}/{}'.format(folder, LABEL_FILE)
+        try:
+            with salt_files.fopen(label, 'r') as label_file_ptr:
+                label_content = label_file_ptr.read().strip()
+                if folder_pattern.match(label_content):
+                    return folder
+                else:
+                    LOGGER.debug(
+                        '%s folder does not contain %s pattern', folder, folder_pattern.pattern)
+        except IOError:
+            LOGGER.debug('%s file not found in %s. Skipping folder', LABEL_FILE, folder)
+
+        labelidx = '{}/{}'.format(folder, LABELIDX_FILE)
+        try:
+            with salt_files.fopen(labelidx, 'r') as labelidx_file_ptr:
+                labelidx_content = labelidx_file_ptr.read().splitlines()
+                new_folders = [
+                    '{}/{}'.format(folder, new_folder) for new_folder in labelidx_content]
+                try:
+                    return _find_sap_folder(new_folders, folder_pattern)
+                except SapFolderNotFoundError:
+                    continue
+        except IOError:
+            LOGGER.debug('%s file not found in %s. Skipping folder', LABELIDX_FILE, folder)
+
+    raise SapFolderNotFoundError(
+        'SAP folder with {} pattern not found'.format(folder_pattern.pattern))
+
+
+def extract_pydbapi(
+        name,
+        software_folders,
+        output_dir,
+        hana_version='20'):
+    '''
+    Extract HANA pydbapi python client from the provided software folders
+
+    name
+        Name of the package that needs to be installed
+    software_folders
+        Folders list where the HANA client is located. It's used as a list as the pydbapi client
+        will be found automatically among different folders and providing several folders is a
+        standard way in SAP landscape
+    output_dir
+        Folder where the package is extracted
+    '''
+    current_platform = hana.HanaInstance.get_platform()
+    hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
+        hana_version, current_platform))
+    try:
+        hana_client_folder = _find_sap_folder(software_folders, hana_client_pattern)
+    except SapFolderNotFoundError:
+        raise exceptions.CommandExecutionError('HANA client not found')
+    pydbapi_file = '{}/client/{}'.format(hana_client_folder, name)
+    __salt__['archive.tar'](options='xvf', tarfile=pydbapi_file, dest=output_dir)
+    return pydbapi_file
