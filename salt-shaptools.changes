@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Mar 27 18:06:32 UTC 2020 - Simranpal Singh <simranpal.singh@suse.com>
+
+- Version 0.3.4
+  * Add new salt module and state to extract the sar files using SAPCAR 
+
+-------------------------------------------------------------------
 Fri Mar 20 14:49:04 UTC 2020 - Xabier Arbulu <xarbulu@suse.com>
 
 - Version 0.3.3
