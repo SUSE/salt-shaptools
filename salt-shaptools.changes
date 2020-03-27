@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Mar 20 14:49:04 UTC 2020 - Xabier Arbulu <xarbulu@suse.com>
+
+- Version 0.3.3
+  * Add new salt state to extract the HANA python dbapi client 
+
+-------------------------------------------------------------------
 Thu Mar  5 10:03:39 UTC 2020 - Xabier Arbulu <xarbulu@suse.com>
 
 - Version 0.3.2

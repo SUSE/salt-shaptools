@@ -262,7 +262,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
             assert hanamod.installed(
                 'prd', '00', 'pass', '/software',
                 'root', 'pass') == ret
-            
+
             mock_create.assert_called_once_with(
                 software_path='/software',
                 conf_file=hanamod.TMP_CONFIG_FILE,
@@ -1041,3 +1041,64 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 sid='prd',
                 inst='00',
                 password='pass')
+
+    def test_pydbapi_extracted_already_exists(self):
+        ret = {'name': 'PYDBAPI.tar',
+               'changes': {},
+               'result': True,
+               'comment': '/tmp/output already exists. Skipping extraction (set force to True to force the extraction)'}
+
+        mock_dir_exists = MagicMock(return_value=True)
+
+        with patch.dict(hanamod.__salt__, {'file.directory_exists': mock_dir_exists}):
+            assert hanamod.pydbapi_extracted(
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output') == ret
+
+        mock_dir_exists.assert_called_once_with('/tmp/output')
+
+    def test_pydbapi_extracted_test(self):
+        ret = {'name': 'PYDBAPI.tar',
+               'changes': {'output_dir': '/tmp/output'},
+               'result': None,
+               'comment': 'PYDBAPI.tar would be extracted'}
+
+        with patch.dict(hanamod.__opts__, {'test': True}):
+            assert hanamod.pydbapi_extracted(
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', force=True) == ret
+
+    def test_pydbapi_extracted_error(self):
+        ret = {'name': 'PYDBAPI.tar',
+               'changes': {},
+               'result': False,
+               'comment': 'error extracting'}
+
+        mock_mkdir = MagicMock()
+        mock_extract_pydbapi = MagicMock(
+            side_effect=exceptions.CommandExecutionError('error extracting'))
+
+        with patch.dict(hanamod.__salt__, {'file.mkdir': mock_mkdir,
+                                           'hana.extract_pydbapi': mock_extract_pydbapi}):
+            assert hanamod.pydbapi_extracted(
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', force=True) == ret
+
+        mock_mkdir.assert_called_once_with('/tmp/output')
+        mock_extract_pydbapi.assert_called_once_with(
+            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20')
+
+    def test_pydbapi_extracted_correct(self):
+        ret = {'name': 'PYDBAPI.tar',
+               'changes': {'pydbapi': 'py_client', 'output_dir': '/tmp/output'},
+               'result': True,
+               'comment': 'py_client correctly extracted'}
+
+        mock_mkdir = MagicMock()
+        mock_extract_pydbapi = MagicMock(return_value='py_client')
+
+        with patch.dict(hanamod.__salt__, {'file.mkdir': mock_mkdir,
+                                           'hana.extract_pydbapi': mock_extract_pydbapi}):
+            assert hanamod.pydbapi_extracted(
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', force=True) == ret
+
+        mock_mkdir.assert_called_once_with('/tmp/output')
+        mock_extract_pydbapi.assert_called_once_with(
+            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20')

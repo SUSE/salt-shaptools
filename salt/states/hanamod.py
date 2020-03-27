@@ -223,7 +223,7 @@ def installed(
             software_path=software_path,
             conf_file=TMP_CONFIG_FILE,
             root_user=root_user,
-            root_password=root_password)        
+            root_password=root_password)
         if hdb_pwd_file:
             __salt__['cp.get_file'](
                 path=hdb_pwd_file,
@@ -755,3 +755,57 @@ def memory_resources_updated(
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
+
+
+def pydbapi_extracted(
+        name,
+        software_folders,
+        output_dir,
+        hana_version='20',
+        force=False):
+    '''
+    Extract HANA pydbapi python client from the provided software folders
+
+    name
+        Name of the package that needs to be installed
+    software_folders
+        Folders list where the HANA client is located. It's used as a list as the pydbapi client
+        will be found automatically among different folders and providing several folders is a
+        standard way in SAP landscape
+    output_dir
+        Folder where the package is extracted
+    force
+        Force new extraction if the file already is extracted
+    '''
+
+    ret = {'name': name,
+           'changes': {},
+           'result': False,
+           'comment': ''}
+
+    if not force and __salt__['file.directory_exists'](output_dir):
+        ret['result'] = True
+        ret['comment'] = \
+            '{} already exists. Skipping extraction (set force to True to force the '\
+            'extraction)'.format(output_dir)
+        return ret
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = '{} would be extracted'.format(name)
+        ret['changes']['output_dir'] = output_dir
+        return ret
+
+    __salt__['file.mkdir'](output_dir)
+
+    try:
+        client = __salt__['hana.extract_pydbapi'](name, software_folders, output_dir, hana_version)
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
+
+    ret['result'] = True
+    ret['comment'] = '{} correctly extracted'.format(client)
+    ret['changes'] = {'pydbapi': client, 'output_dir': output_dir}
+
+    return ret
