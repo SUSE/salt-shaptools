@@ -25,8 +25,6 @@ State module to provide SAP utilities functionality to Salt
 # Import python libs
 from __future__ import absolute_import, unicode_literals
 
-import os
-
 # Import salt libs
 from salt import exceptions
 from salt.ext import six
@@ -78,7 +76,7 @@ def extracted(
             output_dir=output_dir,
             options=options)
             
-        ret['changes']['output_dir'] = output_dir or os.path.dirname(name)
+        ret['changes']['output_dir'] = output_dir
         ret['comment'] = '{} file extracted'.format(name)
         ret['result'] = True
         return ret
