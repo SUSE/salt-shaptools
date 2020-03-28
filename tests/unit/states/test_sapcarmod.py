@@ -70,7 +70,7 @@ class SapcarmodTestCase(TestCase, LoaderModuleMockMixin):
 
     def test_extracted_error_exception(self):
         '''
-        Test to check extracted when sapcar fails extracts a sar file
+        Test to check extracted when sapcar fails to extracts a sar file
         '''
 
         expected_ret = {

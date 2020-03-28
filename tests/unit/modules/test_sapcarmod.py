@@ -23,17 +23,17 @@ from tests.support.mock import (
 )
 
 # Import Salt Libs
-import salt.modules.sapcarmod as sapcar
+import salt.modules.sapcarmod as sapcarmod
 
 
 @skipIf(NO_MOCK, NO_MOCK_REASON)
 class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
     '''
-    This class contains a set of functions that test salt.modules.sapcar.
+    This class contains a set of functions that test salt.modules.sapcarmod.
     '''
 
     def setup_loader_modules(self):
-        return {sapcar: {}}
+        return {sapcarmod: {}}
 
     @patch('salt.modules.sapcarmod.saputils.extract_sapcar_file')
     def test_extract_return(self, mock_extract):
@@ -41,7 +41,7 @@ class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
         Test extract method - return
         '''
         mock_extract.return_value = 0
-        assert sapcar.extract('/sapmedia/SAPCAR','/sapmedia/IMDB_SERVER_LINUX.SAR', '/sapmedia/HANA', '-v') == 0
+        assert sapcarmod.extract('/sapmedia/SAPCAR','/sapmedia/IMDB_SERVER_LINUX.SAR', '/sapmedia/HANA', '-v') == 0
         mock_extract.assert_called_once_with(
             sapcar_exe='/sapmedia/SAPCAR', sar_file='/sapmedia/IMDB_SERVER_LINUX.SAR',
             output_dir='/sapmedia/HANA', options='-v')
@@ -51,9 +51,9 @@ class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test extract method - raise
         '''
-        mock_extract.side_effect = sapcar.saputils.SapUtilsError('error')
+        mock_extract.side_effect = sapcarmod.saputils.SapUtilsError('error')
         with pytest.raises(exceptions.CommandExecutionError) as err:
-            sapcar.extract('/sapmedia/SAPCAR','/sapmedia/IMDB_SERVER_LINUX.SAR', '/sapmedia/HANA', '-v')
+            sapcarmod.extract('/sapmedia/SAPCAR','/sapmedia/IMDB_SERVER_LINUX.SAR', '/sapmedia/HANA', '-v')
         mock_extract.assert_called_once_with(
             sapcar_exe='/sapmedia/SAPCAR', sar_file='/sapmedia/IMDB_SERVER_LINUX.SAR',
             output_dir='/sapmedia/HANA', options='-v')
