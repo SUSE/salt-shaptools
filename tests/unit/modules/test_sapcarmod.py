@@ -35,7 +35,7 @@ class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
     def setup_loader_modules(self):
         return {sapcar: {}}
 
-    @mock.patch('salt.modules.sapcarmod.saputils.extract_sapcar_file')
+    @patch('salt.modules.sapcarmod.saputils.extract_sapcar_file')
     def test_extract_return(self, mock_extract):
         '''
         Test extract method - return
@@ -46,7 +46,7 @@ class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
             sapcar_exe='/sapmedia/SAPCAR', sar_file='/sapmedia/IMDB_SERVER_LINUX.SAR',
             output_dir='/sapmedia/HANA', options='-v')
 
-    @mock.patch('salt.modules.sapcarmod.saputils.extract_sapcar_file')
+    @patch('salt.modules.sapcarmod.saputils.extract_sapcar_file')
     def test_extract_raise(self, mock_extract):
         '''
         Test extract method - raise
