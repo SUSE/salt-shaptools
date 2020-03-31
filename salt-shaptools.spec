@@ -51,7 +51,8 @@ cp -R salt/modules/netweavermod.py %{buildroot}/srv/salt/_modules
 cp -R salt/states/netweavermod.py %{buildroot}/srv/salt/_states
 cp -R salt/modules/saptunemod.py %{buildroot}/srv/salt/_modules
 cp -R salt/states/saptunemod.py %{buildroot}/srv/salt/_states
-
+cp -R salt/modules/sapcarmod.py %{buildroot}/srv/salt/_modules
+cp -R salt/states/sapcarmod.py %{buildroot}/srv/salt/_states
 
 %files
 %defattr(-,root,root,-)
