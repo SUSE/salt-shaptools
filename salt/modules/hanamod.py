@@ -970,6 +970,7 @@ def extract_pydbapi(
         name,
         software_folders,
         output_dir,
+        tar_options=None,
         hana_version='20'):
     '''
     Extract HANA pydbapi python client from the provided software folders
@@ -982,14 +983,21 @@ def extract_pydbapi(
         standard way in SAP landscape
     output_dir
         Folder where the package is extracted
+    extract_options
+        Additional options to pass to the tar extraction command
     '''
     current_platform = hana.HanaInstance.get_platform()
+    tar_options_str = '{} xvf'.format(tar_options) if tar_options else 'xvf'
     hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
         hana_version, current_platform))
+    if not isinstance(software_folders, list):
+        raise TypeError(
+            "software_folders must be list, not {} type".format(type(software_folders).__name__)
+        )
     try:
         hana_client_folder = _find_sap_folder(software_folders, hana_client_pattern)
     except SapFolderNotFoundError:
         raise exceptions.CommandExecutionError('HANA client not found')
     pydbapi_file = '{}/client/{}'.format(hana_client_folder, name)
-    __salt__['archive.tar'](options='xvf', tarfile=pydbapi_file, dest=output_dir)
+    __salt__['archive.tar'](options=tar_options_str, tarfile=pydbapi_file, dest=output_dir)
     return pydbapi_file

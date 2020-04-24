@@ -756,11 +756,11 @@ def memory_resources_updated(
         ret['comment'] = six.text_type(err)
         return ret
 
-
 def pydbapi_extracted(
         name,
         software_folders,
         output_dir,
+        tar_options=None,
         hana_version='20',
         force=False):
     '''
@@ -774,6 +774,8 @@ def pydbapi_extracted(
         standard way in SAP landscape
     output_dir
         Folder where the package is extracted
+    tar_options
+        Additional options to pass to the tar extraction command
     force
         Force new extraction if the file already is extracted
     '''
@@ -799,7 +801,12 @@ def pydbapi_extracted(
     __salt__['file.mkdir'](output_dir)
 
     try:
-        client = __salt__['hana.extract_pydbapi'](name, software_folders, output_dir, hana_version)
+        client = __salt__['hana.extract_pydbapi'](
+            name,
+            software_folders,
+            output_dir,
+            tar_options,
+            hana_version)
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
