@@ -986,14 +986,14 @@ def extract_pydbapi(
     extract_options
         Additional options to pass to the tar extraction command
     '''
-    current_platform = hana.HanaInstance.get_platform()
-    tar_options_str = '{} xvf'.format(tar_options) if tar_options else 'xvf'
-    hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
-        hana_version, current_platform))
     if not isinstance(software_folders, list):
         raise TypeError(
             "software_folders must be list, not {} type".format(type(software_folders).__name__)
         )
+    current_platform = hana.HanaInstance.get_platform()
+    tar_options_str = '{} xvf'.format(tar_options) if tar_options else 'xvf'
+    hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
+        hana_version, current_platform))
     try:
         hana_client_folder = _find_sap_folder(software_folders, hana_client_pattern)
     except SapFolderNotFoundError:
