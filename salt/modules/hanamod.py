@@ -988,7 +988,7 @@ def extract_pydbapi(
     '''
     if not isinstance(software_folders, list):
         raise TypeError(
-            "software_folders must be list, not {} type".format(type(software_folders).__name__)
+            'software_folders must be list, not {} type'.format(type(software_folders).__name__)
         )
     current_platform = hana.HanaInstance.get_platform()
     tar_options_str = '{} xvf'.format(tar_options) if tar_options else 'xvf'

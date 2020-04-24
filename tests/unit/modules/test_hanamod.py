@@ -919,7 +919,9 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         assert 'HANA client not found' in str(err.value)
 
     def test_extract_pydbapi_software_folders_type_error(self):
+        software_folders = '1234'
         with pytest.raises(TypeError) as err:
             pydbapi_file = hanamod.extract_pydbapi(
-                'PYDBAPI.tar.gz','1234', '/tmp/output', '-l')
-        assert 'software_folders must be list, not str type' in str(err.value)
+                'PYDBAPI.tar.gz', software_folders, '/tmp/output', '-l')
+        assert 'software_folders must be list, not {} type'.format(
+            type(software_folders).__name__) in str(err.value)
