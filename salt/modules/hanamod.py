@@ -991,8 +991,8 @@ def extract_pydbapi(
             "software_folders must be list, not {} type".format(type(software_folders).__name__)
         )
     current_platform = hana.HanaInstance.get_platform()
-    tar_options_str = ('{} xvf'.format(additional_extract_options)
-                       if additional_extract_options else 'xvf')
+    tar_options_str = ('{} -xvf'.format(additional_extract_options)
+                       if additional_extract_options else '-xvf')
     hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
         hana_version, current_platform))
     try:

@@ -1080,11 +1080,11 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.extract_pydbapi': mock_extract_pydbapi}):
             assert hanamod.pydbapi_extracted(
                 'PYDBAPI.tar', ['1234', '5678'], '/tmp/output',
-                additional_extract_options='l', force=True) == ret
+                additional_extract_options='-l', force=True) == ret
 
         mock_mkdir.assert_called_once_with('/tmp/output')
         mock_extract_pydbapi.assert_called_once_with(
-            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20', 'l')
+            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20', '-l')
 
     def test_pydbapi_extracted_correct(self):
         ret = {'name': 'PYDBAPI.tar',
@@ -1099,8 +1099,8 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'hana.extract_pydbapi': mock_extract_pydbapi}):
             assert hanamod.pydbapi_extracted(
                 'PYDBAPI.tar', ['1234', '5678'], '/tmp/output',
-                force=True, additional_extract_options='l') == ret
+                force=True, additional_extract_options='-l') == ret
 
         mock_mkdir.assert_called_once_with('/tmp/output')
         mock_extract_pydbapi.assert_called_once_with(
-            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20', 'l')
+            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20', '-l')
