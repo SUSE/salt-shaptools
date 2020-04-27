@@ -756,13 +756,14 @@ def memory_resources_updated(
         ret['comment'] = six.text_type(err)
         return ret
 
+
 def pydbapi_extracted(
         name,
         software_folders,
         output_dir,
-        tar_options=None,
         hana_version='20',
-        force=False):
+        force=False,
+        additional_extract_options=None):
     '''
     Extract HANA pydbapi python client from the provided software folders
 
@@ -774,10 +775,10 @@ def pydbapi_extracted(
         standard way in SAP landscape
     output_dir
         Folder where the package is extracted
-    tar_options
-        Additional options to pass to the tar extraction command
     force
         Force new extraction if the file already is extracted
+    additional_extract_options
+        Additional options to pass to the tar extraction command
     '''
 
     ret = {'name': name,
@@ -805,8 +806,8 @@ def pydbapi_extracted(
             name,
             software_folders,
             output_dir,
-            tar_options,
-            hana_version)
+            hana_version,
+            additional_extract_options)
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret

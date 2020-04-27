@@ -970,8 +970,8 @@ def extract_pydbapi(
         name,
         software_folders,
         output_dir,
-        tar_options=None,
-        hana_version='20'):
+        hana_version='20',
+        additional_extract_options=None):
     '''
     Extract HANA pydbapi python client from the provided software folders
 
@@ -983,15 +983,16 @@ def extract_pydbapi(
         standard way in SAP landscape
     output_dir
         Folder where the package is extracted
-    extract_options
+    additional_extract_options
         Additional options to pass to the tar extraction command
     '''
     if not isinstance(software_folders, list):
         raise TypeError(
-            'software_folders must be list, not {} type'.format(type(software_folders).__name__)
+            "software_folders must be list, not {} type".format(type(software_folders).__name__)
         )
     current_platform = hana.HanaInstance.get_platform()
-    tar_options_str = '{} xvf'.format(tar_options) if tar_options else 'xvf'
+    tar_options_str = ('{} xvf'.format(additional_extract_options)
+                       if additional_extract_options else 'xvf')
     hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
         hana_version, current_platform))
     try:
