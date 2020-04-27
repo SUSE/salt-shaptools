@@ -1098,7 +1098,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(hanamod.__salt__, {'file.mkdir': mock_mkdir,
                                            'hana.extract_pydbapi': mock_extract_pydbapi}):
             assert hanamod.pydbapi_extracted(
-                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', 
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output',
                 force=True, additional_extract_options='l') == ret
 
         mock_mkdir.assert_called_once_with('/tmp/output')
