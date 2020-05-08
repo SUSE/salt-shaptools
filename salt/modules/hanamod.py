@@ -1000,5 +1000,5 @@ def extract_pydbapi(
     except SapFolderNotFoundError:
         raise exceptions.CommandExecutionError('HANA client not found')
     pydbapi_file = '{}/client/{}'.format(hana_client_folder, name)
-    __salt__['archive.tar'](options=tar_options_str, tarfile=pydbapi_file, dest=output_dir)
+    __salt__['archive.tar'](options=tar_options_str, tarfile=pydbapi_file, cwd=output_dir)
     return pydbapi_file

@@ -898,7 +898,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_find_sap_folders.assert_called_once_with(
             ['1234', '5678'], compile_mocked)
         mock_tar.assert_called_once_with(
-            options='-l -xvf', tarfile='my_folder/client/PYDBAPI.tar.gz', dest='/tmp/output')
+            options='-l -xvf', tarfile='my_folder/client/PYDBAPI.tar.gz', cwd='/tmp/output')
         assert pydbapi_file == 'my_folder/client/PYDBAPI.tar.gz'
 
     @mock.patch('re.compile')
