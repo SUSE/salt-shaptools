@@ -150,7 +150,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                                            'cp.get_file': mock_cp,
                                            'file.move': mock_mv,
                                            'hana.create_conf_file': mock_create_xml,
-                                           'hana.update_hdb_pwd_file':mock_update_xml,
+                                           'hana.update_hdb_pwd_file': mock_update_xml,
                                            'hana.update_conf_file': mock_update,
                                            'hana.install': mock_install,
                                            'file.remove': mock_remove}):
@@ -1079,11 +1079,12 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(hanamod.__salt__, {'file.mkdir': mock_mkdir,
                                            'hana.extract_pydbapi': mock_extract_pydbapi}):
             assert hanamod.pydbapi_extracted(
-                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', force=True) == ret
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output',
+                additional_extract_options='-l', force=True) == ret
 
         mock_mkdir.assert_called_once_with('/tmp/output')
         mock_extract_pydbapi.assert_called_once_with(
-            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20')
+            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20', '-l')
 
     def test_pydbapi_extracted_correct(self):
         ret = {'name': 'PYDBAPI.tar',
@@ -1097,8 +1098,9 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
         with patch.dict(hanamod.__salt__, {'file.mkdir': mock_mkdir,
                                            'hana.extract_pydbapi': mock_extract_pydbapi}):
             assert hanamod.pydbapi_extracted(
-                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', force=True) == ret
+                'PYDBAPI.tar', ['1234', '5678'], '/tmp/output',
+                force=True, additional_extract_options='-l') == ret
 
         mock_mkdir.assert_called_once_with('/tmp/output')
         mock_extract_pydbapi.assert_called_once_with(
-            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20')
+            'PYDBAPI.tar', ['1234', '5678'], '/tmp/output', '20', '-l')

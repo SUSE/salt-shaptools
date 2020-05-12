@@ -892,13 +892,13 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_tar = MagicMock()
         with patch.dict(hanamod.__salt__, {'archive.tar': mock_tar}):
             pydbapi_file = hanamod.extract_pydbapi(
-                'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output')
+                'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output', additional_extract_options='-l')
 
         mock_compile.assert_called_once_with('^HDB_CLIENT:20.*:LINUX_X86_64:.*')
         mock_find_sap_folders.assert_called_once_with(
             ['1234', '5678'], compile_mocked)
         mock_tar.assert_called_once_with(
-            options='xvf', tarfile='my_folder/client/PYDBAPI.tar.gz', dest='/tmp/output')
+            options='-l -xvf', tarfile='my_folder/client/PYDBAPI.tar.gz', cwd='/tmp/output')
         assert pydbapi_file == 'my_folder/client/PYDBAPI.tar.gz'
 
     @mock.patch('re.compile')
@@ -911,9 +911,17 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_find_sap_folders.side_effect = hanamod.SapFolderNotFoundError
         with pytest.raises(exceptions.CommandExecutionError) as err:
             pydbapi_file = hanamod.extract_pydbapi(
-                'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output')
+                'PYDBAPI.tar.gz', ['1234', '5678'], '/tmp/output', additional_extract_options='-l')
 
         mock_compile.assert_called_once_with('^HDB_CLIENT:20.*:LINUX_X86_64:.*')
         mock_find_sap_folders.assert_called_once_with(
             ['1234', '5678'], compile_mocked)
         assert 'HANA client not found' in str(err.value)
+
+    def test_extract_pydbapi_software_folders_type_error(self):
+        software_folders = '1234'
+        with pytest.raises(TypeError) as err:
+            pydbapi_file = hanamod.extract_pydbapi(
+                'PYDBAPI.tar.gz', software_folders, '/tmp/output', additional_extract_options='-l')
+        assert 'software_folders must be a list, not {} type'.format(
+            type(software_folders).__name__) in str(err.value)

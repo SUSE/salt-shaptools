@@ -762,7 +762,8 @@ def pydbapi_extracted(
         software_folders,
         output_dir,
         hana_version='20',
-        force=False):
+        force=False,
+        additional_extract_options=None):
     '''
     Extract HANA pydbapi python client from the provided software folders
 
@@ -776,6 +777,8 @@ def pydbapi_extracted(
         Folder where the package is extracted
     force
         Force new extraction if the file already is extracted
+    additional_extract_options
+        Additional options to pass to the tar extraction command
     '''
 
     ret = {'name': name,
@@ -799,7 +802,12 @@ def pydbapi_extracted(
     __salt__['file.mkdir'](output_dir)
 
     try:
-        client = __salt__['hana.extract_pydbapi'](name, software_folders, output_dir, hana_version)
+        client = __salt__['hana.extract_pydbapi'](
+            name,
+            software_folders,
+            output_dir,
+            hana_version,
+            additional_extract_options)
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
