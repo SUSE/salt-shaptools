@@ -923,5 +923,5 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         with pytest.raises(TypeError) as err:
             pydbapi_file = hanamod.extract_pydbapi(
                 'PYDBAPI.tar.gz', software_folders, '/tmp/output', additional_extract_options='-l')
-        assert 'software_folders must be list, not {} type'.format(
+        assert 'software_folders must be a list, not {} type'.format(
             type(software_folders).__name__) in str(err.value)
