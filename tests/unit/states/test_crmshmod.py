@@ -179,6 +179,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                sbd_timeout_watchdog=10,
+                sbd_timeout_msgwait=20,
                 no_overwrite_sshkey=True,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
@@ -190,6 +192,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                sbd_timeout_watchdog=10,
+                sbd_timeout_msgwait=20,
                 no_overwrite_sshkey=True,
                 quiet=False)
 
@@ -215,6 +219,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                sbd_timeout_watchdog=10,
+                sbd_timeout_msgwait=20,
                 no_overwrite_sshkey=True,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
@@ -226,6 +232,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                sbd_timeout_watchdog=10,
+                sbd_timeout_msgwait=20,
                 no_overwrite_sshkey=True,
                 quiet=False)
 
@@ -252,6 +260,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                sbd_timeout_watchdog=10,
+                sbd_timeout_msgwait=20,
                 no_overwrite_sshkey=False,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
@@ -263,6 +273,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                sbd_timeout_watchdog=10,
+                sbd_timeout_msgwait=20,
                 no_overwrite_sshkey=False,
                 quiet=False)
 
