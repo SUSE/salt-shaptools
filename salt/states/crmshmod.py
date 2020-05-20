@@ -386,6 +386,12 @@ def corosync_updated(
         ret['result'] = True
         return ret
 
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Corosync configuration would be update'
+        ret['changes'] = changes
+        return ret
+
     new_conf_file_content = _convert2corosync(new_conf_dict)
     if backup:
         __salt__['file.copy'](name, '{}.backup'.format(name))

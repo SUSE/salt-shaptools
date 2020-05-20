@@ -682,6 +682,34 @@ quorum {
         mock_mergedicts.assert_called_once_with(
             {'data': 1}, {'my_data': 1}, {})
 
+    @mock.patch('salt.states.crmshmod._convert2dict')
+    @mock.patch('salt.states.crmshmod._mergedicts')
+    def test_corosync_updated_test(self, mock_mergedicts, mock_convert2dict):
+        '''
+        Test to check corosync_updated in test mode
+        '''
+
+        ret = {'name': '/etc/corosync/corosync.conf',
+               'changes': {'data': 1},
+               'result': None,
+               'comment': 'Corosync configuration would be update'}
+
+        mock_convert2dict.return_value = ({}, {})
+        mock_mergedicts.return_value = ({}, {'data': 1})
+
+        file_content = "my corosync file content\nmy corosync file 2nd line content"
+        with patch.dict(crmshmod.__opts__, {'test': True}):
+            with patch("salt.utils.files.fopen", mock_open(read_data=file_content)):
+                assert crmshmod.corosync_updated(
+                    name='/etc/corosync/corosync.conf',
+                    data={'my_data': 1}) == ret
+
+        mock_convert2dict.assert_called_once_with(
+            ['my corosync file content', 'my corosync file 2nd line content']
+        )
+        mock_mergedicts.assert_called_once_with(
+            {}, {'my_data': 1}, {})
+
     @mock.patch('salt.states.crmshmod._convert2corosync')
     @mock.patch('salt.states.crmshmod._convert2dict')
     @mock.patch('salt.states.crmshmod._mergedicts')
