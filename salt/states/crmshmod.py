@@ -401,3 +401,146 @@ def corosync_updated(
     ret['comment'] = 'Corosync configuration file updated'
     ret['result'] = True
     return ret
+
+
+def cluster_properties_present(
+        name,
+        properties):
+    """
+    Configure the cluster properties after the cluster creation
+
+    name:
+        This parameter is ignored
+    properties:
+        Dictionary with properties and their values to be configured
+    """
+
+    changes = {}
+    ret = {'name': name,
+           'changes': changes,
+           'result': False,
+           'comment': ''}
+
+    if __salt__['crm.status']():
+        ret['result'] = False
+        ret['comment'] = 'Cluster is not created yet. Run cluster_initialized before'
+        return ret
+
+    # We could check if the properties have already the provided values, but setting already
+    # configured values is not harmful
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Cluster properties would be configured'
+        ret['changes'] = properties
+        return ret
+
+    errors = []
+    for option, value in properties.items():
+        try:
+            __salt__['crm.configure_get_property'](option=option)
+            __salt__['crm.configure_property'](option=option, value=value)
+            changes[option] = value
+        except exceptions.CommandExecutionError:
+            errors.append(str(option))
+
+    if errors:
+        ret['comment'] = 'Error configuring the properties {}'.format(",".join(errors))
+        ret['changes'] = changes
+        ret['result'] = False
+        return ret
+
+    ret['changes'] = changes
+    ret['comment'] = 'Cluster properties configured'
+    ret['result'] = True
+    return ret
+
+
+def cluster_rsc_defaults_present(
+        name,
+        rsc_defaults):
+    """
+    Configure the cluster rsc_defaults after the cluster creation
+
+    name:
+        This parameter is ignored
+    properties:
+        Dictionary with rsc_defaults and their values to be configured
+
+    Warning: The state doesn't do any validation, so it will add any provided option/value entry
+        to the cluster configuration
+    """
+
+    changes = {}
+    ret = {'name': name,
+           'changes': changes,
+           'result': False,
+           'comment': ''}
+
+    if __salt__['crm.status']():
+        ret['result'] = False
+        ret['comment'] = 'Cluster is not created yet. Run cluster_initialized before'
+        return ret
+
+    # We could check if the rsc_defaults have already the provided values, but setting already
+    # configured values is not harmful
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Cluster rsc_defaults would be configured'
+        ret['changes'] = rsc_defaults
+        return ret
+
+    for option, value in rsc_defaults.items():
+        __salt__['crm.configure_rsc_defaults'](option=option, value=value)
+        changes[option] = value
+
+    ret['changes'] = changes
+    ret['comment'] = 'Cluster rsc_defaults configured'
+    ret['result'] = True
+    return ret
+
+
+def cluster_op_defaults_present(
+        name,
+        op_defaults):
+    """
+    Configure the cluster op_defaults after the cluster creation
+
+    name:
+        This parameter is ignored
+    properties:
+        Dictionary with op_defaults and their values to be configured
+
+    Warning: The state doesn't do any validation, so it will add any provided option/value entry
+        to the cluster configuration
+    """
+
+    changes = {}
+    ret = {'name': name,
+           'changes': changes,
+           'result': False,
+           'comment': ''}
+
+    if __salt__['crm.status']():
+        ret['result'] = False
+        ret['comment'] = 'Cluster is not created yet. Run cluster_initialized before'
+        return ret
+
+    # We could check if the op_defaults have already the provided values, but setting already
+    # configured values is not harmful
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Cluster op_defaults would be configured'
+        ret['changes'] = op_defaults
+        return ret
+
+    for option, value in op_defaults.items():
+        __salt__['crm.configure_op_defaults'](option=option, value=value)
+        changes[option] = value
+
+    ret['changes'] = changes
+    ret['comment'] = 'Cluster op_defaults configured'
+    ret['result'] = True
+    return ret

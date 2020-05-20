@@ -23,6 +23,7 @@ Module to provide CRM shell (HA cluster) functionality to Salt
 # Import Python libs
 from __future__ import absolute_import, unicode_literals, print_function
 import logging
+import json
 
 from salt import exceptions
 import salt.utils.path
@@ -591,6 +592,77 @@ def configure_load(
         xml='xml ' if is_xml else '',
         method=method, url=url)
 
+    return __salt__['cmd.retcode'](cmd)
+
+
+def configure_get_property(
+        option):
+    '''
+    Get a cluster property value
+
+    option:
+        property name to get the value
+
+    Raises: exceptions.CommandExecutionError if the property doesn't exist
+    '''
+
+    cmd = '{crm_command} configure get_property {property}'.format(
+        crm_command=CRM_COMMAND, property=option)
+
+    value = __salt__['cmd.run'](cmd).strip()
+    if "ERROR: configure.get_property:" in value:
+        raise exceptions.CommandExecutionError(value)
+    return value
+
+
+def configure_property(
+        option,
+        value):
+    '''
+    Set a cluster property value
+
+    option:
+        property name to set the value
+    value:
+        property new value
+    '''
+
+    cmd = '{crm_command} configure property {property}={value}'.format(
+        crm_command=CRM_COMMAND, property=option, value=json.dumps(value))
+    return __salt__['cmd.retcode'](cmd)
+
+
+def configure_rsc_defaults(
+        option,
+        value):
+    '''
+    Set a cluster rsc default value
+
+    option:
+        property name to set the value
+    value:
+        property new value
+    '''
+
+    cmd = '{crm_command} configure rsc_defaults {property}={value}'.format(
+        crm_command=CRM_COMMAND, property=option, value=json.dumps(value))
+    return __salt__['cmd.retcode'](cmd)
+
+
+def configure_op_defaults(
+        option,
+        value):
+    '''
+    Set a cluster op default value
+
+    option:
+        property name to set the value
+    value:
+        property new value
+    '''
+
+    cmd = '{crm_command} configure op_defaults {property}={value}'.format(
+        crm_command=CRM_COMMAND, property=option, value=json.dumps(value))
     return __salt__['cmd.retcode'](cmd)
 
 
