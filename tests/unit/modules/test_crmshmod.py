@@ -646,7 +646,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             result = crmshmod.configure_load('update', 'file.conf')
             assert result
             mock_cmd_run.assert_called_once_with(
-                '{crm_command} configure load {method} {url}'.format(
+                '{crm_command} -n configure load {method} {url}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
                     method='update',
                     url='file.conf'))
@@ -658,10 +658,10 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod.configure_load('update', 'file.conf', True)
+            result = crmshmod.configure_load('update', 'file.conf', True, True)
             assert result
             mock_cmd_run.assert_called_once_with(
-                '{crm_command} configure load xml {method} {url}'.format(
+                '{crm_command} -F configure load xml {method} {url}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
                     method='update',
                     url='file.conf'))

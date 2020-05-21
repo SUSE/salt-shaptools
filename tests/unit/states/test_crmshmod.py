@@ -431,7 +431,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
             mock_configured.assert_called_once_with(
                 method='update',
                 url='file.config',
-                is_xml=False)
+                is_xml=False,
+                force=False)
 
     def test_configured_error(self):
         '''
@@ -451,12 +452,14 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
             assert crmshmod.cluster_configured(
                 name='update',
                 url='file.config',
-                is_xml=False) == ret
+                is_xml=False,
+                force=True) == ret
             mock_status.assert_called_once_with()
             mock_configured.assert_called_once_with(
                 method='update',
                 url='file.config',
-                is_xml=False)
+                is_xml=False,
+                force=True)
 
     def test_configured_command_error(self):
         '''
@@ -481,7 +484,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
             mock_configured.assert_called_once_with(
                 method='update',
                 url='file.config',
-                is_xml=False)
+                is_xml=False,
+                force=False)
 
     def test_convert2dict(self):
         corofile = """

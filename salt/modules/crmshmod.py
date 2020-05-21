@@ -565,7 +565,8 @@ def cluster_remove(
 def configure_load(
         method,
         url,
-        is_xml=None):
+        is_xml=None,
+        force=False):
     '''
     Load a part of configuration (or all of it) from a local file or a
     network URL. The replace method replaces the current configuration with
@@ -578,8 +579,10 @@ def configure_load(
         Used method (check in the description)
     url
         Used configuration file url (or path if it's a local file)
-    is_xml:
+    is_xml
         Set to true if the file is an xml file
+    force
+        Force commit in the configure load operation
 
     CLI Example:
 
@@ -587,10 +590,12 @@ def configure_load(
 
         salt '*' crm.configure_load update file.conf
     '''
-    cmd = '{crm_command} configure load {xml}{method} {url}'.format(
+    cmd = '{crm_command} {force} configure load {xml}{method} {url}'.format(
         crm_command=CRM_COMMAND,
+        force='-F' if force else '-n',
         xml='xml ' if is_xml else '',
-        method=method, url=url)
+        method=method,
+        url=url)
 
     return __salt__['cmd.retcode'](cmd)
 

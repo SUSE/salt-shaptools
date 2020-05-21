@@ -235,7 +235,8 @@ def cluster_joined(
 def cluster_configured(
         name,
         url,
-        is_xml=None):
+        is_xml=None,
+        force=False):
     """
     Machine is congifured with the provided configuration file
 
@@ -245,6 +246,8 @@ def cluster_configured(
         Configuration file path or url
     is_xml:
         True if the configuration file is xml type, False otherwise
+    force
+        Force commit in the configure load operation
     """
     method = name
 
@@ -271,7 +274,8 @@ def cluster_configured(
         result = __salt__['crm.configure_load'](
             method=method,
             url=url,
-            is_xml=is_xml)
+            is_xml=is_xml,
+            force=force)
 
         if result:
             ret['comment'] = 'Error configuring the cluster with method {} and file {}'.format(
