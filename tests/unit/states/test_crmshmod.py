@@ -7,6 +7,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import sys
+import collections
 from salt import exceptions
 
 # Import Salt Testing Libs
@@ -755,3 +756,215 @@ quorum {
 
         mock_write.assert_called_once_with(
             '/etc/corosync/corosync.conf', 'new content')
+
+    # 'cluster_properties_present' function tests
+
+    def test_properties_present_no_cluster(self):
+        '''
+        Test to check properties_present when the cluster is not created
+        '''
+
+        ret = {'name': 'name',
+               'changes': {},
+               'result': False,
+               'comment': 'Cluster is not created yet. Run cluster_initialized before'}
+
+        mock_status = MagicMock(return_value=1)
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
+            assert crmshmod.cluster_properties_present('name', {'data': 'value'}) == ret
+            mock_status.assert_called_once_with()
+
+    def test_properties_present_test(self):
+        '''
+        Test to check properties_present in test mode
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data': 'value'},
+               'result': None,
+               'comment': 'Cluster properties would be configured'}
+
+        mock_status = MagicMock(return_value=0)
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
+            with patch.dict(crmshmod.__opts__, {'test': True}):
+                assert crmshmod.cluster_properties_present('name', {'data': 'value'}) == ret
+            mock_status.assert_called_once_with()
+
+    def test_properties_present(self):
+        '''
+        Test to check properties_present
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data1': 'value1', 'data2': 'value2'},
+               'result': True,
+               'comment': 'Cluster properties configured'}
+
+        mock_status = MagicMock(return_value=0)
+        mock_configure_get_property = MagicMock()
+        mock_configure_property = MagicMock()
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
+                                            'crm.configure_get_property': mock_configure_get_property,
+                                            'crm.configure_property': mock_configure_property}):
+            assert crmshmod.cluster_properties_present(
+                name='name',
+                properties={'data1': 'value1', 'data2': 'value2'}) == ret
+            mock_status.assert_called_once_with()
+            mock_configure_get_property.assert_has_calls([
+                mock.call(option='data1'),
+                mock.call(option='data2')
+            ])
+            mock_configure_property.assert_has_calls([
+                mock.call(option='data1', value='value1'),
+                mock.call(option='data2', value='value2')
+            ])
+
+    def test_properties_present_error(self):
+        '''
+        Test to check properties_present with an error
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data3': 'value3'},
+               'result': False,
+               'comment': 'Error configuring the properties data1, data2'}
+
+        mock_status = MagicMock(return_value=0)
+        mock_configure_get_property = MagicMock(side_effect=[
+            exceptions.CommandExecutionError('err1'),
+            exceptions.CommandExecutionError('err2'),
+            "value3"
+        ])
+        mock_configure_property = MagicMock()
+        # We need to create the dictionary this way, otherwise the items output is different in py2 and py3
+        data = collections.OrderedDict()
+        data['data1'] = 'value1'
+        data['data2'] = 'value2'
+        data['data3'] = 'value3'
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
+                                            'crm.configure_get_property': mock_configure_get_property,
+                                            'crm.configure_property': mock_configure_property}):
+            assert crmshmod.cluster_properties_present(
+                name='name',
+                properties=data) == ret
+            mock_status.assert_called_once_with()
+            mock_configure_get_property.assert_has_calls([
+                mock.call(option='data1'),
+                mock.call(option='data2'),
+                mock.call(option='data3')
+            ])
+            mock_configure_property.assert_has_calls([
+                mock.call(option='data3', value='value3')
+            ])
+
+    # 'cluster_rsc_defaults_present' function tests
+
+    def test_rsc_defaults_present_no_cluster(self):
+        '''
+        Test to check rsc_defaults_present when the cluster is not created
+        '''
+
+        ret = {'name': 'name',
+               'changes': {},
+               'result': False,
+               'comment': 'Cluster is not created yet. Run cluster_initialized before'}
+
+        mock_status = MagicMock(return_value=1)
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
+            assert crmshmod.cluster_rsc_defaults_present('name', {'data': 'value'}) == ret
+            mock_status.assert_called_once_with()
+
+    def test_rsc_defaults_present_test(self):
+        '''
+        Test to check rsc_defaults_present in test mode
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data': 'value'},
+               'result': None,
+               'comment': 'Cluster rsc_defaults would be configured'}
+
+        mock_status = MagicMock(return_value=0)
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
+            with patch.dict(crmshmod.__opts__, {'test': True}):
+                assert crmshmod.cluster_rsc_defaults_present('name', {'data': 'value'}) == ret
+            mock_status.assert_called_once_with()
+
+    def test_rsc_defaults_present(self):
+        '''
+        Test to check rsc_defaults_present
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data1': 'value1', 'data2': 'value2'},
+               'result': True,
+               'comment': 'Cluster rsc_defaults configured'}
+
+        mock_status = MagicMock(return_value=0)
+        mock_configure_rsc_defaults = MagicMock()
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
+                                            'crm.configure_rsc_defaults': mock_configure_rsc_defaults}):
+            assert crmshmod.cluster_rsc_defaults_present(
+                name='name',
+                rsc_defaults={'data1': 'value1', 'data2': 'value2'}) == ret
+            mock_status.assert_called_once_with()
+            mock_configure_rsc_defaults.assert_has_calls([
+                mock.call(option='data1', value='value1'),
+                mock.call(option='data2', value='value2')
+            ])
+
+    # 'cluster_op_defaults_present' function tests
+
+    def test_op_defaults_present_no_cluster(self):
+        '''
+        Test to check op_defaults_present when the cluster is not created
+        '''
+
+        ret = {'name': 'name',
+               'changes': {},
+               'result': False,
+               'comment': 'Cluster is not created yet. Run cluster_initialized before'}
+
+        mock_status = MagicMock(return_value=1)
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
+            assert crmshmod.cluster_op_defaults_present('name', {'data': 'value'}) == ret
+            mock_status.assert_called_once_with()
+
+    def test_op_defaults_present_test(self):
+        '''
+        Test to check op_defaults_present in test mode
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data': 'value'},
+               'result': None,
+               'comment': 'Cluster op_defaults would be configured'}
+
+        mock_status = MagicMock(return_value=0)
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status}):
+            with patch.dict(crmshmod.__opts__, {'test': True}):
+                assert crmshmod.cluster_op_defaults_present('name', {'data': 'value'}) == ret
+            mock_status.assert_called_once_with()
+
+    def test_op_defaults_present(self):
+        '''
+        Test to check op_defaults_present
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'data1': 'value1', 'data2': 'value2'},
+               'result': True,
+               'comment': 'Cluster op_defaults configured'}
+
+        mock_status = MagicMock(return_value=0)
+        mock_configure_op_defaults = MagicMock()
+        with patch.dict(crmshmod.__salt__, {'crm.status': mock_status,
+                                            'crm.configure_op_defaults': mock_configure_op_defaults}):
+            assert crmshmod.cluster_op_defaults_present(
+                name='name',
+                op_defaults={'data1': 'value1', 'data2': 'value2'}) == ret
+            mock_status.assert_called_once_with()
+            mock_configure_op_defaults.assert_has_calls([
+                mock.call(option='data1', value='value1'),
+                mock.call(option='data2', value='value2')
+            ])

@@ -449,7 +449,7 @@ def cluster_properties_present(
             errors.append(str(option))
 
     if errors:
-        ret['comment'] = 'Error configuring the properties {}'.format(",".join(errors))
+        ret['comment'] = 'Error configuring the properties {}'.format(", ".join(errors))
         ret['changes'] = changes
         ret['result'] = False
         return ret
