@@ -105,6 +105,8 @@ def cluster_initialized(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        sbd_timeout_watchdog=5,
+        sbd_timeout_msgwait=10,
         no_overwrite_sshkey=False,
         quiet=None):
     """
@@ -126,6 +128,12 @@ def cluster_initialized(
         sbd device path. To be used "sbd" parameter must be used too. If None,
             the sbd is set as diskless.
         This parameter can be a string (meaning one disk) or a list with multiple disks
+    sbd_timeout_watchdog
+        watchdog timeout for sbd device creation. To be used "sbd" parameter must be used too.
+            defaults to 5
+    sbd_timeout_msgwait
+        msgwait timeout for sbd device creation. To be used "sbd" parameter must be used too.
+            defaults to 10
     no_overwrite_sshkey
         No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
         Only available after crmsh 3.0.0
@@ -158,6 +166,8 @@ def cluster_initialized(
             admin_ip=admin_ip,
             sbd=sbd,
             sbd_dev=sbd_dev,
+            sbd_timeout_watchdog=sbd_timeout_watchdog,
+            sbd_timeout_msgwait=sbd_timeout_msgwait,
             no_overwrite_sshkey=no_overwrite_sshkey,
             quiet=quiet)
 

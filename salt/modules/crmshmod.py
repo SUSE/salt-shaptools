@@ -289,6 +289,8 @@ def _crm_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        sbd_timeout_watchdog=None,
+        sbd_timeout_msgwait=None,
         no_overwrite_sshkey=False,
         quiet=None):
     '''
@@ -314,7 +316,11 @@ def _crm_init(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
-    return __salt__['cmd.retcode'](cmd)
+    return_code = __salt__['cmd.retcode'](cmd)
+    # Workaround as long as setting sbd timeouts is not supported by "crm cluster init"
+    if not return_code and sbd:
+        _manage_sbd(sbd, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait)
+    return return_code
 
 
 def _ha_cluster_init(
@@ -324,6 +330,8 @@ def _ha_cluster_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        sbd_timeout_watchdog=None,
+        sbd_timeout_msgwait=None,
         quiet=None):
     '''
     ha-cluster-init command execution
@@ -350,45 +358,32 @@ def _ha_cluster_init(
         name = __salt__['network.get_hostname']()
         addr = __salt__['network.interface_ip'](interface or 'eth0')
         _set_corosync_unicast(addr, name)
+    # Workaround as long as setting sbd timeouts is not supported by "ha-cluster-init"
+    if not return_code and sbd:
+        _manage_sbd(sbd, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait)
     return return_code
 
 
-def _manage_multiple_sbd(sbd_enabled, sbd_dev):
+def _manage_sbd(sbd_enabled, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait):
     '''
-    crmsh doesn't support multiple sbd disk usage by now. This method workaround this scenario
-    modifying the /etc/syconfig/sbd file before running crmsh
+    "crm cluster init" and "ha-cluster-join" do not support defining sbd timeouts by now.
+    This method can be called after initializing the cluster to define these timeouts.
     '''
     # sbd disks are managed as list, but individual disk is accepted to be more compatible
     if sbd_dev and not isinstance(sbd_dev, list):
         sbd_dev = [sbd_dev]
 
-    # return sbd_dev
+    if not sbd_enabled or not sbd_dev or not sbd_timeout_watchdog or not sbd_timeout_msgwait:
+        return sbd_enabled, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait
 
-    if not sbd_enabled or not sbd_dev or len(sbd_dev) == 1:
-        return sbd_enabled, sbd_dev
-
-    LOGGER.warning('crmsh will say that sbd is not configured')
+    LOGGER.warning('reformat sbd disks with new timeout values')
 
     sbd_str = ' '.join(['-d {}'.format(sbd) for sbd in sbd_dev])
-    cmd = 'sbd {disks} create'.format(disks=sbd_str)
+    cmd = 'sbd {disks} create -1 {sbd_timeout_watchdog} -4 {sbd_timeout_msgwait}'.format(disks=sbd_str, sbd_timeout_watchdog=sbd_timeout_watchdog, sbd_timeout_msgwait=sbd_timeout_msgwait)
     return_code = __salt__['cmd.retcode'](cmd)
     if return_code:
         raise exceptions.SaltInvocationError('sbd disks could not be formatted properly')
-
-    cmd = '{crm_command} cluster init sbd -s {sbd}'.format(crm_command=CRM_COMMAND, sbd=sbd_dev[0])
-    return_code = __salt__['cmd.retcode'](cmd)
-    if return_code:
-        raise exceptions.SaltInvocationError('crm cluster init sbd failed')
-
-    __salt__['file.replace'](
-        path='/etc/sysconfig/sbd',
-        pattern='^SBD_DEVICE=.*',
-        repl='SBD_DEVICE={}'.format(';'.join(sbd_dev)),
-        append_if_not_found=True
-    )
-
-    # return None, None to avoid sbd configuration in crmsh
-    return None, None
+    return sbd_enabled, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait
 
 
 def cluster_init(
@@ -399,6 +394,8 @@ def cluster_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
+        sbd_timeout_watchdog=None,
+        sbd_timeout_msgwait=None,
         no_overwrite_sshkey=False,
         quiet=None):
     '''
@@ -421,6 +418,12 @@ def cluster_init(
     sbd_dev
         sbd device path. To be used "sbd" parameter must be used too. If None,
             the sbd is set as diskless.
+    sbd_timeout_watchdog
+        watchdog timeout for sbd device creation. To be used "sbd" parameter must be used too.
+            For defaults see states
+    sbd_timeout_msgwait
+        msgwait timeout for sbd device creation. To be used "sbd" parameter must be used too.
+            For defaults see states
     no_overwrite_sshkey
         No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
         Only available after crmsh 3.0.0
@@ -433,20 +436,18 @@ def cluster_init(
 
         salt '*' crm.cluster_init hacluster
     '''
-    # Workaournd while multiple sbd disks are not supported by crmsh
-    sbd, sbd_dev = _manage_multiple_sbd(sbd, sbd_dev)
 
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
     if __salt__['crm.use_crm']:
         return _crm_init(
-            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey, quiet)
+            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait, no_overwrite_sshkey, quiet)
 
     LOGGER.warning('The parameter name is not considered!')
     LOGGER.warning('--no_overwrite_sshkey option not available')
 
     return _ha_cluster_init(
-        watchdog, interface, unicast, admin_ip, sbd, sbd_dev, quiet)
+        watchdog, interface, unicast, admin_ip, sbd, sbd_dev, sbd_timeout_watchdog, sbd_timeout_msgwait, quiet)
 
 
 def _crm_join(
