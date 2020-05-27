@@ -646,7 +646,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             result = crmshmod.configure_load('update', 'file.conf')
             assert result
             mock_cmd_run.assert_called_once_with(
-                '{crm_command} configure load {method} {url}'.format(
+                '{crm_command} -n configure load {method} {url}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
                     method='update',
                     url='file.conf'))
@@ -658,13 +658,123 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         mock_cmd_run = MagicMock(return_value=True)
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
-            result = crmshmod.configure_load('update', 'file.conf', True)
+            result = crmshmod.configure_load('update', 'file.conf', True, True)
             assert result
             mock_cmd_run.assert_called_once_with(
-                '{crm_command} configure load xml {method} {url}'.format(
+                '{crm_command} -F configure load xml {method} {url}'.format(
                     crm_command=crmshmod.CRM_COMMAND,
                     method='update',
                     url='file.conf'))
+
+    def test_configure_get_property(self):
+        '''
+        Test configure_get_property
+        '''
+
+        mock_cmd_run = MagicMock(return_value=' value ')
+
+        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+            result = crmshmod.configure_get_property('item')
+            assert result == 'value'
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure get_property {property}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    property='item'))
+
+    def test_configure_get_property_error(self):
+        '''
+        Test configure_get_property when it raises an error
+        '''
+
+        mock_cmd_run = MagicMock(return_value='ERROR: configure.get_property: item')
+
+        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+            with pytest.raises(exceptions.CommandExecutionError) as err:
+                crmshmod.configure_get_property('item')
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure get_property {property}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    property='item'))
+
+        assert 'ERROR: configure.get_property: item' in str(err.value)
+
+    def test_configure_property(self):
+        '''
+        Test configure_property method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_property('item', 'value')
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure property {item}="{value}"'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    item='item',
+                    value='value'))
+
+        mock_cmd_run.reset_mock()
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_property('item', False)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure property {item}={value}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    item='item',
+                    value='false'))
+
+    def test_configure_rsc_defaults(self):
+        '''
+        Test configure_rsc_defaults method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_rsc_defaults('item', 'value')
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure rsc_defaults {item}="{value}"'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    item='item',
+                    value='value'))
+
+        mock_cmd_run.reset_mock()
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_rsc_defaults('item', False)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure rsc_defaults {item}={value}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    item='item',
+                    value='false'))
+
+    def test_configure_op_defaults(self):
+        '''
+        Test configure_op_defaults method
+        '''
+        mock_cmd_run = MagicMock(return_value=True)
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_op_defaults('item', 'value')
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure op_defaults {item}="{value}"'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    item='item',
+                    value='value'))
+
+        mock_cmd_run.reset_mock()
+
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod.configure_op_defaults('item', False)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{crm_command} configure op_defaults {item}={value}'.format(
+                    crm_command=crmshmod.CRM_COMMAND,
+                    item='item',
+                    value='false'))
 
     def test_detect_cloud_py2(self):
         '''
