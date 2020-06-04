@@ -121,10 +121,10 @@ def cluster_initialized(
     admin_ip
         Virtual IP address. If None the virtual address is not set
     sbd
-        Enable sbd usage. If None sbd is not set
+        Enable sbd diskless
+        sbd and sbd_dev are self exclusive. If both are used by any case sbd_dev will be used
     sbd_dev
-        sbd device path. To be used "sbd" parameter must be used too. If None,
-            the sbd is set as diskless.
+        sbd device path
         This parameter can be a string (meaning one disk) or a list with multiple disks
     no_overwrite_sshkey
         No overwrite the currently existing sshkey (/root/.ssh/id_rsa)

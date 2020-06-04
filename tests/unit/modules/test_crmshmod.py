@@ -356,8 +356,19 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} '
-                '--enable-sbd -s {} -s {} --no-overwrite-sshkey -q'.format(
+                '-s {} -s {} --no-overwrite-sshkey -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'dev1', 'dev2'))
+
+        # SBD diskless
+        mock_cmd_run.reset_mock()
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+            result = crmshmod._crm_init(
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, None, True, True)
+            assert result
+            mock_cmd_run.assert_called_once_with(
+                '{} cluster init -y -n {} -w {} -i {} -u -A {} '
+                '-S --no-overwrite-sshkey -q'.format(
+                    crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50'))
 
     def test_ha_cluster_init_basic(self):
         '''
@@ -392,119 +403,61 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             mock_corosync.assert_called_once_with('1.0.1.0', 'node')
             mock_interface_ip.assert_called_once_with('eth1')
             mock_cmd_run.assert_called_once_with(
-                '{} -y -i {} -A {} -S -s {} -s {} -q'.format(
+                '{} -y -i {} -A {} -s {} -s {} -q'.format(
                     crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50', 'dev1', 'dev2'))
 
-    def test_manage_multiple_sbd(self):
-
-        sbd, devs = crmshmod._manage_multiple_sbd(None, None)
-        assert sbd is None
-        assert devs is None
-
-        sbd, devs = crmshmod._manage_multiple_sbd(True, 'disk')
-        assert sbd is True
-        assert devs == ['disk']
-
-    def test_manage_multiple_sbd_workaround(self):
-
-        mock_cmd_run = MagicMock(side_effect=[0, 0])
-        mock_file_replace = MagicMock(return_code=0)
-
+        # SBD diskless
+        mock_cmd_run.reset_mock()
         with patch.dict(crmshmod.__salt__, {
                 'cmd.retcode': mock_cmd_run,
-                'file.replace': mock_file_replace}):
-            sbd, devs = crmshmod._manage_multiple_sbd(True, ['disk1', 'disk2'])
+                'network.get_hostname': mock_get_hostname,
+                'network.interface_ip': mock_interface_ip}):
+            result = crmshmod._ha_cluster_init(
+                'dog', 'eth1', True, '192.168.1.50', True, None, True)
+            assert result == 0
+            mock_cmd_run.assert_called_once_with(
+                '{} -y -i {} -A {} -S -q'.format(
+                    crmshmod.HA_INIT_COMMAND, 'eth1', '192.168.1.50'))
 
-        mock_cmd_run.assert_has_calls([
-            mock.call('sbd -d disk1 -d disk2 create'),
-            mock.call('{} cluster init sbd -s {}'.format(crmshmod.CRM_COMMAND, 'disk1'))
-        ])
-        mock_file_replace.assert_called_once_with(
-            path='/etc/sysconfig/sbd',
-            pattern='^SBD_DEVICE=.*',
-            repl='SBD_DEVICE={}'.format(';'.join(['disk1', 'disk2'])),
-            append_if_not_found=True
-        )
-        assert sbd is None
-        assert devs is None
-
-    def test_manage_multiple_sbd_workaround_errors(self):
-
-        mock_cmd_run = MagicMock(side_effect=[1, 0])
-
-        with patch.dict(crmshmod.__salt__, {
-                'cmd.retcode': mock_cmd_run}):
-            with pytest.raises(exceptions.SaltInvocationError) as err:
-                crmshmod._manage_multiple_sbd(True, ['disk1', 'disk2'])
-
-        assert 'sbd disks could not be formatted properly' in str(err.value)
-        mock_cmd_run.assert_called_once_with('sbd -d disk1 -d disk2 create')
-
-        mock_cmd_run = MagicMock(side_effect=[0, 1])
-
-        with patch.dict(crmshmod.__salt__, {
-                'cmd.retcode': mock_cmd_run}):
-            with pytest.raises(exceptions.SaltInvocationError) as err:
-                crmshmod._manage_multiple_sbd(True, ['disk1', 'disk2'])
-
-        assert 'crm cluster init sbd failed' in str(err.value)
-        mock_cmd_run.assert_has_calls([
-            mock.call('sbd -d disk1 -d disk2 create'),
-            mock.call('{} cluster init sbd -s {}'.format(crmshmod.CRM_COMMAND, 'disk1'))
-        ])
-
-    @mock.patch('salt.modules.crmshmod._manage_multiple_sbd')
     @mock.patch('salt.modules.crmshmod._crm_init')
-    def test_cluster_init_crm(self, crm_init, manage_sbd):
+    def test_cluster_init_crm(self, crm_init):
         '''
         Test cluster_init with crm option
         '''
 
-        manage_sbd.return_value = ('sbd', 'devs')
-
         with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_init.return_value = 0
-            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1')
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=True, sbd_dev='dev1')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', False, None)
-            crm_init.reset_mock()
+                'hacluster', 'dog', 'eth1', None, None, True, ['dev1'], False, None)
 
+        crm_init.reset_mock()
         with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_init.return_value = 0
-            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev=['disk1', 'disk2'])
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=False, sbd_dev=['disk1', 'disk2'])
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', False, None)
-            crm_init.reset_mock()
-
-        with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
-            crm_init.return_value = 0
-            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd_dev='disk1')
-            assert value == 0
-            crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, 'sbd', 'devs', False, None)
+                'hacluster', 'dog', 'eth1', None, None, False, ['disk1', 'disk2'], False, None)
 
     @mock.patch('logging.Logger.warning')
-    @mock.patch('salt.modules.crmshmod._manage_multiple_sbd')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')
-    def test_cluster_init_ha(self, ha_cluster_init, manage_sbd, logger):
+    def test_cluster_init_ha(self, ha_cluster_init, logger):
         '''
         Test cluster_init with ha_cluster_init option
         '''
-        manage_sbd.return_value = ('sbd', 'devs')
 
         with patch.dict(crmshmod.__salt__, {'crm.use_crm': False}):
             ha_cluster_init.return_value = 0
             value = crmshmod.cluster_init(
-                'hacluster', 'dog', 'eth1', no_overwrite_sshkey=True)
+                'hacluster', 'dog', 'eth1', sbd_dev='dev1', no_overwrite_sshkey=True)
             assert value == 0
             logger.assert_has_calls([
                 mock.call('The parameter name is not considered!'),
                 mock.call('--no_overwrite_sshkey option not available')
             ])
             ha_cluster_init.assert_called_once_with(
-                'dog', 'eth1', None, None, 'sbd', 'devs', None)
+                'dog', 'eth1', None, None, None, ['dev1'], None)
 
     def test_crm_join_basic(self):
         '''
