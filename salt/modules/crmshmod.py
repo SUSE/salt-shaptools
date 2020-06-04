@@ -304,11 +304,11 @@ def _crm_init(
         cmd = '{cmd} -u'.format(cmd=cmd)
     if admin_ip:
         cmd = '{cmd} -A {admin_ip}'.format(cmd=cmd, admin_ip=admin_ip)
-    if sbd:
-        cmd = '{cmd} --enable-sbd'.format(cmd=cmd)
-        if sbd_dev:
-            sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
-            cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
+    if sbd_dev:
+        sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
+        cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
+    elif sbd:
+        cmd = '{cmd} -S'.format(cmd=cmd)
     if no_overwrite_sshkey:
         cmd = '{cmd} --no-overwrite-sshkey'.format(cmd=cmd)
     if quiet:
@@ -337,11 +337,11 @@ def _ha_cluster_init(
         cmd = '{cmd} -i {interface}'.format(cmd=cmd, interface=interface)
     if admin_ip:
         cmd = '{cmd} -A {admin_ip}'.format(cmd=cmd, admin_ip=admin_ip)
-    if sbd:
+    if sbd_dev:
+        sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
+        cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
+    elif sbd:
         cmd = '{cmd} -S'.format(cmd=cmd)
-        if sbd_dev:
-            sbd_str = ' '.join(['-s {}'.format(sbd) for sbd in sbd_dev])
-            cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
@@ -351,44 +351,6 @@ def _ha_cluster_init(
         addr = __salt__['network.interface_ip'](interface or 'eth0')
         _set_corosync_unicast(addr, name)
     return return_code
-
-
-def _manage_multiple_sbd(sbd_enabled, sbd_dev):
-    '''
-    crmsh doesn't support multiple sbd disk usage by now. This method workaround this scenario
-    modifying the /etc/syconfig/sbd file before running crmsh
-    '''
-    # sbd disks are managed as list, but individual disk is accepted to be more compatible
-    if sbd_dev and not isinstance(sbd_dev, list):
-        sbd_dev = [sbd_dev]
-
-    # return sbd_dev
-
-    if not sbd_enabled or not sbd_dev or len(sbd_dev) == 1:
-        return sbd_enabled, sbd_dev
-
-    LOGGER.warning('crmsh will say that sbd is not configured')
-
-    sbd_str = ' '.join(['-d {}'.format(sbd) for sbd in sbd_dev])
-    cmd = 'sbd {disks} create'.format(disks=sbd_str)
-    return_code = __salt__['cmd.retcode'](cmd)
-    if return_code:
-        raise exceptions.SaltInvocationError('sbd disks could not be formatted properly')
-
-    cmd = '{crm_command} cluster init sbd -s {sbd}'.format(crm_command=CRM_COMMAND, sbd=sbd_dev[0])
-    return_code = __salt__['cmd.retcode'](cmd)
-    if return_code:
-        raise exceptions.SaltInvocationError('crm cluster init sbd failed')
-
-    __salt__['file.replace'](
-        path='/etc/sysconfig/sbd',
-        pattern='^SBD_DEVICE=.*',
-        repl='SBD_DEVICE={}'.format(';'.join(sbd_dev)),
-        append_if_not_found=True
-    )
-
-    # return None, None to avoid sbd configuration in crmsh
-    return None, None
 
 
 def cluster_init(
@@ -417,10 +379,11 @@ def cluster_init(
     admin_ip
         Virtual IP address. If None the virtual address is not set
     sbd
-        Enable sbd usage. If None sbd is not set
+        Enable sbd diskless
+        sbd and sbd_dev are self exclusive. If both are used by any case sbd_dev will be used
     sbd_dev
-        sbd device path. To be used "sbd" parameter must be used too. If None,
-            the sbd is set as diskless.
+        sbd device path
+        This parameter can be a string (meaning one disk) or a list with multiple disks
     no_overwrite_sshkey
         No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
         Only available after crmsh 3.0.0
@@ -433,8 +396,8 @@ def cluster_init(
 
         salt '*' crm.cluster_init hacluster
     '''
-    # Workaournd while multiple sbd disks are not supported by crmsh
-    sbd, sbd_dev = _manage_multiple_sbd(sbd, sbd_dev)
+    if sbd_dev and not isinstance(sbd_dev, list):
+        sbd_dev = [sbd_dev]
 
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
