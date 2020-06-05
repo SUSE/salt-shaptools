@@ -21,6 +21,7 @@ from tests.support.mock import (
 
 # Import Salt Libs
 import salt.modules.drbdmod as drbd
+import time
 
 
 @skipIf(NO_MOCK, NO_MOCK_REASON)
@@ -355,16 +356,12 @@ single role:Primary
             mock_cmd.assert_called_once_with('drbdsetup show --json all')
 
         # Test 2: Return code is not 0
-        ret = {'name': 'all',
-               'result': False,
-               'comment': 'Error(10) happend when show resource via drbdsetup.'}
-
-        fake = {'retcode': 10}
+        fake = {'stderr': '', 'retcode': 10}
 
         mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            assert drbd.setup_show() == ret
+            assert not drbd.setup_show()
             mock_cmd.assert_called_once_with('drbdsetup show --json all')
 
         # Test 3: Raise json ValueError
@@ -505,9 +502,12 @@ single role:Primary
         fake['retcode'] = 0
 
         mock_cmd = MagicMock(return_value=fake)
+        mock_time_sleep = MagicMock()
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            self.assertRaises(exceptions.CommandExecutionError, drbd.setup_status)
+            with patch.object(time, 'sleep', mock_time_sleep):
+                self.assertRaises(exceptions.CommandExecutionError,
+                                  drbd.setup_status)
 
     def test_check_sync_status(self):
         '''
@@ -820,3 +820,141 @@ beijing role:Primary
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
             assert drbd.check_sync_status('shanghai')
             mock_cmd.assert_called_with('drbdsetup status --json shanghai')
+
+        # Test 4: Test json return "estimated-seconds-to-finish": nan,
+        fake = {}
+        fake['stdout'] = '''
+[
+{
+  "name": "shanghai",
+  "node-id": 1,
+  "role": "Primary",
+  "suspended": false,
+  "write-ordering": "flush",
+  "devices": [
+    {
+      "volume": 0,
+      "minor": 2,
+      "disk-state": "UpToDate",
+      "client": false,
+      "quorum": true,
+      "size": 409600,
+      "read": 0,
+      "written": 0,
+      "al-writes": 0,
+      "bm-writes": 0,
+      "upper-pending": 0,
+      "lower-pending": 3
+    } ],
+  "connections": [
+    {
+      "peer-node-id": 2,
+      "name": "SLE12-sp4-node2",
+      "connection-state": "Connected",
+      "congested": false,
+      "peer-role": "Secondary",
+      "ap-in-flight": 0,
+      "rs-in-flight": 0,
+      "peer_devices": [
+        {
+          "volume": 0,
+          "replication-state": "SyncSource",
+          "peer-disk-state": "Inconsistent",
+          "peer-client": false,
+          "resync-suspended": "no",
+          "received": 0,
+          "sent": 0,
+          "out-of-sync": 409600,
+          "pending": 0,
+          "unacked": 0,
+          "has-sync-details": true,
+          "has-online-verify-details": false,
+          "percent-in-sync": 0.00,
+          "rs-total": 819200,
+          "rs-dt-start-ms": 0,
+          "rs-paused-ms": 0,
+          "rs-dt0-ms": 0,
+          "rs-db0-sectors": 0,
+          "rs-dt1-ms": 0,
+          "rs-db1-sectors": 0,
+          "rs-failed": 0,
+          "rs-same-csum": 0,
+          "want": 0.00,
+          "db0/dt0 [MiB/s]": 0.00,
+          "db1/dt1 [MiB/s]": 0.00,
+          "estimated-seconds-to-finish": nan,
+          "db/dt [MiB/s]": 0.00,
+          "percent-resync-done": 0.00
+        } ]
+    } ]
+}
+]
+
+'''
+        fake['stderr'] = ""
+        fake['retcode'] = 0
+
+        fake1 = {}
+        fake1['stdout'] = '''
+[
+{
+  "name": "shanghai",
+  "node-id": 1,
+  "role": "Primary",
+  "suspended": false,
+  "write-ordering": "flush",
+  "devices": [
+    {
+      "volume": 0,
+      "minor": 2,
+      "disk-state": "UpToDate",
+      "client": false,
+      "quorum": true,
+      "size": 409600,
+      "read": 0,
+      "written": 0,
+      "al-writes": 0,
+      "bm-writes": 0,
+      "upper-pending": 0,
+      "lower-pending": 3
+    } ],
+  "connections": [
+    {
+      "peer-node-id": 2,
+      "name": "SLE12-sp4-node2",
+      "connection-state": "Connected",
+      "congested": false,
+      "peer-role": "Secondary",
+      "ap-in-flight": 0,
+      "rs-in-flight": 0,
+      "peer_devices": [
+        {
+          "volume": 0,
+          "replication-state": "Established",
+          "peer-disk-state": "Inconsistent",
+          "peer-client": false,
+          "resync-suspended": "no",
+          "received": 0,
+          "sent": 0,
+          "out-of-sync": 0,
+          "pending": 0,
+          "unacked": 0,
+          "has-sync-details": false,
+          "has-online-verify-details": false,
+          "percent-in-sync": 100.00
+        } ]
+    } ]
+}
+]
+
+'''
+        fake1['stderr'] = ""
+        fake1['retcode'] = 0
+
+        mock_cmd = MagicMock(side_effect=[fake, fake1])
+        mock_time_sleep = MagicMock()
+
+        with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
+            with patch.object(time, 'sleep', mock_time_sleep):
+                assert not drbd.check_sync_status('shanghai')
+                mock_cmd.assert_called_with('drbdsetup status --json shanghai')
