@@ -1,7 +1,7 @@
 #
 # spec file for package salt-shaptools
 #
-# Copyright (c) 2019 SUSE LLC
+# Copyright (c) 2020 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -24,7 +24,7 @@ Release:        0
 Summary:        Salt modules and states for SAP Applications and SLE-HA components management
 
 License:        Apache-2.0
-Url:            https://github.com/SUSE/%{name}
+URL:            https://github.com/SUSE/%{name}
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch

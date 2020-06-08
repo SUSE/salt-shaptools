@@ -280,6 +280,37 @@ def _is_no_backing_dev_request(res, output):
     return True
 
 
+def _get_json_output_save(command):
+    '''
+    A warpper of get json command to acommandate json output issues
+    '''
+
+    error_str = '"estimated-seconds-to-finish": nan,'
+    replace_str = '"estimated-seconds-to-finish": 987654321,'
+    results = __salt__['cmd.run_all'](command)
+
+    if 'retcode' not in results or results['retcode'] != 0:
+        LOGGER.info("Error running command \"%s\".  Error message: %s (%s)",
+                     command, results['stderr'], results['retcode'])
+        return None
+
+    # https://github.com/LINBIT/drbd-utils/commit/104293030b2c0106b4791edb3eec38b476652a2e
+    # results['stdout'] is unicode
+    s_result = str(results['stdout'])
+    if error_str in s_result:
+        s_result = s_result.replace(error_str, replace_str)
+        results['stdout'] = six.text_type(s_result)
+
+    try:
+        ret = salt.utils.json.loads(results['stdout'], strict=False)
+
+    except ValueError:
+        raise CommandExecutionError('Error trying to load the json output',
+                                    info=results)
+
+    return ret
+
+
 def overview():
     '''
     Show status of the DRBD devices, support two nodes only.
@@ -597,18 +628,7 @@ def setup_show(name='all'):
     # Only support json format
     cmd = 'drbdsetup show --json {}'.format(name)
 
-    results = __salt__['cmd.run_all'](cmd)
-
-    if 'retcode' not in results or results['retcode'] != 0:
-        ret['comment'] = 'Error({}) happend when show resource via drbdsetup.'.format(
-            results['retcode'])
-        return ret
-
-    try:
-        ret = salt.utils.json.loads(results['stdout'], strict=False)
-    except ValueError:
-        raise CommandExecutionError('Error happens when try to load the json output.',
-                                    info=results)
+    ret = _get_json_output_save(cmd)
 
     return ret
 
@@ -635,17 +655,7 @@ def setup_status(name='all'):
 
     cmd = 'drbdsetup status --json {}'.format(name)
 
-    results = __salt__['cmd.run_all'](cmd)
-
-    if 'retcode' not in results or results['retcode'] != 0:
-        LOGGER.info('No drbdsetup status due to %s (%s).', results['stderr'], results['retcode'])
-        return None
-
-    try:
-        ret = salt.utils.json.loads(results['stdout'], strict=False)
-    except ValueError:
-        raise CommandExecutionError('Error happens when try to load the json output.',
-                                    info=results)
+    ret = _get_json_output_save(cmd)
 
     return ret
 
