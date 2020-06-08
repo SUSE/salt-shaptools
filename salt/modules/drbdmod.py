@@ -17,7 +17,6 @@ Module to provide DRBD functionality to Salt
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import time
 
 from salt.exceptions import CommandExecutionError
 from salt.ext import six
@@ -37,9 +36,6 @@ WITH_JSON = True
 DRBDADM = 'drbd-utils'
 # drbd-utils >= 9.0.0 for json status
 DRBDADM_JSON_VERSION = '9.0.0'
-
-RETRY_TIMES = 5
-RETRY_INTERVAL = 3
 
 
 def __virtual__():  # pragma: no cover
@@ -286,28 +282,30 @@ def _is_no_backing_dev_request(res, output):
 
 def _get_json_output_save(command):
     '''
+    A warpper of get json command to acommandate json output issues
     '''
-    attempts = 0
 
-    while attempts < RETRY_TIMES:
+    error_str = '"estimated-seconds-to-finish": nan,'
+    replace_str = '"estimated-seconds-to-finish": 987654321,'
+    results = __salt__['cmd.run_all'](command)
 
-        try:
-            results = __salt__['cmd.run_all'](command)
+    if 'retcode' not in results or results['retcode'] != 0:
+        LOGGER.info("Error running command \"%s\".  Error message: %s (%s)",
+                     command, results['stderr'], results['retcode'])
+        return None
 
-            if 'retcode' not in results or results['retcode'] != 0:
-                LOGGER.info('No cmd(%s) due to %s (%s).', command,
-                            results['stderr'], results['retcode'])
-                return None
+    # https://github.com/LINBIT/drbd-utils/commit/104293030b2c0106b4791edb3eec38b476652a2e
+    # results['stdout'] is unicode
+    s_result = str(results['stdout'])
+    if error_str in s_result:
+        s_result = s_result.replace(error_str, replace_str)
+        results['stdout'] = six.text_type(s_result)
 
-            ret = salt.utils.json.loads(results['stdout'], strict=False)
-            break
+    try:
+        ret = salt.utils.json.loads(results['stdout'], strict=False)
 
-        except ValueError:
-            attempts += 1
-            time.sleep(RETRY_INTERVAL)
-
-    else:
-        raise CommandExecutionError('Error happens when try to load the json output.',
+    except ValueError:
+        raise CommandExecutionError('Error trying to load the json output',
                                     info=results)
 
     return ret

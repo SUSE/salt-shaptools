@@ -21,7 +21,6 @@ from tests.support.mock import (
 
 # Import Salt Libs
 import salt.modules.drbdmod as drbd
-import time
 
 
 @skipIf(NO_MOCK, NO_MOCK_REASON)
@@ -502,12 +501,10 @@ single role:Primary
         fake['retcode'] = 0
 
         mock_cmd = MagicMock(return_value=fake)
-        mock_time_sleep = MagicMock()
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            with patch.object(time, 'sleep', mock_time_sleep):
-                self.assertRaises(exceptions.CommandExecutionError,
-                                  drbd.setup_status)
+            self.assertRaises(exceptions.CommandExecutionError,
+                              drbd.setup_status)
 
     def test_check_sync_status(self):
         '''
@@ -822,6 +819,7 @@ beijing role:Primary
             mock_cmd.assert_called_with('drbdsetup status --json shanghai')
 
         # Test 4: Test json return "estimated-seconds-to-finish": nan,
+        # https://github.com/SUSE/salt-shaptools/pull/65
         fake = {}
         fake['stdout'] = '''
 [
@@ -894,67 +892,8 @@ beijing role:Primary
         fake['stderr'] = ""
         fake['retcode'] = 0
 
-        fake1 = {}
-        fake1['stdout'] = '''
-[
-{
-  "name": "shanghai",
-  "node-id": 1,
-  "role": "Primary",
-  "suspended": false,
-  "write-ordering": "flush",
-  "devices": [
-    {
-      "volume": 0,
-      "minor": 2,
-      "disk-state": "UpToDate",
-      "client": false,
-      "quorum": true,
-      "size": 409600,
-      "read": 0,
-      "written": 0,
-      "al-writes": 0,
-      "bm-writes": 0,
-      "upper-pending": 0,
-      "lower-pending": 3
-    } ],
-  "connections": [
-    {
-      "peer-node-id": 2,
-      "name": "SLE12-sp4-node2",
-      "connection-state": "Connected",
-      "congested": false,
-      "peer-role": "Secondary",
-      "ap-in-flight": 0,
-      "rs-in-flight": 0,
-      "peer_devices": [
-        {
-          "volume": 0,
-          "replication-state": "Established",
-          "peer-disk-state": "Inconsistent",
-          "peer-client": false,
-          "resync-suspended": "no",
-          "received": 0,
-          "sent": 0,
-          "out-of-sync": 0,
-          "pending": 0,
-          "unacked": 0,
-          "has-sync-details": false,
-          "has-online-verify-details": false,
-          "percent-in-sync": 100.00
-        } ]
-    } ]
-}
-]
-
-'''
-        fake1['stderr'] = ""
-        fake1['retcode'] = 0
-
-        mock_cmd = MagicMock(side_effect=[fake, fake1])
-        mock_time_sleep = MagicMock()
+        mock_cmd = MagicMock(return_value=fake)
 
         with patch.dict(drbd.__salt__, {'cmd.run_all': mock_cmd}):
-            with patch.object(time, 'sleep', mock_time_sleep):
-                assert not drbd.check_sync_status('shanghai')
-                mock_cmd.assert_called_with('drbdsetup status --json shanghai')
+            assert not drbd.check_sync_status('shanghai')
+            mock_cmd.assert_called_with('drbdsetup status --json shanghai')
