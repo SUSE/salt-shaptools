@@ -816,7 +816,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         assert 'HANA database not available after 2 seconds in 192.168.10.15:30015' in str(err.value)
 
     @mock.patch('salt.modules.hanamod.hdb_connector')
-    @mock.patch('importlib.reload')
+    @mock.patch('salt.modules.hanamod.imp_reload')
     def test_reload_hdb_connector(self, mock_reload, mock_hdb_connector):
         hanamod.reload_hdb_connector()
         mock_reload.assert_called_once_with(mock_hdb_connector)

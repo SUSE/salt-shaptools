@@ -27,10 +27,11 @@ import logging
 import time
 import re
 
+# Make imp.reload available for py3 and py2
 try:  # pragma: no cover
-    import importlib as imp
+    from importlib import reload as imp_reload
 except ImportError:  # pragma: no cover
-    import imp
+    from imp import reload as imp_reload
 
 from salt import exceptions
 from salt.utils import files as salt_files
@@ -929,7 +930,7 @@ def reload_hdb_connector():
     As hdb_connector uses pyhdb or dbapi, if these packages are installed on the fly,
     we need to reload the connector to import the correct api
     '''
-    imp.reload(hdb_connector)
+    imp_reload(hdb_connector)
 
 
 def _find_sap_folder(software_folders, folder_pattern):
