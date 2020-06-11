@@ -26,15 +26,14 @@ from __future__ import absolute_import, unicode_literals, print_function
 import logging
 import time
 import re
+import sys
 
-try:  # pragma: no cover
-    import importlib as imp
-except ImportError:  # pragma: no cover
+if sys.version_info.major == 2: # pragma: no cover
     import imp
 
+from salt.ext.six.moves import reload_module
 from salt import exceptions
 from salt.utils import files as salt_files
-
 
 # Import third party libs
 try:
@@ -924,12 +923,40 @@ def wait_for_connection(
             ))
 
 
-def reload_hdb_connector():
+def reload_hdb_connector():  # pragma: no cover
     '''
     As hdb_connector uses pyhdb or dbapi, if these packages are installed on the fly,
     we need to reload the connector to import the correct api
     '''
-    imp.reload(hdb_connector)
+
+    def __import_mod(name):
+        '''
+        Find more info in: https://docs.python.org/2/library/imp.html
+        '''
+        try:
+            return sys.modules[name]
+        except KeyError:
+            pass
+
+        file_ptr, pathname, description = imp.find_module(name)
+
+        try:
+            return imp.load_module(name, file_ptr, pathname, description)
+        finally:
+            # Since we may exit via an exception, close file_ptr explicitly.
+            if file_ptr:
+                file_ptr.close()
+
+    if sys.version_info.major == 2:
+        # pyhdbcli has a cyclical import so it raises an error, but the module is loaded properly
+        try:
+            __import_mod('pyhdbcli')
+        except ImportError:
+            pass
+        __import_mod('hdbcli/dbapi')
+        __import_mod('hdbcli')
+
+    reload_module(hdb_connector)
 
 
 def _find_sap_folder(software_folders, folder_pattern):

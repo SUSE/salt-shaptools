@@ -7,6 +7,7 @@
 # Import Python Libs
 from __future__ import absolute_import, print_function, unicode_literals
 import pytest
+import sys
 
 from salt import exceptions
 
@@ -816,10 +817,46 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         assert 'HANA database not available after 2 seconds in 192.168.10.15:30015' in str(err.value)
 
     @mock.patch('salt.modules.hanamod.hdb_connector')
-    @mock.patch('importlib.reload')
-    def test_reload_hdb_connector(self, mock_reload, mock_hdb_connector):
+    @mock.patch('salt.modules.hanamod.reload_module')
+    def test_reload_hdb_connector_py3(self, mock_reload, mock_hdb_connector):
+        if sys.version_info.major == 2:
+            self.skipTest('python3 only')
         hanamod.reload_hdb_connector()
         mock_reload.assert_called_once_with(mock_hdb_connector)
+
+    @mock.patch('salt.modules.hanamod.hdb_connector')
+    @mock.patch('salt.modules.hanamod.reload_module')
+    @mock.patch('imp.find_module')
+    @mock.patch('imp.load_module')
+    def test_reload_hdb_connector_py2(
+            self, mock_load, mock_find, mock_reload, mock_hdb_connector):
+        if sys.version_info.major == 3:
+            self.skipTest('python2 only')
+
+        pyhdbcli_ptr = mock.Mock()
+        dbapi_ptr = mock.Mock()
+        hdbcli_ptr = mock.Mock()
+
+        mock_find.side_effect = [
+            (pyhdbcli_ptr, 2, 3), (dbapi_ptr, 6, 7), (hdbcli_ptr, 10, 11)]
+
+        hanamod.reload_hdb_connector()
+
+        mock_reload.assert_called_once_with(mock_hdb_connector)
+        mock_find.assert_has_calls([
+            mock.call('pyhdbcli'),
+            mock.call('hdbcli/dbapi'),
+            mock.call('hdbcli')
+        ])
+        mock_load.assert_has_calls([
+            mock.call('pyhdbcli', pyhdbcli_ptr, 2, 3),
+            mock.call('hdbcli/dbapi', dbapi_ptr, 6, 7),
+            mock.call('hdbcli', hdbcli_ptr, 10, 11)
+        ])
+
+        pyhdbcli_ptr.close.assert_called_once_with()
+        dbapi_ptr.close.assert_called_once_with()
+        hdbcli_ptr.close.assert_called_once_with()
 
     @mock.patch('logging.Logger.debug')
     @mock.patch('salt.utils.files.fopen')
