@@ -968,3 +968,68 @@ quorum {
                 mock.call(option='data1', value='value1'),
                 mock.call(option='data2', value='value2')
             ])
+
+    def test_cloud_grains_present_test(self):
+        '''
+        Test to check cloud_grains_present in test mode
+        '''
+
+        ret = {'name': 'name',
+               'changes': {},
+               'result': None,
+               'comment': 'Cloud grains would be set'}
+
+        with patch.dict(crmshmod.__opts__, {'test': True}):
+            assert crmshmod.cloud_grains_present('name') == ret
+
+    def test_cloud_grains_present(self):
+        '''
+        Test to check cloud_grains_present
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'cloud_provider': 'mycloud'},
+               'result': True,
+               'comment': 'Cloud grains set'}
+
+        mock_detect_cloud = MagicMock(return_value='mycloud')
+        mock_set_grains = MagicMock()
+        with patch.dict(crmshmod.__salt__, {'crm.detect_cloud': mock_detect_cloud,
+                                            'grains.set': mock_set_grains}):
+            assert crmshmod.cloud_grains_present(name='name') == ret
+            mock_detect_cloud.assert_called_once_with()
+            mock_set_grains.assert_called_once_with('cloud_provider', 'mycloud')
+
+    def test_cloud_grains_present_gcp(self):
+        '''
+        Test to check cloud_grains_present for gcp
+        '''
+
+        ret = {'name': 'name',
+               'changes': {'cloud_provider': 'google-cloud-platform',
+                           'gcp_instance_id': 'm_id',
+                           'gcp_instance_name': 'm_name'},
+               'result': True,
+               'comment': 'Cloud grains set'}
+
+        mock_detect_cloud = MagicMock(return_value='google-cloud-platform')
+        mock_set_grains = MagicMock()
+        mock_http_query = MagicMock(side_effect=[{'body': 'm_id'}, {'body': 'm_name'}])
+        with patch.dict(crmshmod.__salt__, {'crm.detect_cloud': mock_detect_cloud,
+                                            'grains.set': mock_set_grains,
+                                            'http.query': mock_http_query}):
+            assert crmshmod.cloud_grains_present(name='name') == ret
+            mock_detect_cloud.assert_called_once_with()
+            mock_http_query.assert_has_calls([
+                mock.call(
+                    url='http://metadata.google.internal/computeMetadata/v1/instance/id',
+                    header_dict={"Metadata-Flavor": "Google"}),
+                mock.call(
+                    url='http://metadata.google.internal/computeMetadata/v1/instance/name',
+                    header_dict={"Metadata-Flavor": "Google"})
+            ])
+            mock_set_grains.assert_has_calls([
+                mock.call('cloud_provider', 'google-cloud-platform'),
+                mock.call('gcp_instance_id', 'm_id'),
+                mock.call('gcp_instance_name', 'm_name')
+            ])

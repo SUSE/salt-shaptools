@@ -548,3 +548,50 @@ def cluster_op_defaults_present(
     ret['comment'] = 'Cluster op_defaults configured'
     ret['result'] = True
     return ret
+
+
+def cloud_grains_present(
+        name):
+    """
+    Set the required cloud providers data in the grains
+
+    All providers: cloud_provider
+    Only gcp: gcp_instance_id, gcp_instance_name
+
+    name:
+        This parameter is ignored
+    """
+
+    changes = {}
+    ret = {'name': name,
+           'changes': changes,
+           'result': False,
+           'comment': ''}
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'Cloud grains would be set'
+        ret['changes'] = changes
+        return ret
+
+    cloud_provider = __salt__['crm.detect_cloud']()
+    __salt__['grains.set']('cloud_provider', cloud_provider)
+    changes['cloud_provider'] = cloud_provider
+
+    if cloud_provider == 'google-cloud-platform':
+        gcp_instance_id = __salt__['http.query'](
+            url='http://metadata.google.internal/computeMetadata/v1/instance/id',
+            header_dict={"Metadata-Flavor": "Google"})['body']
+        __salt__['grains.set']('gcp_instance_id', gcp_instance_id)
+        changes['gcp_instance_id'] = gcp_instance_id
+
+        gcp_instance_name = __salt__['http.query'](
+            url='http://metadata.google.internal/computeMetadata/v1/instance/name',
+            header_dict={"Metadata-Flavor": "Google"})['body']
+        __salt__['grains.set']('gcp_instance_name', gcp_instance_name)
+        changes['gcp_instance_name'] = gcp_instance_name
+
+    ret['changes'] = changes
+    ret['comment'] = 'Cloud grains set'
+    ret['result'] = True
+    return ret
