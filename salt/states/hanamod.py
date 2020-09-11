@@ -70,6 +70,20 @@ TMP_CONFIG_FILE = '/tmp/hana.conf'
 TMP_HDB_PWD_FILE = '/root/hdb_passwords.xml'
 INI_PARAM_PRELOAD_CS = {'section_name': 'system_replication', 'parameter_name': 'preload_column_tables'}
 INI_PARAM_GAL = {'section_name': 'memorymanager', 'parameter_name': 'global_allocation_limit'}
+# This keys are retrieved from the xml passwords file created by hdbclm
+PASSWORD_KEYS = [
+    'root_password',
+    'sapadm_password',
+    'master_password',
+    'sapadm_password',
+    'password',
+    'system_user_password',
+    'lss_user_password',
+    'lss_backup_password',
+    'streaming_cluster_manager_password',
+    'ase_user_password',
+    'org_manager_password'
+]
 
 
 def __virtual__():  # pragma: no cover
@@ -239,12 +253,16 @@ def installed(
             __salt__['file.move'](
                 src=pwd_file,
                 dst=TMP_HDB_PWD_FILE)
+
+            extra_keys = _parse_dict(extra_parameters)
+            extra_keys = {key: value for (key, value) in extra_keys.items() if key in PASSWORD_KEYS}
             hdb_pwd_file = __salt__['hana.update_hdb_pwd_file'](
                 hdb_pwd_file=TMP_HDB_PWD_FILE,
                 root_password=root_password,
                 password=password,
                 sapadm_password=sapadm_password,
-                system_user_password=system_user_password)
+                system_user_password=system_user_password,
+                **extra_keys)
             ret['changes']['hdb_pwd_file'] = 'new'
         if config_file:
             __salt__['cp.get_file'](
@@ -261,9 +279,10 @@ def installed(
             ret['changes']['config_file'] = 'new'
         if extra_parameters:
             extra_parameters = _parse_dict(extra_parameters)
+            extra_parameters = {key: value for (key, value) in extra_parameters.items() if key not in PASSWORD_KEYS}
             config_file = __salt__['hana.update_conf_file'](
                 conf_file=config_file,
-                extra_parameters=extra_parameters)
+                **extra_parameters)
 
         __salt__['hana.install'](
             software_path=software_path,

@@ -158,7 +158,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 'prd', '00', 'pass', '/software',
                 'root', config_file='hana.conf', root_password='Test1234',
                 sapadm_password='Test1234', system_user_password='Test1234',
-                extra_parameters=[{'hostname': 'hana01'}]) == ret
+                extra_parameters=[{'hostname': 'hana01', 'org_manager_password': 'pass'}]) == ret
 
             mock_create_xml.assert_called_once_with(
                 software_path='/software',
@@ -170,13 +170,14 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                 dst=hanamod.TMP_HDB_PWD_FILE)
             mock_update_xml.assert_called_once_with(
                 hdb_pwd_file=hanamod.TMP_HDB_PWD_FILE, root_password='Test1234',
-                password='pass', sapadm_password='Test1234', system_user_password='Test1234')
+                password='pass', sapadm_password='Test1234', system_user_password='Test1234',
+                org_manager_password='pass')
             mock_cp.assert_called_once_with(
                 path='hana.conf',
                 dest=hanamod.TMP_CONFIG_FILE)
             mock_update.assert_called_once_with(
                 conf_file=hanamod.TMP_CONFIG_FILE,
-                extra_parameters={u'hostname': u'hana01'})
+                hostname='hana01')
             mock_install.assert_called_once_with(
                 software_path='/software',
                 conf_file='hana_updated.conf',
@@ -228,7 +229,7 @@ class HanamodTestCase(TestCase, LoaderModuleMockMixin):
                     root_user='root'),
                 mock.call(
                     conf_file='hana_updated.conf',
-                    extra_parameters={u'hostname': u'hana01'})
+                    hostname='hana01')
             ])
 
             mock_install.assert_called_once_with(
