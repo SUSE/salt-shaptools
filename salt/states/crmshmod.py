@@ -553,7 +553,12 @@ def cluster_op_defaults_present(
 def cloud_grains_present(
         name):
     """
-    Set the required cloud providers data in the grains
+    Set the required cloud providers data in the grains.
+
+    These grains are used by the `habootstrap-formula` to identify if the current
+    execution is being done in the cloud, and if this is the case, set the information
+    regarding the current cloud provider that is used later to run certain states and
+    populate the configuration templates.
 
     All providers: cloud_provider
     Only gcp: gcp_instance_id, gcp_instance_name
