@@ -456,3 +456,47 @@ def sapservices_updated(
     except exceptions.CommandExecutionError as err:
         ret['comment'] = six.text_type(err)
         return ret
+
+
+def ensa_version_grains_present(
+        name,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Set the `ensa_version` grain with the currently installed ENSA version
+
+    name (sap_instance)
+        Check for specific SAP instances. Available options: ascs, ers.
+    sid
+        Netweaver system id (PRD for example)
+    inst
+        Netweaver instance number (00 for example)
+    password
+        Netweaver instance password
+    '''
+
+    sap_instance = name
+
+    changes = {}
+    ret = {'name': name,
+           'changes': changes,
+           'result': False,
+           'comment': ''}
+
+    if __opts__['test']:
+        ret['result'] = None
+        ret['comment'] = 'ENSA version grain would be set'
+        ret['changes'] = changes
+        return ret
+
+    ensa_version = __salt__['netweaver.get_ensa_version'](
+        sap_instance, sid, inst, password)
+
+    __salt__['grains.set']('ensa_version', ensa_version)
+    changes['ensa_version'] = ensa_version
+
+    ret['changes'] = changes
+    ret['comment'] = 'ENSA version grain set'
+    ret['result'] = True
+    return ret
