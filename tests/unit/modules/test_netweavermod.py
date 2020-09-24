@@ -386,6 +386,35 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
             'root', 'root', ascs_password=None, timeout=0, interval=5, cwd=None)
         assert 'netweaver error' in str(err.value)
 
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_get_ensa_version(self, mock_netweaver):
+        '''
+        Test install method - raise
+        '''
+        mock_netweaver_instance = mock.Mock()
+        mock_netweaver_instance.get_ensa_version.return_value = 1
+        mock_netweaver.return_value = mock_netweaver_instance
+        with patch.object(netweavermod, '_init', mock_netweaver):
+            version = netweavermod.get_ensa_version('ascs', 'prd', '00', 'pass')
+            assert version == 1
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_instance.get_ensa_version.assert_called_once_with('ascs')
+
+    @patch('salt.modules.netweavermod.netweaver.NetweaverInstance')
+    def test_get_ensa_version_error(self, mock_netweaver):
+        '''
+        Test install method - raise
+        '''
+        mock_netweaver_instance = mock.Mock()
+        mock_netweaver_instance.get_ensa_version.side_effect = ValueError('invalid instance')
+        mock_netweaver.return_value = mock_netweaver_instance
+        with patch.object(netweavermod, '_init', mock_netweaver):
+            with pytest.raises(exceptions.CommandExecutionError) as err:
+                netweavermod.get_ensa_version('ascs', 'prd', '00', 'pass')
+            assert'invalid instance' in str(err.value)
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_instance.get_ensa_version.assert_called_once_with('ascs')
+
     def test_setup_cwd(self):
 
         mock_remove = mock.MagicMock()

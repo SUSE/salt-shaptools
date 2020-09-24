@@ -490,8 +490,12 @@ def ensa_version_grains_present(
         ret['changes'] = changes
         return ret
 
-    ensa_version = __salt__['netweaver.get_ensa_version'](
-        sap_instance, sid, inst, password)
+    try:
+        ensa_version = __salt__['netweaver.get_ensa_version'](
+            sap_instance, sid, inst, password)
+    except exceptions.CommandExecutionError as err:
+        ret['comment'] = six.text_type(err)
+        return ret
 
     __salt__['grains.set']('ensa_version', ensa_version)
     changes['ensa_version'] = ensa_version

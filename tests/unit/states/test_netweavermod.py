@@ -556,9 +556,9 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
         mock_append.assert_called_once_with(name='/usr/sap/sapservices', text=new_profile)
 
         new_profile = 'LD_LIBRARY_PATH=/usr/sap/PRD/ASCS00/exe:$LD_LIBRARY_PATH; '\
-        'export LD_LIBRARY_PATH; /usr/sap/PRD/ASCS00/exe/sapstartsrv '\
-        'pf=/usr/sap/PRD/SYS/profile/PRD_ASCS00_virtual '\
-        '-D -u prdadm'
+            'export LD_LIBRARY_PATH; /usr/sap/PRD/ASCS00/exe/sapstartsrv '\
+            'pf=/usr/sap/PRD/SYS/profile/PRD_ASCS00_virtual '\
+            '-D -u prdadm'
 
         ret = {'name': 'ers',
                'changes': {'sap_instance': 'ers', 'profile': new_profile},
@@ -623,3 +623,54 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             'cat /usr/sap/sapservices | grep \'.*ERS.*\'', python_shell=True)
         mock_is_installed.assert_called_once_with(
             sap_instance='ENQREP', sid='prd', inst=00, password='pass')
+
+    def test_ensa_version_grains_present_test(self):
+        '''
+        Test ensa_version_grains_present using test mode
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {},
+               'result': None,
+               'comment': 'ENSA version grain would be set'}
+
+        with patch.dict(netweavermod.__opts__, {'test': True}):
+            assert netweavermod.ensa_version_grains_present(
+                'ascs', 'prd', 00, 'pass') == ret
+
+    def test_ensa_version_grains_present_error(self):
+        '''
+        Test ensa_version_grains_present with the error
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {},
+               'result': False,
+               'comment': 'err'}
+
+        mock_get_ensa_version = mock.Mock(side_effect=exceptions.CommandExecutionError('err'))
+
+        with patch.dict(netweavermod.__salt__, {
+                'netweaver.get_ensa_version': mock_get_ensa_version}):
+            assert netweavermod.ensa_version_grains_present(
+                'ascs', 'prd', 00, 'pass') == ret
+
+    def test_ensa_version_grains_present(self):
+        '''
+        Test ensa_version_grains_present with correct execution
+        '''
+
+        ret = {'name': 'ascs',
+               'changes': {'ensa_version': 1},
+               'result': True,
+               'comment': 'ENSA version grain set'}
+
+        mock_get_ensa_version = mock.Mock(return_value=1)
+        mock_grains_set = mock.Mock()
+
+        with patch.dict(netweavermod.__salt__, {
+                'netweaver.get_ensa_version': mock_get_ensa_version,
+                'grains.set': mock_grains_set}):
+            assert netweavermod.ensa_version_grains_present(
+                'ascs', 'prd', 00, 'pass') == ret
+        mock_grains_set.assert_called_once_with('ensa_version', 1)
