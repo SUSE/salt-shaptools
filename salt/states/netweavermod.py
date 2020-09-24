@@ -464,7 +464,7 @@ def ensa_version_grains_present(
         inst=None,
         password=None):
     '''
-    Set the `ensa_version` grain with the currently installed ENSA version
+    Set the `ensa_version_{sid}_{inst}` grain with the currently installed ENSA version
 
     name (sap_instance)
         Check for specific SAP instances. Available options: ascs, ers.
@@ -497,8 +497,9 @@ def ensa_version_grains_present(
         ret['comment'] = six.text_type(err)
         return ret
 
-    __salt__['grains.set']('ensa_version', ensa_version)
-    changes['ensa_version'] = ensa_version
+    grain_key = 'ensa_version_{}_{}'.format(sid, inst)
+    __salt__['grains.set'](grain_key, ensa_version)
+    changes[grain_key] = ensa_version
 
     ret['changes'] = changes
     ret['comment'] = 'ENSA version grain set'

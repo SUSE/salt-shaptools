@@ -661,7 +661,7 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
         '''
 
         ret = {'name': 'ascs',
-               'changes': {'ensa_version': 1},
+               'changes': {'ensa_version_prd_00': 1},
                'result': True,
                'comment': 'ENSA version grain set'}
 
@@ -672,5 +672,5 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
                 'netweaver.get_ensa_version': mock_get_ensa_version,
                 'grains.set': mock_grains_set}):
             assert netweavermod.ensa_version_grains_present(
-                'ascs', 'prd', 00, 'pass') == ret
-        mock_grains_set.assert_called_once_with('ensa_version', 1)
+                'ascs', 'prd', '00', 'pass') == ret
+        mock_grains_set.assert_called_once_with('ensa_version_prd_00', 1)
