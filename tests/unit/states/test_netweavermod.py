@@ -674,3 +674,12 @@ class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
             assert netweavermod.ensa_version_grains_present(
                 'ascs', 'prd', '00', 'pass') == ret
         mock_grains_set.assert_called_once_with('ensa_version_prd_00', 1)
+
+        mock_grains_set.reset_mock()
+
+        with patch.dict(netweavermod.__salt__, {
+                'netweaver.get_ensa_version': mock_get_ensa_version,
+                'grains.set': mock_grains_set}):
+            assert netweavermod.ensa_version_grains_present(
+                'ascs', 'prd', 0, 'pass') == ret
+        mock_grains_set.assert_called_once_with('ensa_version_prd_00', 1)

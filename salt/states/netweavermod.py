@@ -477,6 +477,7 @@ def ensa_version_grains_present(
     '''
 
     sap_instance = name
+    inst = '{:0>2}'.format(inst)
 
     changes = {}
     ret = {'name': name,
