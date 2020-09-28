@@ -402,7 +402,7 @@ def get_ensa_version(
     try:
         netweaver_inst = _init(sid, inst, password)
         return netweaver_inst.get_ensa_version(sap_instance)
-    except ValueError as err:
+    except (ValueError, netweaver.NetweaverError) as err:
         raise exceptions.CommandExecutionError(err)
 
 

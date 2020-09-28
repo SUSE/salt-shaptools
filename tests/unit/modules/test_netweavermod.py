@@ -410,8 +410,20 @@ class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
         mock_netweaver.return_value = mock_netweaver_instance
         with patch.object(netweavermod, '_init', mock_netweaver):
             with pytest.raises(exceptions.CommandExecutionError) as err:
-                netweavermod.get_ensa_version('ascs', 'prd', '00', 'pass')
+                netweavermod.get_ensa_version('other', 'prd', '00', 'pass')
             assert'invalid instance' in str(err.value)
+        mock_netweaver.assert_called_once_with('prd', '00', 'pass')
+        mock_netweaver_instance.get_ensa_version.assert_called_once_with('other')
+
+        mock_netweaver.reset_mock()
+        mock_netweaver_instance.reset_mock()
+        mock_netweaver_instance.get_ensa_version.side_effect = \
+            netweavermod.netweaver.NetweaverError('Netweaver error')
+        mock_netweaver.return_value = mock_netweaver_instance
+        with patch.object(netweavermod, '_init', mock_netweaver):
+            with pytest.raises(exceptions.CommandExecutionError) as err:
+                netweavermod.get_ensa_version('ascs', 'prd', '00', 'pass')
+            assert'Netweaver error' in str(err.value)
         mock_netweaver.assert_called_once_with('prd', '00', 'pass')
         mock_netweaver_instance.get_ensa_version.assert_called_once_with('ascs')
 
