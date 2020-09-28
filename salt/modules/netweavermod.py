@@ -382,6 +382,30 @@ def install_ers(
         raise exceptions.CommandExecutionError(err)
 
 
+def get_ensa_version(
+        sap_instance,
+        sid=None,
+        inst=None,
+        password=None):
+    '''
+    Get currently installed sap instance ENSA version
+
+    sap_instance
+        Check for specific SAP instances. Available options: ascs, ers.
+    sid
+        Netweaver system id (PRD for example)
+    inst
+        Netweaver instance number (00 for example)
+    password
+        Netweaver instance password
+    '''
+    try:
+        netweaver_inst = _init(sid, inst, password)
+        return netweaver_inst.get_ensa_version(sap_instance)
+    except (ValueError, netweaver.NetweaverError) as err:
+        raise exceptions.CommandExecutionError(err)
+
+
 def setup_cwd(
         software_path,
         cwd='/tmp/swpm_unattended',
