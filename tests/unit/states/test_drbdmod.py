@@ -13,9 +13,7 @@ from tests.support.mixins import LoaderModuleMockMixin
 from tests.support.unit import TestCase, skipIf
 from tests.support.mock import (
     MagicMock,
-    patch,
-    NO_MOCK,
-    NO_MOCK_REASON
+    patch
 )
 
 # Import Salt Libs
@@ -25,7 +23,6 @@ import time
 RES_NAME = 'dummy'
 
 
-@skipIf(NO_MOCK, NO_MOCK_REASON)
 class DrbdStatesTestCase(TestCase, LoaderModuleMockMixin):
     '''
     Test cases for salt.states.drbd

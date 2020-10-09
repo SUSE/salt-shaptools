@@ -18,16 +18,13 @@ from tests.support import mock
 from tests.support.mock import (
     MagicMock,
     patch,
-    mock_open,
-    NO_MOCK,
-    NO_MOCK_REASON
+    mock_open
 )
 
 # Import Salt Libs
 import salt.modules.hanamod as hanamod
 
 
-@skipIf(NO_MOCK, NO_MOCK_REASON)
 class HanaModuleTest(TestCase, LoaderModuleMockMixin):
     '''
     This class contains a set of functions that test salt.modules.hana.

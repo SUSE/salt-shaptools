@@ -13,8 +13,6 @@ from tests.support.mixins import LoaderModuleMockMixin
 from tests.support.unit import skipIf, TestCase
 from tests.support import mock
 from tests.support.mock import (
-    NO_MOCK,
-    NO_MOCK_REASON,
     MagicMock,
     patch
 )
@@ -23,7 +21,6 @@ from tests.support.mock import (
 import salt.states.netweavermod as netweavermod
 
 
-@skipIf(NO_MOCK, NO_MOCK_REASON)
 class NetweavermodTestCase(TestCase, LoaderModuleMockMixin):
     '''
     Test cases for salt.states.netweavermod

@@ -17,16 +17,13 @@ from tests.support import mock
 from tests.support.mock import (
     MagicMock,
     patch,
-    mock_open,
-    NO_MOCK,
-    NO_MOCK_REASON
+    mock_open
 )
 
 # Import Salt Libs
 import salt.modules.sapcarmod as sapcarmod
 
 
-@skipIf(NO_MOCK, NO_MOCK_REASON)
 class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
     '''
     This class contains a set of functions that test salt.modules.sapcarmod.
@@ -57,4 +54,3 @@ class SapcarModuleTest(TestCase, LoaderModuleMockMixin):
         mock_extract.assert_called_once_with(
             sapcar_exe='/sapmedia/SAPCAR', sar_file='/sapmedia/IMDB_SERVER_LINUX.SAR',
             output_dir='/sapmedia/HANA', options='-v')
-        
