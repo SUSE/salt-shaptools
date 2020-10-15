@@ -990,7 +990,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
 
         mock_compile.assert_called_once_with('^HDB_CLIENT:20.*:LINUX_X86_64:.*')
         mock_find_sap_folders.assert_called_once_with(
-            ['1234', '5678'], compile_mocked, check_subfolder_level=1)
+            ['1234', '5678'], compile_mocked, recursion_level=1)
         mock_tar.assert_called_once_with(
             options='-l -xvf', tarfile='my_folder/client/PYDBAPI.tar.gz', cwd='/tmp/output')
         assert pydbapi_file == 'my_folder/client/PYDBAPI.tar.gz'
@@ -1009,7 +1009,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
 
         mock_compile.assert_called_once_with('^HDB_CLIENT:20.*:LINUX_X86_64:.*')
         mock_find_sap_folders.assert_called_once_with(
-            ['1234', '5678'], compile_mocked, check_subfolder_level=1)
+            ['1234', '5678'], compile_mocked, recursion_level=1)
         assert 'HANA client not found' in str(err.value)
 
     def test_extract_pydbapi_software_folders_type_error(self):
