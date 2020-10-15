@@ -884,8 +884,8 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
     def test_find_sap_folder_contain_units(self, mock_debug):
         mock_pattern = mock.Mock(pattern='my_pattern')
         mock_pattern.match.side_effect = [False, True]
-        with patch('salt.utils.files.fopen', mock_open(read_data=
-                ['data\n', 'DATA_UNITS\n', 'data_2\n'])) as mock_file:
+        with patch('salt.utils.files.fopen', mock_open(read_data=[
+                'data\n', 'DATA_UNITS\n', 'data_2\n'])) as mock_file:
             folder = hanamod._find_sap_folder(['1234', '5678'], mock_pattern)
 
         mock_pattern.match.assert_has_calls([
@@ -898,13 +898,73 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         assert folder in '1234/DATA_UNITS'
 
     @mock.patch('logging.Logger.debug')
+    @mock.patch('os.path.isdir')
+    @mock.patch('os.listdir')
+    def test_find_sap_folder_contain_subfolder(
+            self, mock_listdir, mock_isdir, mock_debug):
+        mock_pattern = mock.Mock(pattern='my_pattern')
+        mock_pattern.match.side_effect = [True]
+        mock_listdir.return_value = ['folder1', 'folder2', 'file1']
+        mock_isdir.side_effect = [True, True, False]
+
+        with patch('salt.utils.files.fopen', mock_open(
+                read_data=[IOError, IOError, 'subfolder\n'])) as mock_file:
+            with patch('salt.modules.hanamod._find_sap_folder',
+                       side_effect=hanamod._find_sap_folder) as mock_find_sap_folder:
+                folder = mock_find_sap_folder(['1234', '5678'], mock_pattern, 2)
+
+                mock_find_sap_folder.assert_has_calls([
+                    mock.call(['1234', '5678'], mock_pattern, 2),
+                    mock.call(['1234/folder1', '1234/folder2'], mock_pattern, 1)
+                ])
+
+        mock_listdir.assert_called_once_with('1234')
+
+        mock_isdir.assert_has_calls([
+            mock.call('1234/folder1'),
+            mock.call('1234/folder2'),
+            mock.call('1234/file1')
+        ])
+
+        assert folder == '1234/folder1'
+
+    @mock.patch('logging.Logger.debug')
+    @mock.patch('os.path.isdir')
+    @mock.patch('os.listdir')
+    def test_find_sap_folder_contain_subfolder_error(
+            self, mock_listdir, mock_isdir, mock_debug):
+        mock_pattern = mock.Mock(pattern='my_pattern')
+        mock_listdir.return_value = ['folder1', 'file1', 'file2']
+        mock_isdir.side_effect = [True, False, False]
+
+        with patch('salt.utils.files.fopen', mock_open(
+                read_data=[IOError, IOError, IOError, IOError])) as mock_file:
+            with patch('salt.modules.hanamod._find_sap_folder',
+                       side_effect=hanamod._find_sap_folder) as mock_find_sap_folder:
+                with pytest.raises(hanamod.SapFolderNotFoundError) as err:
+                    mock_find_sap_folder(['1234'], mock_pattern, 1)
+
+                mock_find_sap_folder.assert_has_calls([
+                    mock.call(['1234'], mock_pattern, 1),
+                    mock.call(['1234/folder1'], mock_pattern, 0)
+                ])
+
+        mock_listdir.assert_called_once_with('1234')
+
+        mock_isdir.assert_has_calls([
+            mock.call('1234/folder1'),
+            mock.call('1234/file1'),
+            mock.call('1234/file2')
+        ])
+
+    @mock.patch('logging.Logger.debug')
     def test_find_sap_folder_contain_units_error(self, mock_debug):
         mock_pattern = mock.Mock(pattern='my_pattern')
         mock_pattern.match.side_effect = [False, False]
         with patch('salt.utils.files.fopen', mock_open(read_data=[
                 'data\n', 'DATA_UNITS\n', 'data_2\n', IOError])) as mock_file:
             with pytest.raises(hanamod.SapFolderNotFoundError) as err:
-                folder = hanamod._find_sap_folder(['1234'], mock_pattern)
+                hanamod._find_sap_folder(['1234'], mock_pattern)
 
         mock_pattern.match.assert_has_calls([
             mock.call('data'),

@@ -1001,8 +1001,10 @@ def _find_sap_folder(software_folders, folder_pattern, check_subfolder_level=0):
         if check_subfolder_level:
             subfolders = [os.path.join(folder, found_dir) for found_dir in
                           os.listdir(folder) if os.path.isdir(os.path.join(folder, found_dir))]
-
-            return _find_sap_folder(subfolders, folder_pattern, check_subfolder_level-1)
+            try:
+                return _find_sap_folder(subfolders, folder_pattern, check_subfolder_level-1)
+            except SapFolderNotFoundError:
+                continue
 
     raise SapFolderNotFoundError(
         'SAP folder with {} pattern not found'.format(folder_pattern.pattern))
