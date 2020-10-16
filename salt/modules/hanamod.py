@@ -27,6 +27,7 @@ import logging
 import time
 import re
 import sys
+import os
 
 if sys.version_info.major == 2: # pragma: no cover
     import imp
@@ -959,9 +960,17 @@ def reload_hdb_connector():  # pragma: no cover
     reload_module(hdb_connector)
 
 
-def _find_sap_folder(software_folders, folder_pattern):
+def _find_sap_folder(software_folders, folder_pattern, recursion_level=0):
     '''
     Find a SAP folder following a recursive approach using the LABEL and LABELIDX files
+
+    Args:
+        software_folder (list): List of subfolder where the SAP folder is looked for`
+        folder_pattern (str): Pattern of the LABEL.ASC to look fo
+        recursion_level (int): Number of subfolder levels to check
+            Examples:
+                1 means to check recursively in the subfolder present in software_folders folders
+                2 means to check in the first subfolder and the folder within
     '''
     for folder in software_folders:
         label = '{}/{}'.format(folder, LABEL_FILE)
@@ -988,6 +997,14 @@ def _find_sap_folder(software_folders, folder_pattern):
                     continue
         except IOError:
             LOGGER.debug('%s file not found in %s. Skipping folder', LABELIDX_FILE, folder)
+
+        if recursion_level:
+            subfolders = [os.path.join(folder, found_dir) for found_dir in
+                          os.listdir(folder) if os.path.isdir(os.path.join(folder, found_dir))]
+            try:
+                return _find_sap_folder(subfolders, folder_pattern, recursion_level-1)
+            except SapFolderNotFoundError:
+                continue
 
     raise SapFolderNotFoundError(
         'SAP folder with {} pattern not found'.format(folder_pattern.pattern))
@@ -1023,7 +1040,10 @@ def extract_pydbapi(
     hana_client_pattern = re.compile('^HDB_CLIENT:{}.*:{}:.*'.format(
         hana_version, current_platform))
     try:
-        hana_client_folder = _find_sap_folder(software_folders, hana_client_pattern)
+        # recursion_level is set to 1 because the HANA client
+        # is extracted in SAP_HANA_CLIENT if the file is compressed as SAR
+        hana_client_folder = _find_sap_folder(
+            software_folders, hana_client_pattern, recursion_level=1)
     except SapFolderNotFoundError:
         raise exceptions.CommandExecutionError('HANA client not found')
     pydbapi_file = '{}/client/{}'.format(hana_client_folder, name)

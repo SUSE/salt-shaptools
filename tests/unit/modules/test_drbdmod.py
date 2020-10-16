@@ -14,16 +14,13 @@ from tests.support.mixins import LoaderModuleMockMixin
 from tests.support.unit import TestCase, skipIf
 from tests.support.mock import (
     MagicMock,
-    patch,
-    NO_MOCK,
-    NO_MOCK_REASON
+    patch
 )
 
 # Import Salt Libs
 import salt.modules.drbdmod as drbd
 
 
-@skipIf(NO_MOCK, NO_MOCK_REASON)
 class DrbdTestCase(TestCase, LoaderModuleMockMixin):
     '''
     Test cases for salt.modules.drbd

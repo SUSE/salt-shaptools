@@ -15,16 +15,13 @@ from tests.support.unit import TestCase, skipIf
 from tests.support import mock
 from tests.support.mock import (
     MagicMock,
-    patch,
-    NO_MOCK,
-    NO_MOCK_REASON
+    patch
 )
 
 # Import Salt Libs
 import salt.modules.netweavermod as netweavermod
 
 
-@skipIf(NO_MOCK, NO_MOCK_REASON)
 class NetweaverModuleTest(TestCase, LoaderModuleMockMixin):
     '''
     This class contains a set of functions that test salt.modules.netweavermod.
