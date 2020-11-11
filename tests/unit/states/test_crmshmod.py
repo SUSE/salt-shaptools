@@ -189,6 +189,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 sbd=True,
                 sbd_dev='/dev/sbd',
                 no_overwrite_sshkey=True,
+                qnetd_hostname=None,
                 quiet=False)
 
     def test_initialized_error(self):
@@ -225,6 +226,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 sbd=True,
                 sbd_dev='/dev/sbd',
                 no_overwrite_sshkey=True,
+                qnetd_hostname=None,
                 quiet=False)
 
     def test_initialized_command_error(self):
@@ -262,6 +264,7 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 sbd=True,
                 sbd_dev='/dev/sbd',
                 no_overwrite_sshkey=False,
+                qnetd_hostname=None,
                 quiet=False)
 
     # 'joined' function tests
