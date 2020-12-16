@@ -289,7 +289,6 @@ def _crm_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
-        no_overwrite_sshkey=False,
         qnetd_hostname=None,
         quiet=None):
     '''
@@ -310,8 +309,6 @@ def _crm_init(
         cmd = '{cmd} {sbd_str}'.format(cmd=cmd, sbd_str=sbd_str)
     elif sbd:
         cmd = '{cmd} -S'.format(cmd=cmd)
-    if no_overwrite_sshkey:
-        cmd = '{cmd} --no-overwrite-sshkey'.format(cmd=cmd)
     if qnetd_hostname:
         cmd = '{cmd} --qnetd-hostname {qnetd_hostname}'.format(
             cmd=cmd, qnetd_hostname=qnetd_hostname)
@@ -369,7 +366,6 @@ def cluster_init(
         admin_ip=None,
         sbd=None,
         sbd_dev=None,
-        no_overwrite_sshkey=False,
         qnetd_hostname=None,
         quiet=None):
     '''
@@ -393,9 +389,6 @@ def cluster_init(
     sbd_dev
         sbd device path
         This parameter can be a string (meaning one disk) or a list with multiple disks
-    no_overwrite_sshkey
-        No overwrite the currently existing sshkey (/root/.ssh/id_rsa)
-        Only available after crmsh 3.0.0
     qnetd_hostname:
         The name of the qnetd node. If none, no qdevice is created
     quiet:
@@ -414,11 +407,8 @@ def cluster_init(
     # and create the corresponing UT
     if __salt__['crm.use_crm']:
         return _crm_init(
-            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey,
+            name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev,
             qnetd_hostname, quiet)
-
-    LOGGER.warning('The parameter name is not considered!')
-    LOGGER.warning('--no_overwrite_sshkey option not available')
 
     return _ha_cluster_init(
         watchdog, interface, unicast, admin_ip, sbd, sbd_dev, qnetd_hostname, quiet)

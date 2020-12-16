@@ -349,22 +349,22 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
 
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._crm_init(
-                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True, 'alice', True)
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], 'alice', True)
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} '
-                '-s {} -s {} --no-overwrite-sshkey --qnetd-hostname {} -q'.format(
+                '-s {} -s {} --qnetd-hostname {} -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'dev1', 'dev2', 'alice'))
 
         # SBD diskless
         mock_cmd_run.reset_mock()
         with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
             result = crmshmod._crm_init(
-                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, None, True, 'alice', True)
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, None, 'alice', True)
             assert result
             mock_cmd_run.assert_called_once_with(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} '
-                '-S --no-overwrite-sshkey --qnetd-hostname {} -q'.format(
+                '-S --qnetd-hostname {} -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'alice'))
 
     def test_ha_cluster_init_basic(self):
@@ -427,7 +427,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=True, sbd_dev='dev1')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, True, ['dev1'], False, None, None)
+                'hacluster', 'dog', 'eth1', None, None, True, ['dev1'], None, None)
 
         crm_init.reset_mock()
         with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
@@ -435,7 +435,7 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=False, sbd_dev=['disk1', 'disk2'])
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, False, ['disk1', 'disk2'], False, None, None)
+                'hacluster', 'dog', 'eth1', None, None, False, ['disk1', 'disk2'], None, None)
 
     @mock.patch('logging.Logger.warning')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')
@@ -447,12 +447,8 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {'crm.use_crm': False}):
             ha_cluster_init.return_value = 0
             value = crmshmod.cluster_init(
-                'hacluster', 'dog', 'eth1', sbd_dev='dev1', no_overwrite_sshkey=True)
+                'hacluster', 'dog', 'eth1', sbd_dev='dev1')
             assert value == 0
-            logger.assert_has_calls([
-                mock.call('The parameter name is not considered!'),
-                mock.call('--no_overwrite_sshkey option not available')
-            ])
             ha_cluster_init.assert_called_once_with(
                 'dog', 'eth1', None, None, None, ['dev1'], None, None)
 

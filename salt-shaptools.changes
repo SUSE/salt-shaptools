@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Dec 16 11:30:22 UTC 2020 - Aleksei Burlakov <aburlakov@suse.com>
+
+- remove --no-overwrite-sshkey: the option is deprecated
+
+-------------------------------------------------------------------
 Wed Dec 16 09:04:29 UTC 2020 - Aleksei Burlakov <aburlakov@suse.com>
 
 - qdevice support: it can be created when initializing a cluster
