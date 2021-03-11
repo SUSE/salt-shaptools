@@ -291,7 +291,8 @@ def _crm_init(
         sbd_dev=None,
         no_overwrite_sshkey=False,
         qnetd_hostname=None,
-        quiet=None):
+        quiet=None,
+        ocfs2_dev=None):
     '''
     crm cluster init command execution
     '''
@@ -318,7 +319,12 @@ def _crm_init(
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
-    return __salt__['cmd.retcode'](cmd)
+    return_code = __salt__['cmd.retcode'](cmd)
+    if not ocfs2_dev or return_code != 0:
+        return return_code
+
+    return __salt__['cmd.retcode']('{crm_command} cluster init vgfs -y -n {name} -o {ocfs2_dev}'.format(
+        crm_command=CRM_COMMAND, name=name, ocfs2_dev=ocfs2_dev))
 
 
 def _ha_cluster_init(
@@ -371,7 +377,8 @@ def cluster_init(
         sbd_dev=None,
         no_overwrite_sshkey=False,
         qnetd_hostname=None,
-        quiet=None):
+        quiet=None,
+        ocfs2_dev=None):
     '''
     Initialize a cluster from scratch.
 
@@ -400,6 +407,8 @@ def cluster_init(
         The name of the qnetd node. If none, no qdevice is created
     quiet:
         execute the command in quiet mode (no output)
+    ocfs2_dev
+        ocfs2 device path
 
     CLI Example:
 
@@ -413,15 +422,17 @@ def cluster_init(
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
     if __salt__['crm.use_crm']:
-        return _crm_init(
+        return_code = _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey,
-            qnetd_hostname, quiet)
+            qnetd_hostname, quiet, ocfs2_dev)
+        return return_code
 
     LOGGER.warning('The parameter name is not considered!')
     LOGGER.warning('--no_overwrite_sshkey option not available')
 
-    return _ha_cluster_init(
+    return_code = _ha_cluster_init(
         watchdog, interface, unicast, admin_ip, sbd, sbd_dev, qnetd_hostname, quiet)
+    return return_code
 
 
 def _crm_join(
