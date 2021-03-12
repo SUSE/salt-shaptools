@@ -31,6 +31,7 @@ State module to provide CRMSH (HA cluster) functionality to Salt
 
 # Import python libs
 from __future__ import absolute_import, unicode_literals, print_function
+import re
 
 
 # Import salt libs
@@ -298,11 +299,16 @@ def cluster_configured(
         return ret
 
 
-def _convert2dict(file_content_lines):
+MODIFIED_SEC_NAME_TEMPL = "__{}_list"
+KNOWN_SEC_NAMES_WITH_LIST = ("totem.interface", "nodelist.node")
+
+
+def _convert2dict(file_content_lines, initial_path=""):
     """
     Convert the corosync configuration file to a dictionary
     """
     corodict = {}
+    sub_dict = {}
     index = 0
 
     for i, line in enumerate(file_content_lines):
@@ -313,38 +319,82 @@ def _convert2dict(file_content_lines):
         if index > i:
             continue
 
-        line_items = stripped_line.split()
         if '{' in stripped_line:
-            corodict[line_items[0]], new_index = _convert2dict(file_content_lines[i+1:])
+            sec_name = re.sub("\s*{", "", stripped_line)
+            initial_path += ".{}".format(sec_name) if initial_path else sec_name
+            sub_dict, new_index = _convert2dict(file_content_lines[i+1:], initial_path)
+            if initial_path in KNOWN_SEC_NAMES_WITH_LIST:
+                modified_sec_name = MODIFIED_SEC_NAME_TEMPL.format(sec_name)
+                if modified_sec_name not in corodict:
+                    corodict[modified_sec_name] = []
+                corodict[modified_sec_name].append({sec_name: sub_dict})
+            else:
+                corodict[sec_name] = sub_dict
             index = i + new_index
-        elif line_items[0][-1] == ':':
-            corodict[line_items[0][:-1]] = line_items[-1]
+            initial_path = re.sub("\.{}".format(sec_name), "", initial_path) if "." in initial_path else ""
+        elif ':' in stripped_line:
+            # To parse the line with multi ":", like IPv6 address
+            data = stripped_line.split(':')
+            key, values = data[0], data[1:]
+            corodict[key] = ':'.join(values).strip()
         elif '}' in stripped_line:
             return corodict, i+2
 
     return corodict, index
 
 
-def _mergedicts(main_dict, changes_dict, applied_changes, initial_path=''):
+def _mergedicts(main_dict, changes_dict, applied_changes, initial_path='', index=0):
     """
     Merge the 2 dictionaries. We cannot use update as it changes all the children of an entry
     """
     for key, value in changes_dict.items():
-        current_path = '{}.{}'.format(initial_path, key)
+        current_path = '{}.{}'.format(initial_path, key) if initial_path else key
         if key in main_dict.keys() and not isinstance(value, dict):
             if str(main_dict[key]) != str(value):
                 applied_changes[current_path] = value
             main_dict[key] = value
         elif key in main_dict.keys():
-            modified_dict, new_changes = _mergedicts(main_dict[key], value, applied_changes, current_path)
-            main_dict[key] = modified_dict
-            applied_changes.update(new_changes)
-
+            modified_dict, new_changes = _mergedicts(main_dict[key], value, applied_changes, current_path, index)
+        elif current_path in KNOWN_SEC_NAMES_WITH_LIST:
+            modified_sec_name = MODIFIED_SEC_NAME_TEMPL.format(key)
+            if index < len(main_dict[modified_sec_name]):
+                modified_dict, new_changes = _mergedicts(main_dict[modified_sec_name][index][key], value, applied_changes, current_path, index)
+            else:  # index out of range, so create a new entry
+                main_dict[modified_sec_name].append(changes_dict)
+                applied_changes[current_path] = value
         else:  # Entry not found in current main dictionary, so we can update all
             main_dict[key] = changes_dict[key]
             applied_changes[current_path] = value
 
     return main_dict, applied_changes
+
+
+def _unpack_list_in_dict(value_list, indentation):
+    """
+    Convert dict list to string
+    """
+    output = ''
+    for item_dict in value_list:
+        output += _convert2corosync(item_dict, indentation)
+    return output
+
+
+def _unpack_dict(key, value, indentation):
+    """
+    Convert dict to string
+    """
+    output = ''
+    if isinstance(value, dict):
+        output += '{}{} {{\n'.format(indentation, key)
+        indentation += '\t'
+        output += _convert2corosync(value, indentation)
+        indentation = indentation[:-1]
+        output += '{}}}\n\n'.format(indentation)
+    elif isinstance(value, list):
+        output += _unpack_list_in_dict(value, indentation)
+    else:
+        output += '{}{}: {}\n'.format(indentation, key, value)
+    return output
 
 
 def _convert2corosync(corodict, indentation=''):
@@ -353,21 +403,15 @@ def _convert2corosync(corodict, indentation=''):
     """
     output = ''
     for key, value in corodict.items():
-        if isinstance(value, dict):
-            output += '{}{} {{\n'.format(indentation, key)
-            indentation += '\t'
-            output += _convert2corosync(value, indentation)
-            indentation = indentation[:-1]
-            output += '{}}}\n'.format(indentation)
-        else:
-            output += '{}{}: {}\n'.format(indentation, key, value)
+        output += _unpack_dict(key, value, indentation)
     return output
 
 
 def corosync_updated(
         name,
         data,
-        backup=True):
+        backup=True,
+        index=0):
     """
     Configure corosync configuration file
 
@@ -386,7 +430,7 @@ def corosync_updated(
 
     with salt_utils.files.fopen(name, 'r') as file_content:
         corodict, _ = _convert2dict(file_content.read().splitlines())
-    new_conf_dict, changes = _mergedicts(corodict, data, {})
+    new_conf_dict, changes = _mergedicts(corodict, data, {}, index=index)
 
     if not changes:
         ret['changes'] = changes
