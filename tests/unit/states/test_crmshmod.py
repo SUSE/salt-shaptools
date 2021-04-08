@@ -520,9 +520,11 @@ quorum {
             'totem': {
                 'version': '2',
                 'max_messages': '20',
-                'interface': {
-                    'ringnumber': '0'
-                },
+                '__interface_list': [{
+                    'interface': {
+                        'ringnumber': '0'
+                        }
+                    }],
                 'transport': 'udpu'
             },
             'logging': {
@@ -563,8 +565,8 @@ quorum {
         }
 
         assert applied_changes == {
-            '.a.c': 4,
-            '.d': 5
+            'a.c': 4,
+            'd': 5
         }
 
     def test_merge_dicts2(self):
@@ -599,8 +601,8 @@ quorum {
         }
 
         assert applied_changes == {
-            '.d': 5,
-            '.a.b.f': 8
+            'd': 5,
+            'a.b.f': 8
         }
 
     def test_merge_dicts3(self):
@@ -635,9 +637,83 @@ quorum {
         }
 
         assert applied_changes == {
-            '.d': 5,
-            '.a.b': 3,
-            '.e': {'c': 4}
+            'd': 5,
+            'a.b': 3,
+            'e': {'c': 4}
+        }
+
+    def test_merge_dicts4(self):
+        main_dict = {
+            'nodelist': {
+                '__node_list': [{
+                    'node': {
+                        'nodeid': 1
+                        }
+                    }]
+            }
+        }
+        changed_dict = {
+            'nodelist': {
+                'node': {
+                    'nodeid': 2
+                }
+            }
+        }
+        merged_dict, applied_changes = crmshmod._mergedicts(
+            main_dict, changed_dict, {}, '')
+
+        assert merged_dict == {
+            'nodelist': {
+                '__node_list': [{
+                    'node': {
+                        'nodeid': 2
+                        }
+                    }]
+            }
+        }
+
+        assert applied_changes == {
+            'nodelist.node.nodeid': 2
+        }
+
+    def test_merge_dicts5(self):
+        main_dict = {
+            'nodelist': {
+                '__node_list': [{
+                    'node': {
+                        'nodeid': 1
+                        }
+                    }]
+            }
+        }
+        changed_dict = {
+            'nodelist': {
+                'node': {
+                    'nodeid': 2
+                }
+            }
+        }
+        merged_dict, applied_changes = crmshmod._mergedicts(
+            main_dict, changed_dict, {}, '', index=1)
+
+        assert merged_dict == {
+            'nodelist': {
+                '__node_list': [{
+                    'node': {
+                        'nodeid': 1
+                        }
+                    },{
+                    'node': {
+                        'nodeid': 2
+                        }
+                    }]
+            }
+        }
+
+        assert applied_changes == {
+            'nodelist.node': {
+                'nodeid': 2
+                }
         }
 
     def test_convert2corosync(self):
@@ -656,9 +732,24 @@ quorum {
         # Py2 and py3 have different way of ordering the `items` method
         # For the functionality this does not really affect
         if sys.version_info[0] == 2:
-            assert output == "a {\n\tc: 2\n\tb {\n\t\tf: 7\n\t}\n}\nd: 3\n"
+            assert output == "a {\n\tc: 2\n\tb {\n\t\tf: 7\n\t}\n\n}\n\nd: 3\n"
         else:
-            assert output == "a {\n\tb {\n\t\tf: 7\n\t}\n\tc: 2\n}\nd: 3\n"
+            assert output == "a {\n\tb {\n\t\tf: 7\n\t}\n\n\tc: 2\n}\n\nd: 3\n"
+
+    def test_convert2corosync_nodelist(self):
+        main_dict = {
+            'nodelist': {
+                '__node_list': [{
+                    'node': {
+                        'nodeid': 1
+                        }
+                    }]
+            }
+        }
+
+        output = crmshmod._convert2corosync(main_dict, '')
+
+        assert output == "nodelist {\n\tnode {\n\t\tnodeid: 1\n\t}\n\n}\n\n"
 
     @mock.patch('salt.states.crmshmod._convert2dict')
     @mock.patch('salt.states.crmshmod._mergedicts')
@@ -685,7 +776,7 @@ quorum {
             ['my corosync file content', 'my corosync file 2nd line content']
         )
         mock_mergedicts.assert_called_once_with(
-            {'data': 1}, {'my_data': 1}, {})
+            {'data': 1}, {'my_data': 1}, {}, index=0)
 
     @mock.patch('salt.states.crmshmod._convert2dict')
     @mock.patch('salt.states.crmshmod._mergedicts')
@@ -713,7 +804,7 @@ quorum {
             ['my corosync file content', 'my corosync file 2nd line content']
         )
         mock_mergedicts.assert_called_once_with(
-            {}, {'my_data': 1}, {})
+            {}, {'my_data': 1}, {}, index=0)
 
     @mock.patch('salt.states.crmshmod._convert2corosync')
     @mock.patch('salt.states.crmshmod._convert2dict')
@@ -747,7 +838,7 @@ quorum {
             ['my corosync file content', 'my corosync file 2nd line content']
         )
         mock_mergedicts.assert_called_once_with(
-            {'data': 1}, {'my_data': 1}, {})
+            {'data': 1}, {'my_data': 1}, {}, index=0)
 
         mock_convert2corosync.assert_called_once_with({'updated': 2})
 

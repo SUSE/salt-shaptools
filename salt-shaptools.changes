@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Apr  7 06:39:17 UTC 2021 - XinLiang <XLiang@suse.com>
+
+- Dev: crmshmod: Improve corosync.conf parse logic for corner cases
+  * Parse multi interface/node as list in the dict
+  * When there is no space between words in corosync.conf, like "totem{" or "ring0_addr:10.10.10.121"
+    corosync still works, but our parse results are wrong
+
+-------------------------------------------------------------------
 Wed Dec 16 09:04:29 UTC 2020 - Aleksei Burlakov <aburlakov@suse.com>
 
 - qdevice support: it can be created when initializing a cluster
