@@ -281,6 +281,17 @@ def _join_corosync_unicast(host, interface=None):
     __salt__['cmd.run'](cmd, raise_err=True)
 
 
+def _crm_init_capabilities():
+    '''
+    Return a dictionary of features supported by crmsh
+    '''
+    cmd = '{crm_command} cluster init --help'.format(crm_command=CRM_COMMAND)
+    init_help = __salt__['cmd.run'](cmd)
+    return {
+        'ocfs2-mount': '--mount-point' in init_help,
+    }
+
+
 def _crm_init(
         name,
         watchdog=None,
@@ -292,10 +303,12 @@ def _crm_init(
         no_overwrite_sshkey=False,
         qnetd_hostname=None,
         quiet=None,
-        ocfs2_dev=None):
+        ocfs2_dev=None,
+        ocfs2_mount=None):
     '''
     crm cluster init command execution
     '''
+    crm_caps = _crm_init_capabilities()
     cmd = '{crm_command} cluster init -y -n {name}'.format(
         crm_command=CRM_COMMAND, name=name)
     if watchdog:
@@ -316,15 +329,21 @@ def _crm_init(
     if qnetd_hostname:
         cmd = '{cmd} --qnetd-hostname {qnetd_hostname}'.format(
             cmd=cmd, qnetd_hostname=qnetd_hostname)
+    if ocfs2_dev and crm_caps['ocfs2-mount']:
+        ocfs2_str = ' '.join(['-o {}'.format(ocfs2) for ocfs2 in ocfs2_dev])
+        cmd = '{cmd} {ocfs2_str}'.format(cmd=cmd, ocfs2_str=ocfs2_str)
+        if len(ocfs2_dev) > 1:
+            cmd = '{cmd} -C'.format(cmd=cmd)
+        if ocfs2_mount:
+            cmd = '{cmd} -m {ocfs2_mount}'.format(cmd=cmd, ocfs2_mount=ocfs2_mount)
     if quiet:
         cmd = '{cmd} -q'.format(cmd=cmd)
 
     return_code = __salt__['cmd.retcode'](cmd)
-    if not ocfs2_dev or return_code != 0:
-        return return_code
-
-    return __salt__['cmd.retcode']('{crm_command} cluster init vgfs -y -n {name} -o {ocfs2_dev}'.format(
-        crm_command=CRM_COMMAND, name=name, ocfs2_dev=ocfs2_dev))
+    if ocfs2_dev and not crm_caps['ocfs2-mount'] and return_code == 0:
+        return __salt__['cmd.retcode']('{crm_command} cluster init vgfs -y -n {name} -o {ocfs2_dev}'.format(
+            crm_command=CRM_COMMAND, name=name, ocfs2_dev=ocfs2_dev[0]))
+    return return_code
 
 
 def _ha_cluster_init(
@@ -378,7 +397,8 @@ def cluster_init(
         no_overwrite_sshkey=False,
         qnetd_hostname=None,
         quiet=None,
-        ocfs2_dev=None):
+        ocfs2_dev=None,
+        ocfs2_mount=None):
     '''
     Initialize a cluster from scratch.
 
@@ -409,6 +429,9 @@ def cluster_init(
         execute the command in quiet mode (no output)
     ocfs2_dev
         ocfs2 device path
+        This parameter can be a string (meaning one disk) or a list with multiple disks for OCFS2 LVM
+    ocfs2_mount
+        The OCFS2 mount point
 
     CLI Example:
 
@@ -419,20 +442,21 @@ def cluster_init(
     if sbd_dev and not isinstance(sbd_dev, list):
         sbd_dev = [sbd_dev]
 
+    if ocfs2_dev and not isinstance(ocfs2_dev, list):
+        ocfs2_dev = [ocfs2_dev]
+
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponing UT
     if __salt__['crm.use_crm']:
-        return_code = _crm_init(
+        return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey,
-            qnetd_hostname, quiet, ocfs2_dev)
-        return return_code
+            qnetd_hostname, quiet, ocfs2_dev, ocfs2_mount)
 
     LOGGER.warning('The parameter name is not considered!')
     LOGGER.warning('--no_overwrite_sshkey option not available')
 
-    return_code = _ha_cluster_init(
+    return _ha_cluster_init(
         watchdog, interface, unicast, admin_ip, sbd, sbd_dev, qnetd_hostname, quiet)
-    return return_code
 
 
 def _crm_join(
