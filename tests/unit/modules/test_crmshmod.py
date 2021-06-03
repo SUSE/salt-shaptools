@@ -332,12 +332,13 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test _crm_init method
         '''
-        mock_cmd_run = MagicMock(return_value=True)
+        mock_cmd_retcode = MagicMock(return_value=True)
+        mock_cmd_run = MagicMock(return_value="crm cluster init help without ocfs2 mount")
 
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_retcode, 'cmd.run': mock_cmd_run}):
             result = crmshmod._crm_init('hacluster')
             assert result
-            mock_cmd_run.assert_called_once_with(
+            mock_cmd_retcode.assert_called_once_with(
                 '{crm_command} cluster init -y -n {name}'.format(
                     crm_command=crmshmod.CRM_COMMAND, name='hacluster'))
 
@@ -345,24 +346,49 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         '''
         Test _crm_init method
         '''
-        mock_cmd_run = MagicMock(return_value=True)
+        mock_cmd_retcode = MagicMock(return_value=0)
+        mock_cmd_run = MagicMock(return_value="crm cluster init help without ocfs2 mount")
 
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_retcode, 'cmd.run': mock_cmd_run}):
             result = crmshmod._crm_init(
-                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True, 'alice', True)
-            assert result
-            mock_cmd_run.assert_called_once_with(
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True, 'alice', True, ['disk3'])
+            assert result == 0
+            mock_cmd_retcode.assert_any_call(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} '
                 '-s {} -s {} --no-overwrite-sshkey --qnetd-hostname {} -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'dev1', 'dev2', 'alice'))
+            mock_cmd_retcode.assert_any_call(
+                '{} cluster init vgfs -y -n {} -o {}'.format(crmshmod.CRM_COMMAND, 'hacluster', 'disk3'))
+
+        # New OCFS2 parameters
+        mock_cmd_run = MagicMock(return_value="crm cluster init help with --mount-point")
+        mock_cmd_retcode.reset_mock()
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_retcode, 'cmd.run': mock_cmd_run}):
+            result = crmshmod._crm_init(
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True, 'alice', True, ['disk3'], 'ocfs2_mount')
+            assert result == 0
+            mock_cmd_retcode.assert_any_call(
+                '{} cluster init -y -n {} -w {} -i {} -u -A {} '
+                '-s {} -s {} --no-overwrite-sshkey --qnetd-hostname {} -o {} -m {} -q'.format(
+                    crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'dev1', 'dev2', 'alice', 'disk3', 'ocfs2_mount'))
+
+            # OCFS2+LVM parameters
+            mock_cmd_retcode.reset_mock()
+            result = crmshmod._crm_init(
+                'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, ['dev1', 'dev2'], True, 'alice', True, ['disk3', 'disk4'], 'ocfs2_mount')
+            assert result == 0
+            mock_cmd_retcode.assert_any_call(
+                '{} cluster init -y -n {} -w {} -i {} -u -A {} '
+                '-s {} -s {} --no-overwrite-sshkey --qnetd-hostname {} -o {} -o {} -C -m {} -q'.format(
+                    crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'dev1', 'dev2', 'alice', 'disk3', 'disk4', 'ocfs2_mount'))
 
         # SBD diskless
-        mock_cmd_run.reset_mock()
-        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_run}):
+        mock_cmd_retcode.reset_mock()
+        with patch.dict(crmshmod.__salt__, {'cmd.retcode': mock_cmd_retcode, 'cmd.run': mock_cmd_run}):
             result = crmshmod._crm_init(
                 'hacluster', 'dog', 'eth1', True, '192.168.1.50', True, None, True, 'alice', True)
-            assert result
-            mock_cmd_run.assert_called_once_with(
+            assert result == 0
+            mock_cmd_retcode.assert_called_once_with(
                 '{} cluster init -y -n {} -w {} -i {} -u -A {} '
                 '-S --no-overwrite-sshkey --qnetd-hostname {} -q'.format(
                     crmshmod.CRM_COMMAND, 'hacluster', 'dog', 'eth1', '192.168.1.50', 'alice'))
@@ -427,15 +453,15 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
             value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=True, sbd_dev='dev1')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, True, ['dev1'], False, None, None)
+                'hacluster', 'dog', 'eth1', None, None, True, ['dev1'], False, None, None, None, None)
 
         crm_init.reset_mock()
         with patch.dict(crmshmod.__salt__, {'crm.use_crm': True}):
             crm_init.return_value = 0
-            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=False, sbd_dev=['disk1', 'disk2'])
+            value = crmshmod.cluster_init('hacluster', 'dog', 'eth1', sbd=False, sbd_dev=['disk1', 'disk2'], ocfs2_dev='disk3', ocfs2_mount='mount')
             assert value == 0
             crm_init.assert_called_once_with(
-                'hacluster', 'dog', 'eth1', None, None, False, ['disk1', 'disk2'], False, None, None)
+                'hacluster', 'dog', 'eth1', None, None, False, ['disk1', 'disk2'], False, None, None, ['disk3'], 'mount')
 
     @mock.patch('logging.Logger.warning')
     @mock.patch('salt.modules.crmshmod._ha_cluster_init')

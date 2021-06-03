@@ -107,7 +107,9 @@ def cluster_initialized(
         sbd_dev=None,
         no_overwrite_sshkey=False,
         quiet=None,
-        qnetd_hostname=None):
+        qnetd_hostname=None,
+        ocfs2_dev=None,
+        ocfs2_mount=None):
     """
     Machine is running a cluster node
 
@@ -134,6 +136,11 @@ def cluster_initialized(
         execute the command in quiet mode (no output)
     qnetd_hostname:
         The name of the qnetd node. If none, no qdevice is created
+    ocfs2_dev
+        ocfs2 device path
+        This parameter can be a string (meaning one disk) or a list with multiple disks
+    ocfs2_path
+        the OCFS2 mount path. Defaults to /srv/clusterfs
     """
     ret = {'name': name,
            'changes': {},
@@ -163,7 +170,9 @@ def cluster_initialized(
             sbd_dev=sbd_dev,
             no_overwrite_sshkey=no_overwrite_sshkey,
             qnetd_hostname=qnetd_hostname,
-            quiet=quiet)
+            quiet=quiet,
+            ocfs2_dev=ocfs2_dev,
+            ocfs2_mount=ocfs2_mount)
 
         if result:
             ret['changes']['name'] = name

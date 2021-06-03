@@ -177,6 +177,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                ocfs2_dev='/dev/ocfs2',
+                ocfs2_mount='/srv/ocfs2',
                 no_overwrite_sshkey=True,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
@@ -188,6 +190,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                ocfs2_dev='/dev/ocfs2',
+                ocfs2_mount='/srv/ocfs2',
                 no_overwrite_sshkey=True,
                 qnetd_hostname=None,
                 quiet=False)
@@ -214,6 +218,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                ocfs2_dev='/dev/ocfs2',
+                ocfs2_mount='/srv/ocfs2',
                 no_overwrite_sshkey=True,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
@@ -225,6 +231,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                ocfs2_dev='/dev/ocfs2',
+                ocfs2_mount='/srv/ocfs2',
                 no_overwrite_sshkey=True,
                 qnetd_hostname=None,
                 quiet=False)
@@ -252,6 +260,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                ocfs2_dev='/dev/ocfs2',
+                ocfs2_mount='/srv/ocfs2',
                 no_overwrite_sshkey=False,
                 quiet=False) == ret
             mock_status.assert_called_once_with()
@@ -263,6 +273,8 @@ class CrmshmodTestCase(TestCase, LoaderModuleMockMixin):
                 admin_ip='192.168.1.50',
                 sbd=True,
                 sbd_dev='/dev/sbd',
+                ocfs2_dev='/dev/ocfs2',
+                ocfs2_mount='/srv/ocfs2',
                 no_overwrite_sshkey=False,
                 qnetd_hostname=None,
                 quiet=False)
