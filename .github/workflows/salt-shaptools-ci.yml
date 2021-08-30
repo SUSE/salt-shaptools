@@ -10,10 +10,10 @@ env:
 jobs:
 
   test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
      matrix:
-      os: [ubuntu-18.04]
+      os: [ubuntu-20.04]
       python-version: [2.7, 3.6, 3.7]
     steps:
     - uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
 
   delivery:
     needs: [test]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     if: ${{ github.event_name != 'pull_request' }}
     container:
       image: shap/continuous_deliver
@@ -78,7 +78,7 @@ jobs:
 
   submit:
     needs: [test, delivery]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     container:
       image: shap/continuous_deliver
