@@ -335,7 +335,7 @@ def uninstalled(
 
     if not __salt__['hana.is_installed'](
             sid=sid,
-            ints=inst,
+            inst=inst,
             password=password):
         ret['result'] = True
         ret['comment'] = 'HANA already not installed'
