@@ -28,11 +28,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest
         pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov
-        # on old python version, install ...
+        # on old python version, install and clone ...
         if test -d /opt/hostedtoolcache/Python/2.7.*; then
           pip install enum34
+          git clone --branch=openSUSE-3000.3 --depth=50 https://github.com/openSUSE/salt ../salt
+        else
+          git clone --branch=openSUSE-3002.2 --depth=50 https://github.com/openSUSE/salt ../salt
         fi
-        git clone --depth=50 https://github.com/openSUSE/salt ../salt
         rm ../salt/tests/conftest.py
         git clone --depth=50 https://github.com/SUSE/shaptools.git ../shaptools
         pip install -e ../salt
