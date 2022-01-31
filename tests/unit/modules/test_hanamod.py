@@ -813,6 +813,36 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         ])
         assert 'HANA database not available after 2 seconds in 192.168.10.15:30015' in str(err.value)
 
+    @mock.patch('salt.modules.hanamod.hdb_connector.HdbConnector')
+    def test_query(self, mock_hdb_connector):
+        mock_hdb_instance = mock.Mock()
+        mock_hdb_connector.return_value = mock_hdb_instance
+
+        hanamod.query(
+            '192.168.10.15', 30015, 'SYSTEM', 'pass', 'query')
+
+        mock_hdb_instance.connect.assert_called_once_with(
+            '192.168.10.15', 30015, user='SYSTEM', password='pass')
+        mock_hdb_instance.query.assert_called_once_with('query')
+        mock_hdb_instance.disconnect.assert_called_once_with()
+
+    @mock.patch('salt.modules.hanamod.hdb_connector.HdbConnector')
+    def test_query_error(self, mock_hdb_connector):
+        mock_hdb_instance = mock.Mock()
+        mock_hdb_connector.return_value = mock_hdb_instance
+
+        mock_hdb_instance.query.side_effect = hanamod.base_connector.QueryError('error')
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            hanamod.query(
+                '192.168.10.15', 30015, 'SYSTEM', 'pass', 'query')
+
+        mock_hdb_instance.connect.assert_called_once_with(
+            '192.168.10.15', 30015, user='SYSTEM', password='pass')
+        mock_hdb_instance.query.assert_called_once_with('query')
+        assert('HANA database query not successfull on {}:{} with query "{}"'.format(
+                '192.168.10.15', '30015', 'query')) in str(err.value)
+        mock_hdb_instance.disconnect.assert_called_once_with()
+
     @mock.patch('salt.modules.hanamod.hdb_connector')
     @mock.patch('salt.modules.hanamod.reload_module')
     def test_reload_hdb_connector_py3(self, mock_reload, mock_hdb_connector):
