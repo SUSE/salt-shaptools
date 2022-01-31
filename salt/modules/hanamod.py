@@ -948,21 +948,19 @@ def query(
 
     .. code-block:: bash
 
-        salt '*' hana.query 192.168.10.15 30015 SYSTEM pass
+        salt '*' hana.query 192.168.10.15 30015 SYSTEM pass 'SELECT * FROM SCHEMAS'
     '''
 
     connector = hdb_connector.HdbConnector()
     try:
         connector.connect(host, port, user=user, password=password)
-        rows = connector.query(query)
-        connector.disconnect()
-        # query is returned as a List, so we need to join it into a string
-        result = '\n'.join([str(row) for row in rows.records])
-        return result
+        result = connector.query(query)
 
     except base_connector.QueryError:
         raise exceptions.CommandExecutionError('HANA database query not successfull on {}:{} with query "{}"'.format(
                 host, port, query))
+    finally:
+        connector.disconnect()
 
 
 def reload_hdb_connector():  # pragma: no cover
