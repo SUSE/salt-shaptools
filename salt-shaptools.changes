@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan 20 13:37:10 UTC 2022 - Eike Waldt <waldt@b1-systems.de>
+
+- Version 0.3.13
+  * Add module query to HANA
+
+-------------------------------------------------------------------
 Wed Jul 21 07:55:12 UTC 2021 - Eike Waldt <waldt@b1-systems.de>
 
 - Version 0.3.12

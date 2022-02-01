@@ -84,7 +84,7 @@ Your directory layout should looks like ( all the 3 dirs are in same three dir l
 ```bash
 virtualenv saltvirtenv
 source saltvirtenv/bin/activate
-pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov
+pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt-factories mock pytest-cov
 pip install -e ../salt
 pip install -e ../shaptools
 rm ../salt/tests/conftest.py # remove this file from the saltstack repo
@@ -115,9 +115,7 @@ salt-call --local state.single saptune.solution_applied "HANA"
 
 ## Dependencies
 
-List of dependencies are specified in the ["Requirements file"](requirements.txt). Items can be installed using pip:
-
-    pip install -r requirements.txt
+A list of dependencies is named above in the `pip install ...` commands.
 
 ## License
 

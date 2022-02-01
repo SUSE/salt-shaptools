@@ -924,6 +924,45 @@ def wait_for_connection(
             ))
 
 
+def query(
+        host,
+        port,
+        user,
+        password,
+        query):
+    '''
+    Execute a query on a HANA database
+
+    host
+        Host where HANA is running
+    port
+        HANA database port
+    user
+        User to connect to the databse
+    password
+        Password to connect to the database
+    query
+        Query to execute on database
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.query 192.168.10.15 30015 SYSTEM pass 'SELECT * FROM SCHEMAS'
+    '''
+
+    connector = hdb_connector.HdbConnector()
+    try:
+        connector.connect(host, port, user=user, password=password)
+        result = connector.query(query)
+
+    except base_connector.QueryError:
+        raise exceptions.CommandExecutionError('HANA database query not successfull on {}:{} with query "{}"'.format(
+                host, port, query))
+    finally:
+        connector.disconnect()
+
+
 def reload_hdb_connector():  # pragma: no cover
     '''
     As hdb_connector uses pyhdb or dbapi, if these packages are installed on the fly,
