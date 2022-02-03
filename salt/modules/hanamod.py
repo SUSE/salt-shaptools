@@ -956,9 +956,15 @@ def query(
         connector.connect(host, port, user=user, password=password)
         result = connector.query(query)
 
-    except base_connector.QueryError:
-        raise exceptions.CommandExecutionError('HANA database query not successfull on {}:{} with query "{}"'.format(
-                host, port, query))
+    except base_connector.QueryError as err:
+        if str(err) == "query failed: (0, 'No result set')":
+            pass # This is not error, but an empty query result.
+        else:
+            raise exceptions.CommandExecutionError(
+                'HANA database query not successfull on {}:{} with query "{}"'.format(
+                    host, port, query
+                )
+            )
     finally:
         connector.disconnect()
 
