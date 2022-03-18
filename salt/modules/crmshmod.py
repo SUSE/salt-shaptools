@@ -707,4 +707,13 @@ def detect_cloud():
     cmd = '{version} -c "from crmsh import utils; print(utils.detect_cloud());"'.format(
         version=version)
     provider = __salt__['cmd.run'](cmd).strip()
+
+    # workaround for https://github.com/SUSE/ha-sap-terraform-deployments/issues/832
+    # until https://github.com/ClusterLabs/crmsh/pull/952 is available
+    if provider == 'None':
+        cmd = 'grep -i amazon /sys/class/dmi/id/sys_vendor'
+        return_code = __salt__['cmd.retcode'](cmd)
+        if return_code == 0:
+            provider = 'amazon-web-services'
+
     return provider
