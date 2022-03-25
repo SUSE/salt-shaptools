@@ -239,6 +239,36 @@ def install(
     except hana.HanaError as err:
         raise exceptions.CommandExecutionError(err)
 
+def add_hosts(
+        add_hosts,
+        hdblcm_folder,
+        root_user,
+        root_password,
+        hdb_pwd_file):
+    '''
+    Add additional hosts to SAP HANA system
+
+    add_hosts
+        hosts to add (same format as in hdblcm config)
+    hdblcm_folder
+        Path where hdblcm is installed
+    root_user
+        Root user name
+    root_password
+        Root user password
+    hdb_pwd_file
+        Path where XML password file exists
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' hana.add_hosts hana03:role=standby,hana05:role=worker /hana/shared/SID/hdblcm root root /root/hdb_passwords.xml
+    '''
+    try:
+        hana.HanaInstance.add_hosts(
+            add_hosts, hdblcm_folder, root_user, root_password, hdb_pwd_file)
+    except hana.HanaError as err:
+        raise exceptions.CommandExecutionError(err)
 
 def uninstall(
         root_user,
