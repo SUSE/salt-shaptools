@@ -446,7 +446,7 @@ def cluster_init(
         ocfs2_dev = [ocfs2_dev]
 
     # INFO: 2 different methods are created to make easy to read/understand
-    # and create the corresponing UT
+    # and create the corresponding UT
     if __salt__['crm.use_crm']:
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey,
@@ -535,7 +535,7 @@ def cluster_join(
         salt '*' crm.cluster_join 192.168.1.41
     '''
     # INFO: 2 different methods are created to make easy to read/understand
-    # and create the corresponing UT
+    # and create the corresponding UT
     if __salt__['crm.use_crm']:
         return _crm_join(host, watchdog, interface, quiet)
 

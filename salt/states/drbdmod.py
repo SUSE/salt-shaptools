@@ -433,7 +433,7 @@ def demoted(name):
 
 
 # May replace by "drbdsetup wait-sync-resource" in drbd9 with modification.
-# Cause it only suspend when resoure is in syncing.
+# Cause it only suspend when resource is in syncing.
 # Behavior the same when a resource not and finished sync.
 def wait_for_successful_synced(name, interval=30, timeout=600, **kwargs):
     '''
@@ -451,7 +451,7 @@ def wait_for_successful_synced(name, interval=30, timeout=600, **kwargs):
 
     .. note::
 
-        All other arguements are passed to the module drbd.check_sync_status.
+        All other arguments are passed to the module drbd.check_sync_status.
     '''
     ret = {
         'name': name,

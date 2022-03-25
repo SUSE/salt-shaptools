@@ -54,7 +54,7 @@ You can have look at: https://docs.saltstack.com/en/latest/topics/development/te
 
 ## How to run the tests
 
-Salt has a quite particular way to execute the tests. As a summary, tests are splitted
+Salt has a quite particular way to execute the tests. As a summary, tests are split
 in _integration_ and _unit_ tests. The first group tests the module using actual
 salt master/minions, so the setup is more complicated. The _unit_ tests in the other
 hand only check the code functions.

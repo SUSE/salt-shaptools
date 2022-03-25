@@ -839,7 +839,7 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
         mock_hdb_instance.connect.assert_called_once_with(
             '192.168.10.15', 30015, user='SYSTEM', password='pass')
         mock_hdb_instance.query.assert_called_once_with('query')
-        assert('HANA database query not successfull on {}:{} with query "{}"'.format(
+        assert('HANA database query not successful on {}:{} with query "{}"'.format(
                 '192.168.10.15', '30015', 'query')) in str(err.value)
         mock_hdb_instance.disconnect.assert_called_once_with()
 
