@@ -64,8 +64,8 @@ def __virtual__():
             'The crmsh execution module failed to load: the ha-cluster-init'
             ' package is not available.')
 
-    __salt__['crm.version'] = version
-    __salt__['crm.use_crm'] = use_crm
+    __context__['crm.version'] = version
+    __context__['crm.use_crm'] = use_crm
     return __virtualname__
 
 
@@ -447,7 +447,7 @@ def cluster_init(
 
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponding UT
-    if __salt__['crm.use_crm']:
+    if __context__['crm.use_crm']:
         return _crm_init(
             name, watchdog, interface, unicast, admin_ip, sbd, sbd_dev, no_overwrite_sshkey,
             qnetd_hostname, quiet, ocfs2_dev, ocfs2_mount)
@@ -536,7 +536,7 @@ def cluster_join(
     '''
     # INFO: 2 different methods are created to make easy to read/understand
     # and create the corresponding UT
-    if __salt__['crm.use_crm']:
+    if __context__['crm.use_crm']:
         return _crm_join(host, watchdog, interface, quiet)
 
     return _ha_cluster_join(host, watchdog, interface, quiet)
@@ -699,7 +699,7 @@ def detect_cloud():
     * google-cloud-platform
     * None (as string)(otherwise)
     '''
-    if int(__salt__['crm.version'][0]) <= 3:
+    if int(__context__['crm.version'][0]) <= 3:
         version = 'python'
     else:
         version = 'python3'
