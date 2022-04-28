@@ -62,7 +62,7 @@ def solution_applied(name):
 
         # result is not null 0, so we have error
         if result:
-            ret['comment'] = 'Error appling saptune solution'
+            ret['comment'] = 'Error applying saptune solution'
             ret['result'] = False
             return ret
 

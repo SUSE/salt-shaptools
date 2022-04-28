@@ -83,7 +83,7 @@ class SaptunemodTestCase(TestCase, LoaderModuleMockMixin):
             'changes': {},
             'result': False,
             'name': solution_name,
-            'comment': "Error appling saptune solution"
+            'comment': "Error applying saptune solution"
         }
 
         with patch.dict(saptune.__salt__, {
