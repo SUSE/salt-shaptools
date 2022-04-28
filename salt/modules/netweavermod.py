@@ -141,7 +141,7 @@ def is_db_installed(
     port:
         HANA database port
     schema_name:
-        Schema installed in the dabase
+        Schema installed in the database
     schema_password:
         Password of the user for the schema
 

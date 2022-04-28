@@ -119,7 +119,7 @@ def available(
     port:
         HANA database port
     user:
-        User to connect to the databse
+        User to connect to the database
     password:
         Password to connect to the database
     timeout:
@@ -190,12 +190,12 @@ def installed(
     root_password
         Root user password
     config_file
-        If config_file paremeter is set, it will be downloaded from the master
+        If config_file parameter is set, it will be downloaded from the master
         to the minion and used in the installation. Values in this file might
         be changed setting then in the extra_parameters dictionary using the
         exact name as in the config file as a key
     hdb_pwd_file
-        If hdb_pwd_file paremeter is set, it will be downloaded from the master
+        If hdb_pwd_file parameter is set, it will be downloaded from the master
         to the minion and used in the installation. Values in this file might
         be changed setting then in the extra_parameters dictionary using the
         exact name as in the XML file as a key

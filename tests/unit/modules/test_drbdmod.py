@@ -687,7 +687,7 @@ beijing role:Primary
             assert drbd.check_sync_status('shanghai')
             mock_cmd.assert_called_with('drbdsetup status --json shanghai')
 
-        # Test 2: Test _is_no_backing_dev_request() have unfinished requrests
+        # Test 2: Test _is_no_backing_dev_request() have unfinished requests
         fake = {}
         fake['stdout'] = '''
 [
@@ -751,7 +751,7 @@ beijing role:Primary
             assert not drbd.check_sync_status('shanghai')
             mock_cmd.assert_called_with('drbdsetup status --json shanghai')
 
-        # Test 3: Test _is_no_backing_dev_request() all requrests finished
+        # Test 3: Test _is_no_backing_dev_request() all requests finished
         fake = {}
         fake['stdout'] = '''
 [

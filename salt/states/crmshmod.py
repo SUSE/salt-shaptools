@@ -251,7 +251,7 @@ def cluster_configured(
         is_xml=None,
         force=False):
     """
-    Machine is congifured with the provided configuration file
+    Machine is configured with the provided configuration file
 
     name
         Used method. replace, update or push
