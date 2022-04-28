@@ -7,3 +7,10 @@ dist/*
 *.pyc
 *.egg-info*
 .tox/*
+.direnv
+.envrc
+shell.nix
+saltvirtenv
+venv
+coverage.xml
+.ropeproject

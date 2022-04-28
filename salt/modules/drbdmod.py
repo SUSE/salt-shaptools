@@ -266,7 +266,7 @@ def _is_no_backing_dev_request(res, output):
 
     Metadata still need to sync to disk after state changed.
     Only reply to sync target to change when I/O request finished,
-    which is unpredictable. Local refernece count is not 0 before endio.
+    which is unpredictable. Local reference count is not 0 before endio.
 
     '''
     if not __salt__['drbd.json']:

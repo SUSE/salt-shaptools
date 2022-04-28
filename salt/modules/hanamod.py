@@ -632,7 +632,7 @@ def check_user_key(
         inst=None,
         password=None):
     '''
-    Check the use key existance
+    Check the use key existence
 
     key
         User key name
@@ -726,7 +726,7 @@ def create_backup(
     user_name
         User to connect to sap hana db
     user_password
-        Password to connecto to sap hana db
+        Password to connect to to sap hana db
     sid
         HANA system id (PRD for example)
     inst
@@ -815,7 +815,7 @@ def set_ini_parameter(
     user_name
         User to connect to sap hana db
     user_password
-        Password to connecto to sap hana db
+        Password to connect to to sap hana db
     sid
         HANA system id (PRD for example)
     inst
@@ -879,7 +879,7 @@ def unset_ini_parameter(
     user_name
         User to connect to sap hana db
     user_password
-        Password to connecto to sap hana db
+        Password to connect to to sap hana db
     sid
         HANA system id (PRD for example)
     inst
@@ -921,7 +921,7 @@ def wait_for_connection(
     port
         HANA database port
     user
-        User to connect to the databse
+        User to connect to the database
     password
         Password to connect to the database
     timeout
@@ -968,7 +968,7 @@ def query(
     port
         HANA database port
     user
-        User to connect to the databse
+        User to connect to the database
     password
         Password to connect to the database
     query
@@ -991,7 +991,7 @@ def query(
             pass # This is not error, but an empty query result.
         else:
             raise exceptions.CommandExecutionError(
-                'HANA database query not successfull on {}:{} with query "{}"'.format(
+                'HANA database query not successful on {}:{} with query "{}"'.format(
                     host, port, query
                 )
             )
@@ -1041,7 +1041,7 @@ def _find_sap_folder(software_folders, folder_pattern, recursion_level=0):
 
     Args:
         software_folder (list): List of subfolder where the SAP folder is looked for`
-        folder_pattern (str): Pattern of the LABEL.ASC to look fo
+        folder_pattern (str): Pattern of the LABEL.ASC to look for
         recursion_level (int): Number of subfolder levels to check
             Examples:
                 1 means to check recursively in the subfolder present in software_folders folders

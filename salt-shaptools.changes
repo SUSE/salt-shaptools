@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr 19 14:04:54 UTC 2022 - Eike Waldt <waldt@b1-systems.de>
+
+- Version 0.3.16
+  * store crm state in __context__ instead of __salt__
+
+-------------------------------------------------------------------
 Fri Mar 18 15:02:13 UTC 2022 - Eike Waldt <waldt@b1-systems.de>
 
 - Version 0.3.15
