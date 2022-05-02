@@ -72,15 +72,7 @@ test-jsonlint:
 
 # test-mlc: @ Run markup link checker
 test-mlc:
-	mkdir -p aws/.terraform # make sure ingore-path exists
-	mlc --throttle 1000 \
-		--ignore-path \
-			**/.terraform \
-			**/venv \
-			**/saltvirtenv \
-		--ignore-links \
-			./terraform.tvars.example \
-			../pillar/*/*
+	mlc --throttle 1000
 
 # test-python: @ Run Python Unit Tests
 test-python:

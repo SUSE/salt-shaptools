@@ -9,6 +9,22 @@ on: [push, pull_request]  # yamllint disable-line rule:truthy
 env:
   PACKAGE_NAME: salt-shaptools
 jobs:
+  tab:
+    name: 'tabspace checking'
+    runs-on: ubuntu-20.04
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: tab
+        run: make test-tab
   codespell:
     name: 'spell checking'
     runs-on: ubuntu-20.04
