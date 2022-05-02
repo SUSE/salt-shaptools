@@ -202,6 +202,32 @@ class HanaModuleTest(TestCase, LoaderModuleMockMixin):
             'software_path', 'hana.conf', 'root', 'root', 'hana.conf.xml')
         assert 'hana error' in str(err.value)
 
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_add_hosts_return(self, mock_hana):
+        '''
+        Test add_hosts method - return
+        '''
+        mock_hana.add_hosts.return_value = 'hana.conf'
+        hanamod.add_hosts(
+            'add_hosts', 'hdblcm_folder', 'root', 'root', 'hdb_pwd_file')
+        mock_hana.add_hosts.assert_called_once_with(
+            'add_hosts', 'hdblcm_folder', 'root', 'root', 'hdb_pwd_file')
+
+    @patch('salt.modules.hanamod.hana.HanaInstance')
+    def test_add_hosts_raise(self, mock_hana):
+        '''
+        Test add_hosts method - raise
+        '''
+        mock_hana.add_hosts.side_effect = hanamod.hana.HanaError(
+            'hana error'
+        )
+        with pytest.raises(exceptions.CommandExecutionError) as err:
+            hanamod.add_hosts(
+                'add_hosts', 'hdblcm_folder', 'root', 'root', 'hdb_pwd_file')
+        mock_hana.add_hosts.assert_called_once_with(
+            'add_hosts', 'hdblcm_folder', 'root', 'root', 'hdb_pwd_file')
+        assert 'hana error' in str(err.value)
+
     def test_uninstall_return(self):
         '''
         Test uninstall method - return
