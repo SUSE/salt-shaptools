@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jul 11 15:03:17 UTC 2023 - Eike Waldt <waldt@b1-systems.de>
+
+- Version 0.3.18
+  * Salt no longer vendors six (>=salt-3006.0)
+    https://github.com/saltstack/salt/issues/63874
+
+-------------------------------------------------------------------
 Fri Apr 28 08:55:32 UTC 2022 - Eike Waldt <waldt@b1-systems.de>
 
 - Version 0.3.17
