@@ -36,12 +36,21 @@ State module to provide DRBD functionality to Salt
 .. code-block:: yaml
 
 '''
+# Import python libs
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import time
 
+# Import six - Python 2 and 3 compatibility library
+# Salt no longer vendors six (>=salt-3006.0)
+# https://github.com/saltstack/salt/issues/63874
+try:
+    from salt.ext import six
+except ImportError:
+    import six
+
+# Import salt libs
 from salt.exceptions import CommandExecutionError
-from salt.ext import six
 
 LOGGER = logging.getLogger(__name__)
 

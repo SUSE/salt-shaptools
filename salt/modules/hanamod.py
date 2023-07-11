@@ -32,7 +32,15 @@ import os
 if sys.version_info.major == 2: # pragma: no cover
     import imp
 
-from salt.ext.six.moves import reload_module
+# Import six - Python 2 and 3 compatibility library
+# Salt no longer vendors six (>=salt-3006.0)
+# https://github.com/saltstack/salt/issues/63874
+try:
+    from salt.ext.six.moves import reload_module
+except ImportError:
+    from six.moves import reload_module
+
+# Import salt libs
 from salt import exceptions
 from salt.utils import files as salt_files
 
