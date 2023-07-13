@@ -1,8 +1,11 @@
 ---
 name: Package CI
 # - this workflow will
-# - pytest with python version [2.7, 3.6, 3.7]
-# - uploads coverage data to codeClimate and the results are linked as a badges in the README
+# - test on
+#   - SLE 12 SP5
+#     - python 2.7
+#   - SLE 15 SP5
+#     - python 3.6
 # - deliver the package content to the configured repository
 # - submit the new package content to the upstream repository
 on: [push, pull_request]  # yamllint disable-line rule:truthy
@@ -11,7 +14,7 @@ env:
 jobs:
   tab:
     name: 'tabspace checking'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -27,7 +30,7 @@ jobs:
         run: make test-tab
   codespell:
     name: 'spell checking'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -41,6 +44,7 @@ jobs:
 
       - name: Install linting tools
         run: |
+          sudo apt-get update
           sudo apt-get install -y git python3 python3-pip
           python3 -m pip install codespell
 
@@ -49,7 +53,7 @@ jobs:
 
   shellcheck:
     name: 'script syntax check'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -63,6 +67,7 @@ jobs:
 
       - name: Install linting tools
         run: |
+          sudo apt-get update
           sudo apt-get install -y git python3 python3-pip shellcheck
 
       - name: shellcheck
@@ -70,7 +75,7 @@ jobs:
 
   yamllint:
     name: 'yaml linting'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -84,15 +89,16 @@ jobs:
 
       - name: Install linting tools
         run: |
+          sudo apt-get update
           sudo apt-get install -y git python3 python3-pip
-          python3 -m pip install codespell
+          python3 -m pip install yamllint
 
       - name: yamllint
         run: make test-yamllint
 
   jsonlint:
     name: 'json linting'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -106,6 +112,7 @@ jobs:
 
       - name: Install linting tools
         run: |
+          sudo apt-get update
           sudo apt-get install -y git python3 python3-pip
           python3 -m pip install jsonlint
 
@@ -114,7 +121,7 @@ jobs:
 
   mlc:
     name: 'markup link checker'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -137,30 +144,44 @@ jobs:
         run: make test-mlc
 
   python:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
+      # do not fail if other test fails
+      fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
-        python-version: [2.7, 3.6, 3.7]
+        container:
+          - registry.suse.com/suse/sles12sp5:latest  # python 2.7
+          - registry.suse.com/bci/bci-base:15.5      # python 3.6
+    container:
+      image: ${{ matrix.container }}
     steps:
+      - name: Auth to SCC and minimal dependencies
+        run: |
+            echo "username=${{ secrets.SCC_USERNAME }}" >/etc/zypp/credentials.d/SCCcredentials
+            echo "password=${{ secrets.SCC_PASSWORD }}" >>/etc/zypp/credentials.d/SCCcredentials
+            zypper ref -s
+            zypper -n in -y tar gzip git
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt mock pytest-cov
-          # on old python version, install and clone ...
-          if test -d /opt/hostedtoolcache/Python/2.7.*; then
-            pip install enum34
-            git clone --branch=openSUSE-3000.3 --depth=50 https://github.com/openSUSE/salt ../salt
+          zypper -n in -y make python
+          if test -f /usr/bin/python3; then
+            # minimal python packages and compilers
+            zypper -n in -y python3-pip python3-devel gcc
+            # use current salt version shipped with SLE 15
+            git clone --branch=openSUSE/release/3006.0 --depth=50 https://github.com/openSUSE/salt ../salt
+            # python 3.6 - official requirements from salt (works with python >3.6)
+            pip install -r ../salt/requirements/pytest.txt
+            pip install -r tests/requirements.3.6.yaml # pinned pytest-cov
           else
-            git clone --branch=openSUSE-3002.2 --depth=50 https://github.com/openSUSE/salt ../salt
+            # minimal python packages and compilers
+            zypper -n in -y python-pip python-devel gcc gcc-c++
+            # python 2.7 - latest available versions for old python release
+            pip install -r tests/requirements.2.7.yaml
+            # use current salt version shipped with SLE 12
+            git clone --branch=openSUSE/release/3000.3 --depth=50 https://github.com/openSUSE/salt ../salt
           fi
           rm ../salt/tests/conftest.py
           git clone --depth=50 https://github.com/SUSE/shaptools.git ../shaptools
@@ -172,7 +193,7 @@ jobs:
 
   delivery:
     needs: [tab, codespell, shellcheck, yamllint, jsonlint, mlc, python]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ github.event_name != 'pull_request' }}
     container:
       image: shap/continuous_deliver
@@ -200,7 +221,7 @@ jobs:
 
   submit:
     needs: [tab, codespell, shellcheck, yamllint, jsonlint, mlc, python, delivery]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     container:
       image: shap/continuous_deliver
