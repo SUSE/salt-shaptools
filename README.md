@@ -1,6 +1,4 @@
 [![Package CI](https://github.com/SUSE/salt-shaptools/actions/workflows/salt-shaptools-ci.yml/badge.svg)](https://github.com/SUSE/salt-shaptools/actions/workflows/salt-shaptools-ci.yml)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/770395dbb4bb868502b3/test_coverage)](https://codeclimate.com/github/SUSE/salt-shaptools/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/770395dbb4bb868502b3/maintainability)](https://codeclimate.com/github/SUSE/salt-shaptools/maintainability)
 
 # SAP Applications and SUSE Linux Enterprise High Availability salt modules and States
 

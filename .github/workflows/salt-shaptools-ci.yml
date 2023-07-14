@@ -168,17 +168,6 @@ jobs:
           pip install ../shaptools
       - name: execute test script
         run: make test-python
-      - name: change absolute path to relative path for successful upload to code climate
-        run: |
-          WORKSPACE=`dirname ${{ github.workspace }}`/salt/
-          sed -i "s#$WORKSPACE##g" coverage.xml
-      - name: Publish code coverage
-        uses: paambaati/codeclimate-action@v2.7.5
-        if: ${{ env.CC_TEST_REPORTER_ID != null && github.event_name != 'pull_request' }}
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-        with:
-          coverageLocations: coverage.xml:coverage.py
 
 
   delivery:
