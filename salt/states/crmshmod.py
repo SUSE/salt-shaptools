@@ -32,11 +32,17 @@ State module to provide CRMSH (HA cluster) functionality to Salt
 # Import python libs
 from __future__ import absolute_import, unicode_literals, print_function
 
+# Import six - Python 2 and 3 compatibility library
+# Salt no longer vendors six (>=salt-3006.0)
+# https://github.com/saltstack/salt/issues/63874
+try:
+    from salt.ext import six
+except ImportError:
+    import six
 
 # Import salt libs
 from salt import exceptions
 from salt import utils as salt_utils
-from salt.ext import six
 
 
 __virtualname__ = 'crm'
