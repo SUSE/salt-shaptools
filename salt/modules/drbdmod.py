@@ -282,7 +282,7 @@ def _is_no_backing_dev_request(res, output):
 
 def _get_json_output_save(command):
     '''
-    A warpper of get json command to acommandate json output issues
+    A wrapper of get json command to acommandate json output issues
     '''
 
     error_str = '"estimated-seconds-to-finish": nan,'

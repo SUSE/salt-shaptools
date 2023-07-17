@@ -1,6 +1,4 @@
 [![Package CI](https://github.com/SUSE/salt-shaptools/actions/workflows/salt-shaptools-ci.yml/badge.svg)](https://github.com/SUSE/salt-shaptools/actions/workflows/salt-shaptools-ci.yml)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/770395dbb4bb868502b3/test_coverage)](https://codeclimate.com/github/SUSE/salt-shaptools/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/770395dbb4bb868502b3/maintainability)](https://codeclimate.com/github/SUSE/salt-shaptools/maintainability)
 
 # SAP Applications and SUSE Linux Enterprise High Availability salt modules and States
 
@@ -84,7 +82,14 @@ Your directory layout should looks like ( all the 3 dirs are in same three dir l
 ```bash
 virtualenv saltvirtenv
 source saltvirtenv/bin/activate
-pip install pyzmq PyYAML pycrypto msgpack-python jinja2 psutil futures tornado pytest-salt-factories mock pytest-cov
+
+# python 3.6 - official requirements from salt (works with python >3.6)
+pip install -r ../salt/requirements/pytest.txt
+pip install -r tests/requirements.3.6.yaml # pinned pytest-cov
+# or
+# python 2.7 - latest available versions for old python release
+pip install -r tests/requirements.2.7.yaml
+
 pip install -e ../salt
 pip install -e ../shaptools
 rm ../salt/tests/conftest.py # remove this file from the saltstack repo
