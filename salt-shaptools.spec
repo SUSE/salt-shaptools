@@ -28,8 +28,11 @@ URL:            https://github.com/SUSE/%{name}
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
-BuildRequires:  python-rpm-macros
-Requires:       %{python_module six}
+%if 0%{?suse_version} >= 1500
+Requires: python3-six
+%else
+Requires: python-six
+%endif
 
 %description
 Salt modules and states for SAP Applications and SLE-HA components management
