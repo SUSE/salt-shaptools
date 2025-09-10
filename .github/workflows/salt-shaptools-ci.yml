@@ -2,13 +2,16 @@
 name: Package CI
 # - this workflow will
 # - test on
-#   - SLE 12 SP5
-#     - python 2.7
 #   - SLE 15 SP5
 #     - python 3.6
 # - deliver the package content to the configured repository
 # - submit the new package content to the upstream repository
-on: [push, pull_request]  # yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, labeled]
 env:
   PACKAGE_NAME: salt-shaptools
 jobs:
@@ -150,7 +153,6 @@ jobs:
       fail-fast: false
       matrix:
         container:
-          - registry.suse.com/suse/sles12sp5:latest  # python 2.7
           - registry.suse.com/bci/bci-base:15.5      # python 3.6
     container:
       image: ${{ matrix.container }}
@@ -167,32 +169,17 @@ jobs:
       - name: Install dependencies
         run: |
           zypper -n in -y make python
-          if test -f /usr/bin/python3; then
-            # minimal salt, python packages and compilers
-            zypper -n in -y salt python3-pip python3-devel gcc
-            # use current salt version shipped with SLE 15
-            git clone --branch=openSUSE/release/3006.0 --depth=50 https://github.com/openSUSE/salt ../salt
-            # python 3.6 - official requirements from salt (works with python >3.6)
-            pip install -r ../salt/requirements/pytest.txt
-            pip install -r tests/requirements.3.6.yaml # pinned pytest-cov
-            # install shaptools
-            zypper addrepo https://download.opensuse.org/repositories/network:/ha-clustering:/sap-deployments:/devel/SLE_15_SP5/network:ha-clustering:sap-deployments:devel.repo
-            zypper --gpg-auto-import-keys ref
-            zypper -n in -y python3-shaptools
-          else
-            zypper -n in -y SUSEConnect
-            SUSEConnect -p sle-module-adv-systems-management/12/x86_64
-            # minimal salt, python packages and compilers
-            zypper -n in -y salt python-pip python-devel gcc gcc-c++
-            # python 2.7 - latest available versions for old python release
-            pip install --ignore-installed -r tests/requirements.2.7.yaml
-            # use current salt version shipped with SLE 12
-            git clone --branch=openSUSE/release/3000.3 --depth=50 https://github.com/openSUSE/salt ../salt
-            # install shaptools
-            zypper addrepo https://download.opensuse.org/repositories/network:/ha-clustering:/sap-deployments:/devel/SLE_12_SP5/network:ha-clustering:sap-deployments:devel.repo
-            zypper --gpg-auto-import-keys ref
-            zypper -n in -y python-shaptools
-          fi
+          # minimal salt, python packages and compilers
+          zypper -n in -y salt python3-pip python3-devel gcc
+          # use current salt version shipped with SLE 15
+          git clone --branch=openSUSE/release/3006.0 --depth=50 https://github.com/openSUSE/salt ../salt
+          # python 3.6 - official requirements from salt (works with python >3.6)
+          pip install -r ../salt/requirements/pytest.txt
+          pip install -r tests/requirements.3.6.yaml # pinned pytest-cov
+          # install shaptools
+          zypper addrepo https://download.opensuse.org/repositories/network:ha-clustering:sap-deployments:devel/15.5/network:ha-clustering:sap-deployments:devel.repo
+          zypper --gpg-auto-import-keys ref
+          zypper -n in -y python3-shaptools
           rm ../salt/tests/conftest.py
       - name: execute test script
         run: make test-python

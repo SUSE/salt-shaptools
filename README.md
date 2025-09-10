@@ -30,7 +30,7 @@ sudo salt-call --retcode-passthrough -l debug -m . state.template demo/primary.s
 
 ### Run in minions
 
-To run the module funcionalities in the minions:
+To run the module functionalities in the minions:
 
 1. Copy the content of **modules** in your "salt://\_modules/" (by default /srv/salt/\_modules)
 2. Copy the content of **states** in your "salt://\_states/" (by default /srv/salt/\_states)
@@ -48,7 +48,7 @@ sudo salt-call hana.is_installed
 
 ## Writing unit test
 
-You can have look at: https://docs.saltstack.com/en/latest/topics/development/tests/unit.html
+You can have look at: https://docs.saltproject.io/en/latest/topics/development/tests/unit.html
 
 ## How to run the tests
 
