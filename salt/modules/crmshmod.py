@@ -685,35 +685,13 @@ def detect_cloud():
     '''
     Detect if crmsh is being executed in some cloud provider
 
-    INFO: The code is implemented this way because crmsh is still using python2 in
-    SLE12SP3 and python3 beyond, but salt is running python2 until SLE15, so SLE12SP4 breaks
-    the rule.
-
-    Otherwise we could just use:
-    from crmsh import utils
-    return utils.detect_cloud()
-
     These are the currently known platforms:
     * amazon-web-services
     * microsoft-azure
     * google-cloud-platform
     * None (as string)(otherwise)
     '''
-    if int(__context__['crm.version'][0]) <= 3:
-        version = 'python'
-    else:
-        version = 'python3'
-
-    cmd = '{version} -c "from crmsh import utils; print(utils.detect_cloud());"'.format(
-        version=version)
+    cmd = '/usr/bin/python3 -c "from crmsh import utils; print(utils.detect_cloud());"'
     provider = __salt__['cmd.run'](cmd).strip()
-
-    # workaround for https://github.com/SUSE/ha-sap-terraform-deployments/issues/832
-    # until https://github.com/ClusterLabs/crmsh/pull/952 is available
-    if provider == 'None':
-        cmd = 'grep -i amazon /sys/class/dmi/id/sys_vendor'
-        return_code = __salt__['cmd.retcode'](cmd)
-        if return_code == 0:
-            provider = 'amazon-web-services'
 
     return provider

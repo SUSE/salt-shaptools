@@ -752,32 +752,15 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
                     item='item',
                     value='false'))
 
-    def test_detect_cloud_py2(self):
+    def test_detect_cloud(self):
         '''
         Test detect_cloud
         '''
-        mock_versin = '3.0.0'
         mock_cmd_run = MagicMock(return_value='my-cloud ')
 
-        with patch.dict(crmshmod.__context__, {'crm.version': mock_versin}):
-            with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
-                result = crmshmod.detect_cloud()
-                assert result == 'my-cloud'
+        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+            result = crmshmod.detect_cloud()
+            assert result == 'my-cloud'
 
         mock_cmd_run.assert_called_once_with(
-            'python -c "from crmsh import utils; print(utils.detect_cloud());"')
-
-    def test_detect_cloud_py3(self):
-        '''
-        Test detect_cloud
-        '''
-        mock_versin = '4.0.0'
-        mock_cmd_run = MagicMock(return_value='my-cloud ')
-
-        with patch.dict(crmshmod.__context__, {'crm.version': mock_versin}):
-            with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
-                result = crmshmod.detect_cloud()
-                assert result == 'my-cloud'
-
-        mock_cmd_run.assert_called_once_with(
-            'python3 -c "from crmsh import utils; print(utils.detect_cloud());"')
+            '/usr/bin/python3 -c "from crmsh import utils; print(utils.detect_cloud());"')
