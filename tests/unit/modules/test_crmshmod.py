@@ -16,7 +16,8 @@ from tests.support.unit import TestCase, skipIf
 from tests.support import mock
 from tests.support.mock import (
     MagicMock,
-    patch
+    patch,
+    mock_open
 )
 
 # Import Salt Libs
@@ -62,11 +63,12 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         with patch.dict(crmshmod.__salt__, {
                 'pkg.version': mock_pkg_version,
                 'pkg.version_cmp': mock_pkg_version_cmp}):
-            assert crmshmod.__virtual__() == 'crm'
-            mock_which.assert_has_calls([
-                mock.call(crmshmod.CRM_COMMAND),
-                mock.call(crmshmod.HA_INIT_COMMAND)
-            ])
+            with patch('salt.utils.files.fopen', mock_open(read_data='#!/usr/bin/python3.11\n')) as mock_fopen:
+                assert crmshmod.__virtual__() == 'crm'
+                mock_which.assert_has_calls([
+                    mock.call(crmshmod.CRM_COMMAND),
+                    mock.call(crmshmod.HA_INIT_COMMAND)
+                ])
 
     @mock.patch('salt.utils.path.which')
     def test_virtual_ha_error(self, mock_which):
@@ -757,10 +759,11 @@ class CrmshModuleTest(TestCase, LoaderModuleMockMixin):
         Test detect_cloud
         '''
         mock_cmd_run = MagicMock(return_value='my-cloud ')
-
-        with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
-            result = crmshmod.detect_cloud()
-            assert result == 'my-cloud'
+        
+        with patch.dict(crmshmod.__context__, {'crm.python_version': '/usr/bin/python3'}):
+            with patch.dict(crmshmod.__salt__, {'cmd.run': mock_cmd_run}):
+                result = crmshmod.detect_cloud()
+                assert result == 'my-cloud'
 
         mock_cmd_run.assert_called_once_with(
             '/usr/bin/python3 -c "from crmsh import utils; print(utils.detect_cloud());"')
