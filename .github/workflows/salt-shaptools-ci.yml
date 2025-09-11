@@ -190,22 +190,25 @@ jobs:
     runs-on: ubuntu-22.04
     if: ${{ github.event_name != 'pull_request' }}
     container:
-      image: shap/continuous_deliver
+      image: ghcr.io/trento-project/continuous-delivery:main
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
         OBS_PASS: ${{ secrets.OBS_PASS }}
         OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+      options: -u 0:0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - name: Configure git for in-container operations
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: configure OSC
         # OSC credentials must be configured beforehand as the HOME variables cannot be changed from /github/home
         # that is used to run osc commands
         run: |
-          /scripts/init_osc_creds.sh
           mkdir -p $HOME/.config/osc
-          cp /root/.config/osc/oscrc $HOME/.config/osc
+          cp /home/osc/.config/osc/oscrc $HOME/.config/osc
+          /scripts/init_osc_creds.sh
       - name: deliver package
         run: |
           sed -i 's~%%VERSION%%~${{ github.sha }}~' _service && \
@@ -216,25 +219,28 @@ jobs:
   submit:
     needs: [tab, codespell, shellcheck, yamllint, jsonlint, mlc, python, delivery]
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     container:
-      image: shap/continuous_deliver
+      image: ghcr.io/trento-project/continuous-delivery:main
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
         OBS_PASS: ${{ secrets.OBS_PASS }}
         OBS_PROJECT: ${{ secrets.OBS_PROJECT}}
         TARGET_PROJECT: ${{ secrets.TARGET_PROJECT}}
+      options: -u 0:0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - name: Configure git for in-container operations
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: configure OSC
         # OSC credentials must be configured beforehand as the HOME variables cannot be changed from /github/home
         # that is used to run osc commands
         run: |
-          /scripts/init_osc_creds.sh
           mkdir -p $HOME/.config/osc
-          cp /root/.config/osc/oscrc $HOME/.config/osc
+          cp /home/osc/.config/osc/oscrc $HOME/.config/osc
+          /scripts/init_osc_creds.sh
       - name: submit package
         run: |
          sed -i 's~%%VERSION%%~${{ github.sha }}~' _service && \
