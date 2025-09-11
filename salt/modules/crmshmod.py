@@ -27,6 +27,7 @@ import json
 
 from salt import exceptions
 import salt.utils.path
+import salt.utils.files
 
 
 __virtualname__ = 'crm'
@@ -38,6 +39,7 @@ HA_JOIN_COMMAND = '/usr/sbin/ha-cluster-join'
 # Below this version ha-cluster-init will be used to create the cluster
 CRM_NEW_VERSION = '3.0.0'
 COROSYNC_CONF = '/etc/corosync/corosync.conf'
+DEFAULT_CRM_PYTHON_BIN = '/usr/bin/python3'
 
 LOGGER = logging.getLogger(__name__)
 # True if current execution has a newer version than CRM_NEW_VERSION
@@ -63,9 +65,17 @@ def __virtual__():
             False,
             'The crmsh execution module failed to load: the ha-cluster-init'
             ' package is not available.')
+    
+    try:
+        with salt.utils.files.fopen(CRM_COMMAND) as file:
+            shebang_line = file.readline().strip()
+            crm_python_version = shebang_line.split("#!")[1]
+    except:
+        crm_python_version = DEFAULT_CRM_PYTHON_BIN
 
     __context__['crm.version'] = version
     __context__['crm.use_crm'] = use_crm
+    __context__['crm.python_version'] = crm_python_version
     return __virtualname__
 
 
@@ -683,7 +693,9 @@ def configure_op_defaults(
 
 def detect_cloud():
     '''
-    Detect if crmsh is being executed in some cloud provider
+    Detect if crmsh is being executed in some cloud provider.
+    It reads `crm` command shebang from the binary file to get the specific python version.
+    The crm command shebang might be altered during the package build process
 
     These are the currently known platforms:
     * amazon-web-services
@@ -691,7 +703,8 @@ def detect_cloud():
     * google-cloud-platform
     * None (as string)(otherwise)
     '''
-    cmd = '/usr/bin/python3 -c "from crmsh import utils; print(utils.detect_cloud());"'
+    cmd = '{} -c "from crmsh import utils; print(utils.detect_cloud());"'.format(
+        __context__['crm.python_version'])
     provider = __salt__['cmd.run'](cmd).strip()
 
     return provider
